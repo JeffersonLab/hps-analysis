@@ -8,7 +8,7 @@ cmake_policy(SET CMP0005 NEW)
 cmake_policy(SET CMP0042 NEW)
 
 # Set the name of the project
-project(MiniDstLib)
+project(MakeMiniDst)
 
 # Set the project version
 set(HPS_ANALYSIS_VERSION_MAJOR 0)
@@ -103,15 +103,16 @@ if(APPLE)
   ENDIF("${isSystemDir}" STREQUAL "-1")
 endif(APPLE)
 
-add_subdirectory(MiniDstLib)
+add_subdirectory(MiniDst)
 add_subdirectory(Dst2016)
+add_subdirectory(LcioReader)
 
 include_directories("/data/HPS/HPS_Analysis/OldDST/BaseAna/BaseAna")
 include_directories("/data/HPS/HPS_Analysis/OldDST/hps-dst/include/hps_event")
 link_directories("/data/HPS/lib")
 
 add_executable(make_mini_dst make_mini_dst.cxx)
-target_link_libraries(make_mini_dst MiniDstLib Dst2016 ${ROOT_LIBRARIES})
+target_link_libraries(make_mini_dst MiniDst Dst2016 LcioReader ${ROOT_LIBRARIES})
 install(TARGETS make_mini_dst)
 
 message("-----------------------------------------------")

@@ -10,7 +10,7 @@ using namespace std;
 
 int main(int argc, char **argv){
 
-    cxxopts::Options options(argv[0], " - Write a ROOT MiniDstLib for HPS data.\n");
+    cxxopts::Options options(argv[0], " - Write a ROOT MiniDst for HPS data.\n");
     options
             .positional_help(" infile1 infile2 ...")
             .show_positional_help();

@@ -1,5 +1,5 @@
-# Create the MiniDstLib library
-project(MiniDstLib)
+# Create the MiniDst library
+project(MiniDst)
 
 ROOT_GENERATE_DICTIONARY(MiniDstDict MiniDst.h MODULE ${PROJECT_NAME} LINKDEF MiniDstLinkDef.h )
 

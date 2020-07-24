@@ -216,14 +216,12 @@ public:
     vector< vector<int> > mc_part_parents;
 
 public:
-    MiniDst(){
-        cout << "MiniDstLib starting up. \n";
-    };
+    MiniDst(): md_output_file_name("minidst.root"){};
     MiniDst(string_view output_file_name): md_output_file_name(output_file_name){};
     ~MiniDst(){};
-
-    void Setup();
-
+    virtual void Start();
+    virtual long Run(int nevt=0);
+    virtual void End();
 };
 
 

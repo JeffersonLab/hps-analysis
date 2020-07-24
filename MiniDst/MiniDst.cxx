@@ -4,7 +4,7 @@
 
 #include "MiniDst.h"
 
-void MiniDst::Setup() {
+void MiniDst::Start() {
     // Create the output TTree
     if( !md_output_file){
         if(md_Debug & kDebug_Info) std::cout << "Opening output file: " << md_output_file_name << std::endl;
@@ -178,4 +178,13 @@ void MiniDst::Setup() {
         //if(bran.index() == 1){ output_tree->Branch(nam.c_str(), std::get< vector<int>*>(bran));}
         std::visit([this,&it](auto&& arg){md_output_tree->Branch(it->first.c_str(), arg);}, it->second);
     }
+}
+
+long MiniDst::Run(int nevt){
+    std::cout << "MiniDst::Run() called. \n";
+    return(0);
+}
+
+void MiniDst::End(){
+   std::cout << "MiniDst::End() called \n";
 }

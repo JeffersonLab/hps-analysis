@@ -8,8 +8,21 @@
 ClassImp(Dst2016)
 
 Dst2016::Dst2016(TTree *tree, string out_file_name): BaseAna(tree), MiniDst(out_file_name) {
-    SetOutputFileName("MiniDst2016.root");
+    // SetOutputFileName("MiniDst2016.root");
     fCounter_Freq = 10000;
+}
+
+void Dst2016::Start() {
+    SlaveBegin();
+    MiniDst::Start();
+}
+
+long Dst2016::Run(int nevt){
+    return(BaseAna::Run(nevt));
+}
+
+void Dst2016::End(){
+    BaseAna::End();
 }
 
 void Dst2016::SlaveBegin(TTree *tree) {
@@ -21,7 +34,7 @@ void Dst2016::SlaveBegin(TTree *tree) {
 
     if (md_Debug & MiniDst::kDebug_L1)cout << "Dst2016::Begin(): \n";
     BaseAna::SlaveBegin(tree);
-    MiniDst::Setup();
+
 }
 
 void Dst2016::clear(){
@@ -52,7 +65,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
     event_number = GetEventNumber();
     trigger = (IsSingle0Trigger() << 3) + (IsSingle1Trigger()<<2) + (IsPair0Trigger() << 1) + (IsPair1Trigger());
 
-//    if( md_Debug & MiniDstLib::kDebug_L2){
+//    if( md_Debug & MiniDst::kDebug_L2){
 //        cout << "S0: " << IsSingle0Trigger() << " S1: " << IsSingle1Trigger() << "  P0:" << IsPair0Trigger() <<
 //        " P1: " << IsPair1Trigger() << endl;
 //        cout << "Trigger = " << trigger << endl;
@@ -591,7 +604,7 @@ void Dst2016::Terminate() {
     if( !md_output_file) md_output_file = new TFile(md_output_file_name.data(),"RECREATE");
 
     if(!md_output_tree){
-        md_output_tree = dynamic_cast<TTree *>(list->FindObject("MiniDstLib"));
+        md_output_tree = dynamic_cast<TTree *>(list->FindObject("MiniDst"));
     }
 
     WriteList(list);

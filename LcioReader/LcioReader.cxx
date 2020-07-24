@@ -3,3 +3,13 @@
 //
 
 #include "LcioReader.h"
+
+void LcioReader::Start(){
+
+};
+void LcioReader::Run(unsigned long nevent){
+
+};
+void LcioReader::End(){
+
+};

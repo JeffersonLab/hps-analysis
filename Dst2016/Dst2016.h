@@ -19,9 +19,14 @@ public:
     explicit Dst2016(TTree *tree=nullptr, string out_file_name="minidst2016.root");
     ~Dst2016(){};
 
-    void SlaveBegin(TTree *tree= nullptr) override;
+    virtual void Start() override;
+    virtual long Run(int nevt) override;
+    virtual void End() override;
+    virtual void SlaveBegin(TTree *tree= nullptr) override;
     virtual Bool_t  Process(Long64_t entry) override;
     virtual void    Terminate() override;
+
+    void            SetOutputFileName(const string& outfile){md_output_file_name=outfile;};
 
     void clear();  // Clear all the vectors.
     //std::map<std::string, vector<double>* > &Get_brmap(){return branch_map;};

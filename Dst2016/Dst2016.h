@@ -25,9 +25,9 @@ public:
     virtual void SlaveBegin(TTree *tree= nullptr) override;
     virtual Bool_t  Process(Long64_t entry) override;
     virtual void    Terminate() override;
-
-    void            SetOutputFileName(const string& outfile){md_output_file_name=outfile;};
-
+    virtual void SetDebugLevel(const int level) override {
+        md_Debug = level;
+        fDebug=level;};
     void clear();  // Clear all the vectors.
     //std::map<std::string, vector<double>* > &Get_brmap(){return branch_map;};
     // #define FULL_CLEAR(xxx)  { for( auto p: xxx){delete p;}; xxx.clear(); };

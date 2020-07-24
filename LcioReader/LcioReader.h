@@ -25,14 +25,15 @@ public:
     };
     LcioReader(const vector<string_view> infile_list): input_file_list(infile_list){};
     ~LcioReader(){};
-    void Start();
-    void Run(unsigned long nevent=0);
-    void End();
+
+
+    virtual void Start() override;
+    virtual long Run(int nevt=0) override;
+    virtual void End() override;
 
 public:
     IO::LCReader* lcio_reader{IOIMPL::LCFactory::getInstance()->createLCReader()};
     EVENT::LCEvent* lcio_event{nullptr};
-
     vector<string_view> input_file_list{};
 
 };

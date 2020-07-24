@@ -23,6 +23,7 @@ long Dst2016::Run(int nevt){
 
 void Dst2016::End(){
     BaseAna::End();
+    MiniDst::End();
 }
 
 void Dst2016::SlaveBegin(TTree *tree) {

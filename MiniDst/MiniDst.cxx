@@ -181,10 +181,10 @@ void MiniDst::Start() {
 }
 
 long MiniDst::Run(int nevt){
-    std::cout << "MiniDst::Run() called. \n";
+    std::cout << "MiniDst::Run() called. =====================<<<<<<<<<<<<<======\n";
     return(0);
 }
 
 void MiniDst::End(){
-   std::cout << "MiniDst::End() called \n";
+    md_output_file->Close();
 }

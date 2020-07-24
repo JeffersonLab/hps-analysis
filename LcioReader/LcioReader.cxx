@@ -5,11 +5,11 @@
 #include "LcioReader.h"
 
 void LcioReader::Start(){
-
+    MiniDst::Start();
 };
-void LcioReader::Run(unsigned long nevent){
+long LcioReader::Run(int nevent){
 
 };
 void LcioReader::End(){
-
+    MiniDst::End();
 };

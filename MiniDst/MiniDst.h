@@ -222,6 +222,8 @@ public:
     virtual void Start();
     virtual long Run(int nevt=0);
     virtual void End();
+    virtual void SetOutputFileName(const string& outfile){md_output_file_name=outfile;};
+    virtual void SetDebugLevel(const int level){ md_Debug = level;};
 };
 
 

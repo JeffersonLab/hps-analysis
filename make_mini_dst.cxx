@@ -83,11 +83,22 @@ int main(int argc, char **argv){
         if(store_ecal_hits) cout << "Storing the ECAL hits.\n";
     }
 
-    auto chain = new TChain("HPS_Event");
-    for (auto &v : infiles) {
-        chain->Add(v.c_str());
+    MiniDst *dst{nullptr};
+    bool is_dst_type = false;
+    if( infiles.size()>0 && infiles[0].find(".root") != string::npos ) {
+        // The first file in the list has .root extension.
+        is_dst_type = true;
+        auto chain = new TChain("HPS_Event");
+        for (auto &v : infiles) {
+            chain->Add(v.c_str());
+        }
+        auto dst2016 = new Dst2016(chain);
+        dst = static_cast<MiniDst*>(dst2016);
+        if(dst2016->event->getNumberOfMCParticles() > 0 && !dst->write_mc_particles && !no_mc_particles){
+            cout << "Warning: Input is MC Data, but write_mc_particles is not set. Turning on write_mc_particles!\n";
+            dst->write_mc_particles = true;
+        }
     }
-    auto dst = new Dst2016(chain);
     int debug_code = 0;
     if( debug <= 0){
         debug_code = 0;
@@ -100,10 +111,6 @@ int main(int argc, char **argv){
     cout << "Debug code = " << debug_code << endl;
     dst->SetDebugLevel(debug_code);
     dst->write_mc_particles = store_mc_particles;
-    if(dst->event->getNumberOfMCParticles() > 0 && !dst->write_mc_particles && !no_mc_particles){
-        cout << "Warning: Input is MC Data, but write_mc_particles is not set. Turning on write_mc_particles!\n";
-        dst->write_mc_particles = true;
-    }
     dst->write_ecal_cluster = store_ecal_clusters || store_all;
     dst->write_ecal_hits = store_ecal_hits || store_all;
     dst->write_svt_hits = store_svt_hits || store_all;

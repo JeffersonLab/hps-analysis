@@ -5,6 +5,7 @@
 #include "cxxopts.hpp"
 #include "TChain.h"
 #include "Dst2016.h"
+#include "LcioReader.h"
 
 using namespace std;
 
@@ -98,6 +99,9 @@ int main(int argc, char **argv){
             cout << "Warning: Input is MC Data, but write_mc_particles is not set. Turning on write_mc_particles!\n";
             dst->write_mc_particles = true;
         }
+    }else if( infiles.size()>0 && infiles[0].find(".slcio") != string::npos ) {
+        auto dstlcio = new LcioReader(infiles);
+        dst = static_cast<MiniDst*>(dstlcio);
     }
     int debug_code = 0;
     if( debug <= 0){

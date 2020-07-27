@@ -7,6 +7,8 @@
 #pragma link C++ nestedclasses;
 
 #pragma link C++ class MiniDst+;
+#pragma link C++ struct TriggerBits_t +;
+#pragma link C++ union TriggerBits_int_t +;
 #pragma link C++ class Multi_Branch;
 #pragma link C++ class Multi_Value;
 #pragma link C++ class std::map<std::string, Multi_Value> >+;

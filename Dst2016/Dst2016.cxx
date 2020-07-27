@@ -1,7 +1,9 @@
-//
-// Created by Maurik Holtrop on 7/6/20.
-//
-
+///
+/// This class will read the 2016 hps-dst type ROOT files and convert them to the MiniDst type format.
+///
+/// The class is implemented as a BasaAna reader, where BaseAna is the base reader for hps-dst type root files.
+/// If you want to analyze hps-dst type files directly, you would be better off just deriving from BasaAna.
+///
 #include "Dst2016.h"
 #include "TVector3.h"
 
@@ -64,7 +66,16 @@ Bool_t  Dst2016::Process(Long64_t entry) {
 
     run_number = GetRunNumber();
     event_number = GetEventNumber();
-    trigger = (IsSingle0Trigger() << 3) + (IsSingle1Trigger()<<2) + (IsPair0Trigger() << 1) + (IsPair1Trigger());
+    time_stamp = GetEventTime();
+    // Undo the highly inefficient unpacking on the trigger unsigned int bits into multiple ints
+    // To not have a different trigger int for 2015/2016 and 2019 data we pack ACCORDING TO 2019 DATA BITS!
+    // Note that the *meaning* of the Single0 or Pair0 or Pair1 will change between runs.
+    //
+    trigger = (IsSingle0Trigger() << 0 ) + (IsSingle0Trigger() << 4 ) + // Set Top and Bottom bits.
+              (IsSingle1Trigger() << 1 ) + (IsSingle1Trigger() << 5 ) +
+              (IsPair0Trigger() << 8 ) +
+              (IsPair1Trigger() << 9 ) +
+              (IsPulserTrigger() << 15);
 
 //    if( md_Debug & MiniDst::kDebug_L2){
 //        cout << "S0: " << IsSingle0Trigger() << " S1: " << IsSingle1Trigger() << "  P0:" << IsPair0Trigger() <<
@@ -391,12 +402,24 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                 double found_ep_good_pid= -999.;
                 double found_em_track_time = -999.;
                 double found_ep_track_time = -999.;
-                double found_em_clus_time = -999.;
-                double found_ep_clus_time = -999.;
                 double found_em_pos_ecal_x = -999.;
                 double found_em_pos_ecal_y = -999.;
                 double found_ep_pos_ecal_x = -999.;
                 double found_ep_pos_ecal_y = -999.;
+                int    found_em_clus = -99;
+                int    found_ep_clus = -99;
+                int    found_em_clus_ix = -99;
+                int    found_em_clus_iy = -99;
+                int    found_ep_clus_ix = -99;
+                int    found_ep_clus_iy = -99;
+                double found_em_clus_energy = -999.;
+                double found_ep_clus_energy = -999.;
+                double found_em_clus_time = -999.;
+                double found_ep_clus_time = -999.;
+                double found_em_clus_pos_x = -999.;
+                double found_em_clus_pos_y = -999.;
+                double found_ep_clus_pos_x = -999.;
+                double found_ep_clus_pos_y = -999.;
 
                 for (int idx = 0; idx < GetNumberOfParticles(HpsParticle::FINAL_STATE_PARTICLE); ++idx) {
                     HpsParticle *part = GetParticle(HpsParticle::FINAL_STATE_PARTICLE, idx);
@@ -432,11 +455,26 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                             }else{
 #ifdef DEBUG
                                 if(cluster_refs->GetEntries()>1){
-                                    cout << "Weird electron with more than one cluster!! \n";
+                                    cout << "Even weirder electron with more than one cluster!! \n";
                                 }
 #endif
-                                EcalCluster *clust = (EcalCluster *)cluster_refs->At(0) ;
+                                EcalCluster *clust = (EcalCluster *)cluster_refs->At(0);
+                                // Find the cluster index. Only really usefull is you also write these clusters.
+                                for(int j=0; j< GetNumberOfEcalClusters(); ++j){
+                                    EcalCluster *try_clus = GetEcalCluster(j);
+                                    if( clust == try_clus){
+                                        found_em_clus = j;
+                                        break;
+                                    }
+                                }
+                                found_em_clus_energy = clust->getEnergy();
                                 found_em_clus_time = clust->getClusterTime();
+                                EcalHit * seed_hit = clust->getSeed();
+                                found_em_clus_ix = seed_hit->getXCrystalIndex();
+                                found_em_clus_iy = seed_hit->getYCrystalIndex();
+                                vector<double> clus_pos = clust->getPosition();
+                                found_em_clus_pos_x = clus_pos[0];
+                                found_em_clus_pos_y = clus_pos[1];
                             }
                             found_em_good_pid = part->getGoodnessOfPID();
 
@@ -473,9 +511,23 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                                 }
 #endif
                                 EcalCluster *clust = (EcalCluster *)cluster_refs->At(0) ;
+                                // Find the cluster index. Only really usefull is you also write these clusters.
+                                for(int j=0; j< GetNumberOfEcalClusters(); ++j){
+                                    EcalCluster *try_clus = GetEcalCluster(j);
+                                    if( clust == try_clus){
+                                        found_ep_clus = j;
+                                        break;
+                                    }
+                                }
+                                found_ep_clus_energy = clust->getEnergy();
                                 found_ep_clus_time = clust->getClusterTime();
+                                EcalHit * seed_hit = clust->getSeed();
+                                found_ep_clus_ix = seed_hit->getXCrystalIndex();
+                                found_ep_clus_iy = seed_hit->getYCrystalIndex();
+                                vector<double> clus_pos = clust->getPosition();
+                                found_ep_clus_pos_x = clus_pos[0];
+                                found_ep_clus_pos_y = clus_pos[1];
                             }
-
                             found_ep_good_pid = part->getGoodnessOfPID();
                         }else{
                             std::cout << "Problem with particle, neither e- nor e+ \n";
@@ -512,12 +564,24 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                 v0_ep_good_pid.push_back(found_ep_good_pid);
                 v0_em_track_time.push_back(found_em_track_time);
                 v0_ep_track_time.push_back(found_ep_track_time);
-                v0_em_clus_time.push_back(found_em_clus_time);
-                v0_ep_clus_time.push_back(found_ep_clus_time);
+                v0_em_clus_ix.push_back(found_em_clus_ix);
+                v0_em_clus_iy.push_back(found_em_clus_iy);
+                v0_ep_clus_ix.push_back(found_ep_clus_ix);
+                v0_ep_clus_iy.push_back(found_ep_clus_iy);
                 v0_em_pos_ecal_x.push_back(found_em_pos_ecal_x);
                 v0_em_pos_ecal_y.push_back(found_em_pos_ecal_y);
                 v0_ep_pos_ecal_x.push_back(found_ep_pos_ecal_x);
                 v0_ep_pos_ecal_y.push_back(found_ep_pos_ecal_y);
+                v0_em_clus.push_back(found_em_clus);
+                v0_ep_clus.push_back(found_ep_clus);
+                v0_em_clus_energy.push_back(found_em_clus_energy);
+                v0_ep_clus_energy.push_back(found_ep_clus_energy);
+                v0_em_clus_time.push_back(found_em_clus_time);
+                v0_ep_clus_time.push_back(found_ep_clus_time);
+                v0_em_clus_pos_x.push_back(found_em_clus_pos_x);
+                v0_em_clus_pos_y.push_back(found_em_clus_pos_y);
+                v0_ep_clus_pos_x.push_back(found_ep_clus_pos_x);
+                v0_ep_clus_pos_y.push_back(found_ep_clus_pos_y);
             }
 
             // Find and linkup the track associated with the particle.
@@ -590,7 +654,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             mc_part_parents.push_back(parents);
         }
     }
-    md_output_tree->Fill();
+    if(md_output_tree) md_output_tree->Fill();
     return true;
 };
 

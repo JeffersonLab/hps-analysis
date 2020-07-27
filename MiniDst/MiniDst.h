@@ -18,7 +18,38 @@ using Multi_Value = std::variant < std::vector<double>* , std::vector<int>*,
         std::vector< std::vector<int> >*, std::vector< std::vector<double> >*>;
 using Multi_Branch = std::map<std::string, Multi_Value >;
 
+//
+// Same structure/union for 2019 trigger as EVIOTool::TSBank
+//
 using namespace std;
+using TriggerBits_t  = struct{  // Trigger structure for the 2019 data set.
+    bool Single_0_Top: 1; //  0   ( 150-8191) MeV (-31,31)   Low energy cluster
+    bool Single_1_Top: 1; //  1   ( 300-3000) MeV (  5,31)   e+
+    bool Single_2_Top: 1; //  2   ( 300-3000) MeV (  5,31)   e+ : Position dependent energy cut
+    bool Single_3_Top: 1; //  3   ( 300-3000) MeV (  5,31)   e+ : HODO L1*L2  Match with cluster
+    bool Single_0_Bot: 1; //  4   ( 150-8191) MeV (-31,31)   Low energy cluster
+    bool Single_1_Bot: 1; //  5   ( 300-3000) MeV (  5,31)   e+
+    bool Single_2_Bot: 1; //  6   ( 300-3000) MeV (  5,31)   e+ : Position dependent energy cut
+    bool Single_3_Bot: 1; //  7   ( 300-3000) MeV (  5,31)   e+ : HODO L1*L2  Match with cluster
+    bool Pair_0      : 1; //  8    A'
+    bool Pair_1      : 1; //  9    Moller
+    bool Pair_2      : 1; // 10    pi0
+    bool Pair_3      : 1; // 11    -
+    bool LED         : 1; // 12    LED
+    bool Cosmic      : 1; // 13    Cosmic
+    bool Hodoscope   : 1; // 14    Hodoscope
+    bool Pulser      : 1; // 15    Pulser
+    bool Mult_0      : 1; // 16    Multiplicity-0 2 Cluster Trigger
+    bool Mult_1      : 1; // 17    Multiplicity-1 3 Cluster trigger
+    bool FEE_Top     : 1; // 18    FEE Top       ( 2600-5200)
+    bool FEE_Bot     : 1; // 19    FEE Bot       ( 2600-5200)
+    unsigned int NA  :12; // 20-31 Not used
+};
+
+using TriggerBits_int_t = union{
+    unsigned int intval;
+    TriggerBits_t  bits;
+};
 
 class MiniDst : public TObject {
 
@@ -54,14 +85,7 @@ public:
     TFile *md_output_file{nullptr};
     TTree *md_output_tree{nullptr};
 
-    /// All the items that we could possibly write out are here so that direct access
-    /// to the variables is possible throughout the code.
-
-    int trigger{0};
-    int run_number{0};
-    int event_number{0};
-
-    // Switches that allow turning output on/off.
+    /// Switches that allow turning output on/off.
     bool write_ecal_cluster{true};
     bool write_ecal_hits{true};
     bool write_svt_hits{true};
@@ -69,12 +93,28 @@ public:
     bool write_only_gbl_tracks{false};
     bool write_mc_particles{false};
 
-    // These determine what types of particles will be written out.
+    /// These determine what types of particles will be written out.
     vector<int> particle_types_single{FINAL_STATE_PARTICLE, OTHER_ELECTRONS}; // No vertex
     vector<int> particle_types_double{TC_V0_CANDIDATE, UC_VC_CANDIDATE}; // Yes vertex.
 
     // Vector type helpers.
     Multi_Branch branch_map;
+
+    /// All the items that we could possibly write out are here so that direct access
+    /// to the variables is possible throughout the code, and to each class that derives from the MiniDst.
+    /// Note:
+    /// - For each variable you want in the output you need 3 steps (the last one for each input type!)
+    /// -- 1: Create a variable below for easy access.
+    /// -- 2: Add this variable and the name in the branch map. Please make these names consistent!
+    /// -- 3: Fill the variable in each of the input file parsers.
+    ///
+
+    // Event header information
+    int run_number{0};
+    int event_number{0};
+    ULong64_t time_stamp{0};
+    unsigned int svt_status{0};  // Only useful for some 2016 data.
+    unsigned int trigger{0};     // Packed trigger bits.
 
     // Ecal Hits
     vector<double> ecal_hit_energy;
@@ -166,6 +206,9 @@ public:
     vector<double> v0_vertex_z;
     vector<double> v0_vertex_chi2;
     vector<double> v0_n_daughter;
+// These could be implemented easily, but they are not really needed for e+ e- vertexes.
+// It is much easier to use if we write the e+ and e- particle, track and cluster index, which will be
+// just one int. Also, it is convenient to get directly some of the track and ecal properties, see below.
 //    vector< vector< int> > v0_parts;
 //    vector< vector< int> > v0_tracks;
 //    vector< vector< int> > v0_ecal_clusters;
@@ -175,26 +218,39 @@ public:
 /// from the particle, track or cluster collections.
 ///
 /// Since this is HPS we are interested in the e+ and e- vertexes.
-    vector<int>    v0_em_part;
+    vector<int>    v0_em_part;  /// index to particle
     vector<int>    v0_ep_part;
-    vector<int>    v0_em_track;
+    vector<int>    v0_em_track; /// index to track
     vector<int>    v0_ep_track;
-    vector<int>    v0_em_track_nhit;
+    vector<int>    v0_em_track_nhit; // Number of hits on track.
     vector<int>    v0_ep_track_nhit;
-    vector<double> v0_em_p;
+    vector<double> v0_em_p;          /// Track momentum
     vector<double> v0_ep_p;
-    vector<double> v0_em_chi2;
+    vector<double> v0_em_chi2;      /// Track chi-squared.
     vector<double> v0_ep_chi2;
-    vector<double> v0_em_good_pid;
+    vector<double> v0_em_good_pid;  /// goodness of pid from particle.
     vector<double> v0_ep_good_pid;
-    vector<double> v0_em_track_time;
+    vector<double> v0_em_track_time; /// track time
     vector<double> v0_ep_track_time;
-    vector<double> v0_em_clus_time;
-    vector<double> v0_ep_clus_time;
-    vector<double> v0_em_pos_ecal_x;
+    vector<double> v0_em_pos_ecal_x; /// track position at ecal
     vector<double> v0_em_pos_ecal_y;
     vector<double> v0_ep_pos_ecal_x;
     vector<double> v0_ep_pos_ecal_y;
+
+    vector<int>    v0_em_clus;       /// index to cluster
+    vector<int>    v0_ep_clus;
+    vector<double> v0_em_clus_energy; /// cluster energy
+    vector<double> v0_ep_clus_energy;
+    vector<double> v0_em_clus_time;  /// cluster time
+    vector<double> v0_ep_clus_time;
+    vector<int>    v0_em_clus_ix;   // Cluster seed ix.
+    vector<int>    v0_em_clus_iy;   // Cluster seed iy.
+    vector<int>    v0_ep_clus_ix;   // Cluster seed ix.
+    vector<int>    v0_ep_clus_iy;   // Cluster seed iy.
+    vector<double> v0_em_clus_pos_x; /// Cluster x position.
+    vector<double> v0_em_clus_pos_y;
+    vector<double> v0_ep_clus_pos_x;
+    vector<double> v0_ep_clus_pos_y;
 
     // MCParticles
     vector<double> mc_part_energy;

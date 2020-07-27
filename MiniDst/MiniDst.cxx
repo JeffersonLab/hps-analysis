@@ -17,6 +17,9 @@ void MiniDst::Start() {
     md_output_tree->Branch("trigger",&trigger);
     md_output_tree->Branch("run_number",&run_number);
     md_output_tree->Branch("event_number", &event_number);
+    md_output_tree->Branch("time_stamp", &time_stamp);
+    md_output_tree->Branch("svt_status",&svt_status);
+
 
     // You do not HAVE to create the handles to the vectors in "this":
     //    branch_map.try_emplace("hidden_double", new std::vector<double>());
@@ -135,12 +138,25 @@ void MiniDst::Start() {
     branch_map.try_emplace("v0_em_good_pid", &v0_em_good_pid);
     branch_map.try_emplace("v0_em_track_time", &v0_em_track_time);
     branch_map.try_emplace("v0_ep_track_time", &v0_ep_track_time);
-    branch_map.try_emplace("v0_em_clus_time", &v0_em_clus_time);
-    branch_map.try_emplace("v0_ep_clus_time", &v0_ep_clus_time);
     branch_map.try_emplace("v0_em_pos_ecal_x", &v0_em_pos_ecal_x);
     branch_map.try_emplace("v0_em_pos_ecal_y", &v0_em_pos_ecal_y);
     branch_map.try_emplace("v0_ep_pos_ecal_x", &v0_ep_pos_ecal_x);
     branch_map.try_emplace("v0_ep_pos_ecal_y", &v0_ep_pos_ecal_y);
+    branch_map.try_emplace("v0_em_clus", &v0_em_clus);
+    branch_map.try_emplace("v0_ep_clus", &v0_ep_clus);
+    branch_map.try_emplace("v0_em_clus_energy", &v0_em_clus_energy);
+    branch_map.try_emplace("v0_ep_clus_energy", &v0_ep_clus_energy);
+    branch_map.try_emplace("v0_em_clus_time", &v0_em_clus_time);
+    branch_map.try_emplace("v0_ep_clus_time", &v0_ep_clus_time);
+    branch_map.try_emplace("v0_em_clus_ix", &v0_em_clus_ix);
+    branch_map.try_emplace("v0_em_clus_iy", &v0_em_clus_iy);
+    branch_map.try_emplace("v0_ep_clus_ix", &v0_em_clus_ix);
+    branch_map.try_emplace("v0_ep_clus_iy", &v0_em_clus_iy);
+    branch_map.try_emplace("v0_em_clus_pos_x", &v0_em_clus_pos_x);
+    branch_map.try_emplace("v0_em_clus_pos_y", &v0_em_clus_pos_y);
+    branch_map.try_emplace("v0_ep_clus_pos_x", &v0_ep_clus_pos_x);
+    branch_map.try_emplace("v0_ep_clus_pos_y", &v0_ep_clus_pos_y);
+
 
     branch_map.try_emplace("v0_pdg", &v0_pdg);            // Not usefull, always zero ???
     branch_map.try_emplace("v0_charge", &v0_charge);      // Not usefull, always zero ???

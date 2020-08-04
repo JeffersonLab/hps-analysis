@@ -40,13 +40,6 @@ void Dst2016::SlaveBegin(TTree *tree) {
 
 }
 
-void Dst2016::clear(){
-    // Clear the event. We can now just use the map.
-    for( auto const& [nam, bran] : branch_map ){
-        std::visit([](auto &&arg){arg->clear();},bran);
-    }
-}
-
 Bool_t  Dst2016::Process(Long64_t entry) {
 
     clear();
@@ -63,6 +56,12 @@ Bool_t  Dst2016::Process(Long64_t entry) {
         printf("i: %9ld  event: %9d  fChain evt: %9lld  output evt: %9lld\n", evt_count, event->getEventNumber(),
                 fChain->GetReadEntry(), md_output_tree->GetEntries());
     }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    /// Event Header
+    ///
+    /////////////////////////////////////////////////////////////////////////////////////////////
 
     run_number = GetRunNumber();
     event_number = GetEventNumber();
@@ -83,7 +82,16 @@ Bool_t  Dst2016::Process(Long64_t entry) {
 //        cout << "Trigger = " << trigger << endl;
 //    }
 
-    // ECAL hits.
+    rf_time1 = GetRfTime(0);
+    rf_time2 = GetRfTime(1);
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    /// Ecal
+    ///
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /// ECAL hits.
     if(write_ecal_hits){
         for(int i=0; i< GetNumberOfEcalHits(); ++i){
             EcalHit *hit = GetEcalHit(i);
@@ -107,11 +115,15 @@ Bool_t  Dst2016::Process(Long64_t entry) {
 
             vector<int> matched_hits;
             auto clus_seed = static_cast<EcalHit *>(clus->seed_hit.GetObject());
+            ecal_cluster_seed_ix.push_back(clus_seed->getXCrystalIndex());
+            ecal_cluster_seed_iy.push_back(clus_seed->getYCrystalIndex());
+            ecal_cluster_seed_energy.push_back(clus_seed->getEnergy());
+
             for(int k=0; k < GetNumberOfEcalHits(); ++k){   // For each of the ECAL hits, we know k
                 EcalHit *hit = GetEcalHit(k);               // corresponds to the location in our index.
                 if(hit == clus_seed ){
-                    ecal_cluster_seed_idx.push_back(k);     // Matches the seed hit, so store that index.
-                }
+                    ecal_cluster_seed_index.push_back(k);     // Matches the seed hit, so store that index.
+                 }
 
                 for(int j=0; j < clus->n_ecal_hits; ++j){   // Get each of the hits in the cluster.
                     EcalHit *test_hit = static_cast<EcalHit *>(clus->ecal_hits->At(j));
@@ -144,7 +156,6 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             svt_hit_czz.push_back(svthit->czz);
             svt_hit_time.push_back(svthit->time);
             svt_hit_layer.push_back(svthit->layer);
-
         }
     }
 
@@ -185,7 +196,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             vector<double> covmat(track->covmatrix, track->covmatrix + 15);
             track_covmatrix.push_back(covmat);
             track_time.push_back(track->track_time);
-             track_x_at_ecal.push_back(track->x_at_ecal);
+            track_x_at_ecal.push_back(track->x_at_ecal);
             track_y_at_ecal.push_back(track->y_at_ecal);
             track_z_at_ecal.push_back(track->z_at_ecal);
 
@@ -294,60 +305,60 @@ Bool_t  Dst2016::Process(Long64_t entry) {
     // Single Track Particles.
     for( auto type: particle_types_single) {
         for (int i = 0; i < GetNumberOfParticles(HpsParticle::ParticleType(type)); ++i) {
-            HpsParticle *part = GetParticle(HpsParticle::ParticleType(type), i);
-            part_type.push_back( int(type));
-            part_energy.push_back(part->energy);
-            part_pdg.push_back(part->pdg);
-            part_charge.push_back(part->charge);
-            part_goodness_of_pid.push_back(part->getGoodnessOfPID());
-            part_px.push_back(part->px);
-            part_py.push_back(part->py);
-            part_pz.push_back(part->pz);
-            part_corr_px.push_back(part->px_corr);
-            part_corr_py.push_back(part->py_corr);
-            part_corr_pz.push_back(part->pz_corr);
-            part_vertex_x.push_back(part->vtx_x);
-            part_vertex_y.push_back(part->vtx_y);
-            part_vertex_z.push_back(part->vtx_z);
-            part_vertex_chi2.push_back(part->vtx_fit_chi2);
+            HpsParticle *hps_part = GetParticle(HpsParticle::ParticleType(type), i);
+            part.type.push_back( int(type));
+            part.energy.push_back(hps_part->energy);
+            part.pdg.push_back(hps_part->pdg);
+            part.charge.push_back(hps_part->charge);
+            part.goodness_of_pid.push_back(hps_part->getGoodnessOfPID());
+            part.px.push_back(hps_part->px);
+            part.py.push_back(hps_part->py);
+            part.pz.push_back(hps_part->pz);
+//            part.corr_px.push_back(hps_part->px_corr);
+//            part.corr_py.push_back(hps_part->py_corr);
+//            part.corr_pz.push_back(hps_part->pz_corr);
+//            part.vertex_x.push_back(hps_part->vtx_x);
+//            part.vertex_y.push_back(hps_part->vtx_y);
+//            part.vertex_z.push_back(hps_part->vtx_z);
+//            part.vertex_chi2.push_back(hps_part->vtx_fit_chi2);
             // Find and linkup the track associated with the particle. == Usually just one?
 #ifdef DEBUG
-            if(part->svt_tracks->GetEntries() > 1){
-                std::cout<< "Particle with more than one track: " << part->svt_tracks->GetEntries() << endl;
+            if(hps_part->svt_tracks->GetEntries() > 1){
+                std::cout << "Particle with more than one track: " << hps_part->svt_tracks->GetEntries() << endl;
             }
 #endif
-            int part_track_idx = -10;
-            if(part->svt_tracks->GetEntries() == 1) {
-                GblTrack *gbl_track = (GblTrack *)part->svt_tracks->At(0);
+            int track_idx = -10;
+            if(hps_part->svt_tracks->GetEntries() == 1) {
+                GblTrack *gbl_track = (GblTrack *)hps_part->svt_tracks->At(0);
 
                 for (int k = 0; k < GetNumberOfGblTracks(); k++) {
                     GblTrack *test_track = GetGblTrack(k);
                     if (test_track == gbl_track) {
-                        part_track_idx = k;
+                        track_idx = k;
                         break;
                     }
                 }
             }
-            part_track.push_back(part_track_idx); // No track for this particle = neutral.
+            part.track.push_back(track_idx); // No track for this particle = neutral.
 
 
             // Find and linkup the Ecal clusters. Only one!
 #ifdef DEBUG
-            if(part->ecal_clusters->GetEntries() > 1){
-                std::cout<< "Particle with more than one ecal cluster! " << part->ecal_clusters->GetEntries() << endl;
+            if(hps_part->ecal_clusters->GetEntries() > 1){
+                std::cout << "Particle with more than one ecal cluster! " << hps_part->ecal_clusters->GetEntries() << endl;
             }
 #endif
-            if(part->ecal_clusters->GetEntries() ==1){
-                EcalCluster *p_clus = (EcalCluster *) part->ecal_clusters->At(0);
+            if(hps_part->ecal_clusters->GetEntries() == 1){
+                EcalCluster *p_clus = (EcalCluster *) hps_part->ecal_clusters->At(0);
                 for(int k = 0; k < GetNumberOfEcalClusters(); ++k){
                     EcalCluster *test_clus = GetEcalCluster(k);
                     if( test_clus == p_clus){
-                        part_ecal_cluster.push_back(k);
+                        part.ecal_cluster.push_back(k);
                         break;
                     }
                 }
             }else{
-                part_ecal_cluster.push_back(-1);
+                part.ecal_cluster.push_back(-1);
             }
         }
     }
@@ -355,38 +366,38 @@ Bool_t  Dst2016::Process(Long64_t entry) {
     // Double Track Particles, i.e.  Constrained V0 Candidates.
     for(int type: particle_types_double) {
         for (int i = 0; i < GetNumberOfParticles(HpsParticle::ParticleType(type)); ++i) {
-            HpsParticle *part = GetParticle(HpsParticle::ParticleType(type), i);
-            v0_type.push_back( int(type));
-            v0_energy.push_back(part->energy);
-            v0_mass.push_back(part->getMass());
-            v0_pdg.push_back(part->pdg);
-            v0_charge.push_back(part->charge);
-            v0_goodness_of_pid.push_back(part->getGoodnessOfPID());
-            v0_px.push_back(part->px);
-            v0_py.push_back(part->py);
-            v0_pz.push_back(part->pz);
-            v0_corr_px.push_back(part->px_corr);
-            v0_corr_py.push_back(part->py_corr);
-            v0_corr_pz.push_back(part->pz_corr);
-            v0_vertex_x.push_back(part->vtx_x);
-            v0_vertex_y.push_back(part->vtx_y);
-            v0_vertex_z.push_back(part->vtx_z);
-            v0_vertex_chi2.push_back(part->vtx_fit_chi2);
-            v0_n_daughter.push_back(part->n_daughters);
+            HpsParticle *hps_vert_part = GetParticle(HpsParticle::ParticleType(type), i);
+            v0.type.push_back( int(type));
+            v0.energy.push_back(hps_vert_part->energy);
+            v0.mass.push_back(hps_vert_part->getMass());
+            v0.pdg.push_back(hps_vert_part->pdg);
+            v0.charge.push_back(hps_vert_part->charge);
+            v0.goodness_of_pid.push_back(hps_vert_part->getGoodnessOfPID());
+            v0.px.push_back(hps_vert_part->px);
+            v0.py.push_back(hps_vert_part->py);
+            v0.pz.push_back(hps_vert_part->pz);
+//            v0.corr_px.push_back(hps_vert_part->px_corr);
+//            v0.corr_py.push_back(hps_vert_part->py_corr);
+//            v0.corr_pz.push_back(hps_vert_part->pz_corr);
+            v0.vertex_x.push_back(hps_vert_part->vtx_x);
+            v0.vertex_y.push_back(hps_vert_part->vtx_y);
+            v0.vertex_z.push_back(hps_vert_part->vtx_z);
+            v0.vertex_chi2.push_back(hps_vert_part->vtx_fit_chi2);
+            v0.n_daughter.push_back(hps_vert_part->n_daughters);
 
             // We only look for and store 2 daughter particles.
 #ifdef DEBUG
-            if (part->n_daughters != 2)
-                std::cout << "Weird, but I expected 2 and only 2 daughters, but got " << part->n_daughters << std::endl;
+            if (hps_vert_part->n_daughters != 2)
+                std::cout << "Weird, but I expected 2 and only 2 daughters, but got " << hps_vert_part->n_daughters << std::endl;
 #endif
             /// The following is for convenience in analysis.
             /// Here we identify the electron and positron that make the V0 particle, and fill
             /// some useful quantities for each:  chi2 of track, goodness_of_pid, track time, cluster time.
             //
             // Todo: This code can be prettified: the em and ep code duplicates and could done with a struct instead.
-            if (part->n_daughters > 1) {
-                auto *d0 = dynamic_cast<HpsParticle *>(part->getParticles()->At(0)); // getParticles returns TRefArray.
-                auto *d1 = dynamic_cast<HpsParticle *>(part->getParticles()->At(1));
+            if (hps_vert_part->n_daughters > 1) {
+                auto *particle_at0 = dynamic_cast<HpsParticle *>(hps_vert_part->getParticles()->At(0)); // getParticles returns TRefArray.
+                auto *particle_at1 = dynamic_cast<HpsParticle *>(hps_vert_part->getParticles()->At(1));
                 int found_idx_em = -99;
                 int found_idx_ep = -99;
                 int found_ep_track = -99;
@@ -422,16 +433,16 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                 double found_ep_clus_pos_y = -999.;
 
                 for (int idx = 0; idx < GetNumberOfParticles(HpsParticle::FINAL_STATE_PARTICLE); ++idx) {
-                    HpsParticle *part = GetParticle(HpsParticle::FINAL_STATE_PARTICLE, idx);
-                    if (d0 == part || d1 == part) {
-                        if( part->getPDG() == 11) {
+                    HpsParticle *fs_part = GetParticle(HpsParticle::FINAL_STATE_PARTICLE, idx);
+                    if (particle_at0 == fs_part || particle_at1 == fs_part) {
+                        if(fs_part->getPDG() == 11) {  // Particle is an electron.
                             found_idx_em = idx;
-                            TRefArray *track_refs = part->getTracks();
+                            TRefArray *track_refs = fs_part->getTracks();
                             if(track_refs->GetEntries() == 0){  // no track?
                                 found_em_chi2 = -1;
                             }else {                             // Should be only one track.
                                 GblTrack *track = (GblTrack *) track_refs->At(0);
-                                found_em_track = part_track[idx];
+                                found_em_track = part.track[idx];
 #ifdef DEBUG
                                 GblTrack *test_track = GetGblTrack(found_em_track);
                                 if( test_track != track){
@@ -449,7 +460,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
 
                             }
 
-                            TRefArray *cluster_refs = part->getClusters();
+                            TRefArray *cluster_refs = fs_part->getClusters();
                             if( cluster_refs->GetEntries() == 0){
                                 cout << "Weird electron without a cluster-ref!\n";
                             }else{
@@ -476,16 +487,16 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                                 found_em_clus_pos_x = clus_pos[0];
                                 found_em_clus_pos_y = clus_pos[1];
                             }
-                            found_em_good_pid = part->getGoodnessOfPID();
+                            found_em_good_pid = fs_part->getGoodnessOfPID();
 
-                        }else if( part->getPDG() == -11){
+                        }else if(fs_part->getPDG() == -11){  // Particle is a positron.
                             found_idx_ep = idx;
-                            TRefArray *track_refs = part->getTracks();
+                            TRefArray *track_refs = fs_part->getTracks();
                             if(track_refs->GetEntries() == 0){
                                 found_ep_chi2 = -1;
                             }else {
                                 GblTrack *track = (GblTrack *) track_refs->At(0);
-                                found_ep_track = part_track[idx];
+                                found_ep_track = part.track[idx];
 #ifdef DEBUG
                                 GblTrack *test_track = GetGblTrack(found_ep_track);
                                 if( test_track != track){
@@ -501,7 +512,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                                 found_ep_pos_ecal_x = pos_ecal[0];
                                 found_ep_pos_ecal_y = pos_ecal[1];
                             }
-                            TRefArray *cluster_refs = part->getClusters();
+                            TRefArray *cluster_refs = fs_part->getClusters();
                             if( cluster_refs->GetEntries() == 0){
                                 cout << "Weird positron without a cluster-ref!\n";
                             }else{
@@ -528,7 +539,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                                 found_ep_clus_pos_x = clus_pos[0];
                                 found_ep_clus_pos_y = clus_pos[1];
                             }
-                            found_ep_good_pid = part->getGoodnessOfPID();
+                            found_ep_good_pid = fs_part->getGoodnessOfPID();
                         }else{
                             std::cout << "Problem with particle, neither e- nor e+ \n";
                         }
@@ -539,55 +550,55 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                 if( found_idx_em == found_idx_ep || found_idx_em <0 || found_idx_ep <0 ){
                     std::cout << "Problem with particle. The e+ or e- was not found, or e+ == e- \n";
                 }
-                if( part_charge[found_idx_em]>0 || part_charge[found_idx_ep]<0 ){
+                if( part.charge[found_idx_em]>0 || part.charge[found_idx_ep]<0 ){
                     std::cout << "Problem with particle: e- has +charge or e+ has -charge.\n";
                 }
-                if( track_chi2[part_track[found_idx_em]] != found_em_chi2){
-                    std::cout << "We got the electron chi2 wrong: " << track_chi2[part_track[found_idx_em]] << " != " << found_em_chi2 << endl;
+                if( track_chi2[part.track[found_idx_em]] != found_em_chi2){
+                    std::cout << "We got the electron chi2 wrong: " << track_chi2[part.track[found_idx_em]] << " != " << found_em_chi2 << endl;
                 }
-                if( track_chi2[part_track[found_idx_ep]] != found_ep_chi2){
-                    std::cout << "We got the positron chi2 wrong: " << track_chi2[part_track[found_idx_ep]] << " != " << found_ep_chi2 << endl;
+                if( track_chi2[part.track[found_idx_ep]] != found_ep_chi2){
+                    std::cout << "We got the positron chi2 wrong: " << track_chi2[part.track[found_idx_ep]] << " != " << found_ep_chi2 << endl;
                 }
 #endif
-                v0_em_part.push_back(found_idx_em);
-                v0_ep_part.push_back(found_idx_ep);
-                v0_em_track.push_back(found_em_track);
-                v0_ep_track.push_back(found_ep_track);
-                v0_em_track_nhit.push_back(found_em_track_nhit);
-                v0_ep_track_nhit.push_back(found_em_track_nhit);
-                v0_em_p.push_back(found_em_mom);
-                v0_ep_p.push_back(found_ep_mom);
+                v0.em.part.push_back(found_idx_em);
+                v0.ep.part.push_back(found_idx_ep);
+                v0.em.track.push_back(found_em_track);
+                v0.ep.track.push_back(found_ep_track);
+                v0.em.track_nhit.push_back(found_em_track_nhit);
+                v0.ep.track_nhit.push_back(found_em_track_nhit);
+                v0.em.p.push_back(found_em_mom);
+                v0.ep.p.push_back(found_ep_mom);
 
-                v0_em_chi2.push_back(found_em_chi2);
-                v0_ep_chi2.push_back(found_ep_chi2);
-                v0_em_good_pid.push_back(found_em_good_pid);
-                v0_ep_good_pid.push_back(found_ep_good_pid);
-                v0_em_track_time.push_back(found_em_track_time);
-                v0_ep_track_time.push_back(found_ep_track_time);
-                v0_em_clus_ix.push_back(found_em_clus_ix);
-                v0_em_clus_iy.push_back(found_em_clus_iy);
-                v0_ep_clus_ix.push_back(found_ep_clus_ix);
-                v0_ep_clus_iy.push_back(found_ep_clus_iy);
-                v0_em_pos_ecal_x.push_back(found_em_pos_ecal_x);
-                v0_em_pos_ecal_y.push_back(found_em_pos_ecal_y);
-                v0_ep_pos_ecal_x.push_back(found_ep_pos_ecal_x);
-                v0_ep_pos_ecal_y.push_back(found_ep_pos_ecal_y);
-                v0_em_clus.push_back(found_em_clus);
-                v0_ep_clus.push_back(found_ep_clus);
-                v0_em_clus_energy.push_back(found_em_clus_energy);
-                v0_ep_clus_energy.push_back(found_ep_clus_energy);
-                v0_em_clus_time.push_back(found_em_clus_time);
-                v0_ep_clus_time.push_back(found_ep_clus_time);
-                v0_em_clus_pos_x.push_back(found_em_clus_pos_x);
-                v0_em_clus_pos_y.push_back(found_em_clus_pos_y);
-                v0_ep_clus_pos_x.push_back(found_ep_clus_pos_x);
-                v0_ep_clus_pos_y.push_back(found_ep_clus_pos_y);
+                v0.em.chi2.push_back(found_em_chi2);
+                v0.ep.chi2.push_back(found_ep_chi2);
+                v0.em.good_pid.push_back(found_em_good_pid);
+                v0.ep.good_pid.push_back(found_ep_good_pid);
+                v0.em.track_time.push_back(found_em_track_time);
+                v0.ep.track_time.push_back(found_ep_track_time);
+                v0.em.clus_ix.push_back(found_em_clus_ix);
+                v0.em.clus_iy.push_back(found_em_clus_iy);
+                v0.ep.clus_ix.push_back(found_ep_clus_ix);
+                v0.ep.clus_iy.push_back(found_ep_clus_iy);
+                v0.em.pos_ecal_x.push_back(found_em_pos_ecal_x);
+                v0.em.pos_ecal_y.push_back(found_em_pos_ecal_y);
+                v0.ep.pos_ecal_x.push_back(found_ep_pos_ecal_x);
+                v0.ep.pos_ecal_y.push_back(found_ep_pos_ecal_y);
+                v0.em.clus.push_back(found_em_clus);
+                v0.ep.clus.push_back(found_ep_clus);
+                v0.em.clus_energy.push_back(found_em_clus_energy);
+                v0.ep.clus_energy.push_back(found_ep_clus_energy);
+                v0.em.clus_time.push_back(found_em_clus_time);
+                v0.ep.clus_time.push_back(found_ep_clus_time);
+                v0.em.clus_pos_x.push_back(found_em_clus_pos_x);
+                v0.em.clus_pos_y.push_back(found_em_clus_pos_y);
+                v0.ep.clus_pos_x.push_back(found_ep_clus_pos_x);
+                v0.ep.clus_pos_y.push_back(found_ep_clus_pos_y);
             }
 
             // Find and linkup the track associated with the particle.
 //            vector<int> track_list;
-//            for(int j=0; j< part->svt_tracks->GetEntries(); ++j) {
-//                SvtTrack *p_track = (SvtTrack *)part->svt_tracks->At(j);
+//            for(int j=0; j< hps_vert_part->svt_tracks->GetEntries(); ++j) {
+//                SvtTrack *p_track = (SvtTrack *)hps_vert_part->svt_tracks->At(j);
 //                for (int k = 0; k < GetNumberOfTracks(); k++) {
 //                    SvtTrack *test_track = GetTrack(k);
 //                    if (test_track == p_track) {
@@ -599,8 +610,8 @@ Bool_t  Dst2016::Process(Long64_t entry) {
 //            v0_tracks.push_back(track_list);
             // Find and linkup the Ecal clusters. == Usually just one?
 //            vector<int> ecal_list;
-//            for(int j=0; j< part->ecal_clusters->GetEntries(); ++j){
-//                EcalCluster *p_clus = (EcalCluster *) part->ecal_clusters->At(j);
+//            for(int j=0; j< hps_vert_part->ecal_clusters->GetEntries(); ++j){
+//                EcalCluster *p_clus = (EcalCluster *) hps_vert_part->ecal_clusters->At(j);
 //                for(int k = 0; k < GetNumberOfEcalClusters(); ++k){
 //                    EcalCluster *test_clus = GetEcalCluster(k);
 //                    if( test_clus == p_clus){
@@ -654,7 +665,14 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             mc_part_parents.push_back(parents);
         }
     }
-    if(md_output_tree) md_output_tree->Fill();
+    if(md_output_tree){
+        if( md_abort_tree_fill){
+            cout << "Bad Event -- Not filling TTree \n";
+            md_abort_tree_fill = false;
+        }else {
+            md_output_tree->Fill();
+        }
+    }
     return true;
 };
 

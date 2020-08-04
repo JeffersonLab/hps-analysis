@@ -1,0 +1,9 @@
+project(BumpHunt2016)
+
+ROOT_GENERATE_DICTIONARY(BumpHunt2016Dict BumpHunt2016.h MODULE ${PROJECT_NAME} LINKDEF BumpHunt2016LinkDef.h )
+
+add_library(BumpHunt2016 SHARED BumpHunt2016.cxx BumpHunt2016Dict.cxx)
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${ROOT_LIBRARIES})
+
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} )

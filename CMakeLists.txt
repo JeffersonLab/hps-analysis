@@ -3,7 +3,7 @@
 #
 # Specify the minimum CMake version required.  If the cmake version 
 # minimum is not met, cmake will fail.
-cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.5.0 FATAL_ERROR)
 cmake_policy(SET CMP0005 NEW)
 cmake_policy(SET CMP0042 NEW)
 
@@ -44,7 +44,7 @@ set(CMAKE_INSTALL_DOCDIR           "${CMAKE_INSTALL_PREFIX}/doc" CACHE PATH "Ins
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(LCIO REQUIRED)
-include_directories("${LCIO_INCLUDE_DIR} ")
+include_directories("${LCIO_INCLUDE_DIR}")
 
 # You need to tell CMake where to find the ROOT installation.
 #   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
@@ -85,12 +85,11 @@ if(APPLE)
   ENDIF("${isSystemDir}" STREQUAL "-1")
 endif(APPLE)
 
+add_subdirectory(BaseAna)
 add_subdirectory(MiniDst)
 add_subdirectory(Dst2016)
 add_subdirectory(LcioReader)
 
-include_directories("/data/HPS/HPS_Analysis/OldDST/BaseAna/BaseAna")
-include_directories("/data/HPS/HPS_Analysis/OldDST/hps-dst/include/hps_event")
 link_directories("/data/HPS/lib")
 
 add_executable(make_mini_dst make_mini_dst.cxx)
@@ -102,6 +101,6 @@ message("* Configuration Summary: ")
 message("*")
 message("* ROOT version: ${ROOT_VERSION} ")
 message("* ROOT location: $ENV{ROOTSYS} ")
-message("* LCIO location: ${LCIO_ROOT_DIR} ")
+message("* LCIO include: ${LCIO_INCLUDE_DIR} ")
 message("* Compiler ID:  ${CMAKE_CXX_COMPILER_ID}")
 message("* Compiler Ver: ${CMAKE_CXX_COMPILER_VERSION}")

@@ -84,6 +84,7 @@ public:
     string  md_output_file_name;
     TFile *md_output_file{nullptr};
     TTree *md_output_tree{nullptr};
+    bool md_abort_tree_fill{false};
 
     /// Switches that allow turning output on/off.
     bool write_ecal_cluster{true};
@@ -106,7 +107,9 @@ public:
     /// - For each variable you want in the output you need 3 steps (the last one for each input type!)
     /// -- 1: Create a variable below for easy access.
     /// -- 2: Add this variable and the name in the branch map. Please make these names consistent!
-    /// -- 3: Fill the variable in each of the input file parsers.
+    /// -- 3: Fill the variable in each of the input file parsers:
+    /// ---  3a: LcioReader.cxx
+    /// ---  3b: Dst2016.cxx
     ///
 
     // Event header information
@@ -114,7 +117,10 @@ public:
     int event_number{0};
     ULong64_t time_stamp{0};
     unsigned int svt_status{0};  // Only useful for some 2016 data.
-    unsigned int trigger{0};     // Packed trigger bits.
+    unsigned int trigger{0};     // Packed trigger bits. For 2019 - prescaled bits
+    unsigned int ext_trigger{0};     // Ext trigger bits. For 2019 - un-prescaled bits, N/A for 2016
+    double rf_time1;
+    double rf_time2;
 
     // Ecal Hits
     vector<double> ecal_hit_energy;
@@ -124,17 +130,29 @@ public:
 
     // Ecal Clusters:
     vector<double> ecal_cluster_energy;
-    vector<double> ecal_cluster_time;
+    vector<double> ecal_cluster_time;    // Cluster time = seed hit time.
     vector<double> ecal_cluster_x;
     vector<double> ecal_cluster_y;
     vector<double> ecal_cluster_z;
-    vector<int> ecal_cluster_seed_idx;
+    vector<int> ecal_cluster_seed_index;
+    vector<int> ecal_cluster_seed_ix;
+    vector<int> ecal_cluster_seed_iy;
+    vector<double> ecal_cluster_seed_energy;
     vector< vector<int> > ecal_cluster_hits;
     vector<int> ecal_cluster_nhits; // Not strictly needed, but handy. (could use ecal_cluster_hits[i].size())
 
+    // RAW SVT Hits  == Not available in the 2016 DST, but could be useful for some LCIO based studies.
+    // ToDo: Add these later?
+    //
+    // svt_raw_hit_layer
+    // svt_raw_hit_strip
+    // svt_raw_hit_charge
+    // svt_raw_hit_time
+    //
+
     // SVT Hits
     vector<int> svt_hit_layer;
-    vector<double> svt_hit_x;
+     vector<double> svt_hit_x;
     vector<double> svt_hit_y;
     vector<double> svt_hit_z;
     vector<double> svt_hit_cxx;
@@ -144,6 +162,7 @@ public:
     vector<double> svt_hit_cyz;
     vector<double> svt_hit_czz;
     vector<double> svt_hit_time;
+    vector<double> svt_hit_edep;  // Energy deposit. Not is 2016 DST.
 
     // SVT Tracks
     vector<int>  track_n_hits; /** The number of 3D hits associated with this track. */
@@ -168,89 +187,67 @@ public:
     vector<int>  track_ref;
     vector<vector<int> > track_svt_hits;/** Reference to the 3D hits associated with this track. */
 
-    // Final State Particles.
-    vector<int>    part_type;
-    vector<double> part_energy;
-    vector<int>    part_pdg;
-    vector<int>    part_charge;
-    vector<double> part_goodness_of_pid;
-    vector<double> part_px;
-    vector<double> part_py;
-    vector<double> part_pz;
-    vector<double> part_corr_px;
-    vector<double> part_corr_py;
-    vector<double> part_corr_pz;
-    vector<double> part_vertex_x;
-    vector<double> part_vertex_y;
-    vector<double> part_vertex_z;
-    vector<double> part_vertex_chi2;
-    vector<int>    part_track;       // At most one track per particle.
-    vector<int>    part_ecal_cluster; // At most one ecal cluster per particle.
+    struct Basic_Particle_t {
+        vector<int>    type;
+        vector<int>    lcio_type;
+        vector<double> energy;
+        vector<double> mass;
+        vector<int>    pdg;
+        vector<int>    charge;
+        vector<double> goodness_of_pid;
+        vector<double> px;
+        vector<double> py;
+        vector<double> pz;
+//        vector<double> corr_px;
+//        vector<double> corr_py;
+//        vector<double> corr_pz;
+    };
 
+    struct Single_Particle_t : Basic_Particle_t{
+        vector<int>    track;       // At most one track per particle.
+        vector<int>    ecal_cluster; // At most one ecal cluster per particle.
+    };
 
-    // Target Constrained V0 Particles;
-    vector<int>    v0_type;
-    vector<double> v0_energy;
-    vector<double> v0_mass;
-    vector<int>    v0_pdg;
-    vector<int>    v0_charge;
-    vector<double> v0_goodness_of_pid;
-    vector<double> v0_px;
-    vector<double> v0_py;
-    vector<double> v0_pz;
-    vector<double> v0_corr_px;
-    vector<double> v0_corr_py;
-    vector<double> v0_corr_pz;
-    vector<double> v0_vertex_x;
-    vector<double> v0_vertex_y;
-    vector<double> v0_vertex_z;
-    vector<double> v0_vertex_chi2;
-    vector<double> v0_n_daughter;
-// These could be implemented easily, but they are not really needed for e+ e- vertexes.
-// It is much easier to use if we write the e+ and e- particle, track and cluster index, which will be
-// just one int. Also, it is convenient to get directly some of the track and ecal properties, see below.
-//    vector< vector< int> > v0_parts;
-//    vector< vector< int> > v0_tracks;
-//    vector< vector< int> > v0_ecal_clusters;
+    Single_Particle_t part;
 
-///
-/// The following are for convenience, essentially duplicating information
-/// from the particle, track or cluster collections.
-///
-/// Since this is HPS we are interested in the e+ and e- vertexes.
-    vector<int>    v0_em_part;  /// index to particle
-    vector<int>    v0_ep_part;
-    vector<int>    v0_em_track; /// index to track
-    vector<int>    v0_ep_track;
-    vector<int>    v0_em_track_nhit; // Number of hits on track.
-    vector<int>    v0_ep_track_nhit;
-    vector<double> v0_em_p;          /// Track momentum
-    vector<double> v0_ep_p;
-    vector<double> v0_em_chi2;      /// Track chi-squared.
-    vector<double> v0_ep_chi2;
-    vector<double> v0_em_good_pid;  /// goodness of pid from particle.
-    vector<double> v0_ep_good_pid;
-    vector<double> v0_em_track_time; /// track time
-    vector<double> v0_ep_track_time;
-    vector<double> v0_em_pos_ecal_x; /// track position at ecal
-    vector<double> v0_em_pos_ecal_y;
-    vector<double> v0_ep_pos_ecal_x;
-    vector<double> v0_ep_pos_ecal_y;
+    struct Sub_Particle_t{
+        /// The SubParticle structure is really just for convenience.
+        /// All the information here could be found by looking up the particle,
+        /// and from that particle the cluster, and then retreive the information needed.
+        /// But, I am lazy, and want easy access to these numbers without all the lookups.
+        vector<int>    part;  /// index to particle
+        vector<int>    track; /// index to track
+        vector<int>    track_nhit; // Number of hits on track.
+        vector<double> p;          /// Track momentum
+        vector<double> chi2;      /// Track chi-squared.
+        vector<double> good_pid;  /// goodness of pid from particle.
+        vector<double> track_time; /// track time
+        vector<double> pos_ecal_x; /// track position at ecal
+        vector<double> pos_ecal_y;
+        vector<int>    clus;       /// index to cluster
+        vector<double> clus_energy; /// cluster energy
+        vector<double> clus_time;  /// cluster time
+        vector<int>    clus_ix;   // Cluster seed ix.
+        vector<int>    clus_iy;   // Cluster seed iy.
+        vector<double> clus_pos_x; /// Cluster x position.
+        vector<double> clus_pos_y;
+    };
 
-    vector<int>    v0_em_clus;       /// index to cluster
-    vector<int>    v0_ep_clus;
-    vector<double> v0_em_clus_energy; /// cluster energy
-    vector<double> v0_ep_clus_energy;
-    vector<double> v0_em_clus_time;  /// cluster time
-    vector<double> v0_ep_clus_time;
-    vector<int>    v0_em_clus_ix;   // Cluster seed ix.
-    vector<int>    v0_em_clus_iy;   // Cluster seed iy.
-    vector<int>    v0_ep_clus_ix;   // Cluster seed ix.
-    vector<int>    v0_ep_clus_iy;   // Cluster seed iy.
-    vector<double> v0_em_clus_pos_x; /// Cluster x position.
-    vector<double> v0_em_clus_pos_y;
-    vector<double> v0_ep_clus_pos_x;
-    vector<double> v0_ep_clus_pos_y;
+    struct Vertex_Particle_t: Basic_Particle_t{
+        vector<double> n_daughter; // Not needed, should alsways be = 2.
+        /// Since this is for HPS data, the subs are always an e+ and an e-.
+        vector<double> vertex_x;
+        vector<double> vertex_y;
+        vector<double> vertex_z;
+        vector<double> vertex_chi2;
+        vector<double> vertex_prob;
+        vector<int>    vertex_type;
+
+        Sub_Particle_t em;  // Electron
+        Sub_Particle_t ep;  // Positron
+    };
+
+    Vertex_Particle_t v0;
 
     // MCParticles
     vector<double> mc_part_energy;
@@ -280,6 +277,15 @@ public:
     virtual void End();
     virtual void SetOutputFileName(const string& outfile){md_output_file_name=outfile;};
     virtual void SetDebugLevel(const int level){ md_Debug = level;};
+    void clear();  // Clear all the vectors.
+    //std::map<std::string, vector<double>* > &Get_brmap(){return branch_map;};
+    // #define FULL_CLEAR(xxx)  { for( auto p: xxx){delete p;}; xxx.clear(); };
+
+    template<typename T> inline void FULL_CLEAR(T& xxx){
+        for(auto p: xxx){ delete p; };
+        xxx.clear();
+    }
+
 };
 
 

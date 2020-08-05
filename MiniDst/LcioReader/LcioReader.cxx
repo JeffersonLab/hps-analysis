@@ -251,7 +251,7 @@ long LcioReader::Run(int nevent){
                     ecal_cluster_seed_energy.push_back(seed_energy);
                     ecal_hit_field_decoder.setValue(seed_cellid0);
                     ecal_cluster_seed_ix.push_back(ecal_hit_field_decoder["ix"]);
-                    ecal_cluster_seed_ix.push_back(ecal_hit_field_decoder["iy"]);
+                    ecal_cluster_seed_iy.push_back(ecal_hit_field_decoder["iy"]);
                 }
             }
             ////////////////////////////////////////////////////////////////////////////////////////////////

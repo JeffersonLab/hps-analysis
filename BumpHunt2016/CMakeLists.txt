@@ -55,7 +55,4 @@ message(STATUS "ROOT found at: ${ROOT_DIR} using use file: ${ROOT_USE_FILE}")
 link_directories("/data/HPS/lib")
 
 add_subdirectory(BumpHunt2016)
-
-add_executable(run_bumphunt runbumphunt.cpp variadic.C)
-target_link_libraries(run_bumphunt BumpHunt2016 ${ROOT_LIBRARIES})
-install(TARGETS run_bumphunt)
+add_subdirectory(exec)

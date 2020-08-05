@@ -46,3 +46,62 @@ auto column_list = df.GetColumnNames(); // Get a list of all the column names.
 There are only a few items in the list that are vectors of vectors. These are, for instance, the indexes from a track to
 the hits on the track, where you can have N tracks in the event with M(n) hits each, requiring a 2-dimensional array to
 store the integers.
+
+## How to build MiniDst
+
+#### Required Software:
+
+* cmake version 3
+    * Available for all Linux and Mac versions. On some systems you need to specify "cmake3" instead of just "cmake".
+    Check your version with "cmake --version".
+* c++17 compiler: gcc 7+, clang
+    * I recommend you use at least gcc 9.3 (on MacOS, clang 11), which has far better support for lambda functions.
+    * Ubuntu 20.04 LTS comes with gcc 9.3 pre-installed.
+* ROOT version 6.18 or better.
+    * The RDataFrame component of ROOT is rather new and still seeing active development and bug fixes. I would 
+    recommend using 6.22, or the master branch from git.
+    * You need to compile ROOT with the C++17 option: -Dcxx17=ON
+* LCIO
+    * Since we are converting LCIO to ROOT we need to be able to read the LCIO. You can install LCIO from their GitHub
+    repository: [LCIO](https://github.com/iLCSoft/LCIO.git) and follow the installation instructions. 
+    You need a c++17 capable version of LCIO. I successfully used "master". An alternate is Omar's version 2.7.5 of LCIO
+    which is made c++17 compatible: [Omar's LCIO](https://github.com/LDMX-Software/lcio)
+    
+#### At JLAB
+
+At JLab, there is a 9.2.0 version of gcc available using "module", however there is no pre-installed ROOT 
+version that is C++17 compatible. This situation is currently resolved by building a "master" version (6.23.99) 
+of ROOT with 9.2.0 and C++17 compatibility. To use this:
+
+```bash
+module use /group/clas12/packages/local/etc/modulefiles
+module use /apps/modulefiles
+module load cmake/3.5.1
+module load gcc/9.2.0
+source /home/holtrop/root/bin/thisroot.sh
+``` 
+
+You will find pre-compiled libraries for LCIO and MiniDst in /home/holtrop/lib
+
+### Building MiniDst
+
+The building of MiniDST follows the standard cmake scheme. Below the recipe for building at JLab. 
+
+* Setup your environment, as detailed above.
+* Checkout the code from GitHub: 
+```
+git clone https://github.com/JeffersonLab/hps-analysis.git
+```
+* Go there and create a build directory for MiniDST:
+```
+cd hps-analysis/MiniDst
+mkdir build
+cd build
+``` 
+* Run cmake and compile the code:
+```
+cmake -DCMAKE_INSTALL_PREFIX=${HOME} -DLCIO_DIR=/home/holtrop ..
+make -j 8
+make install  # Install the code in your home directory's bin and lib.
+```
+

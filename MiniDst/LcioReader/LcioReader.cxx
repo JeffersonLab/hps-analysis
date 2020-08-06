@@ -398,8 +398,8 @@ long LcioReader::Run(int nevent){
                         IMPL::LCGenericObjectImpl *track_info =
                                 static_cast<IMPL::LCGenericObjectImpl *>(track_data_list.at(0));
 
-                        if (track_info->getNDouble() < 12 || track_info->getNDouble() > 14 || track_info->getNFloat() != 1
-                            || track_info->getNInt() != 1) {
+                        if (track_info->getNDouble() < 12 || track_info->getNDouble() > 14 || track_info->getNFloat() < 1
+                            || track_info->getNInt() < 1) {
                             cout << "Dude, you got messed up SVT tracking data!\n";
                         }
 
@@ -490,43 +490,22 @@ long LcioReader::Run(int nevent){
 
             // Double Track Particles, i.e.  Constrained V0 Candidates.
             for(int type: particle_types_double) {
-                string collection_name = Type_to_Collection[type];
-                EVENT::LCCollection* particles = lcio_event->getCollection(collection_name.c_str());
-                for(int i_part=0; i_part < particles->getNumberOfElements(); ++i_part){
-                    EVENT::ReconstructedParticle *lcio_part =
-                            static_cast<EVENT::ReconstructedParticle*>(particles->getElementAt(i_part));
-                    Fill_Part_From_LCIO(&v0, lcio_part);
-                    EVENT::Vertex *vertex = lcio_part->getStartVertex();
-                    const float *vertex_pos = vertex->getPosition();
-                    v0.vertex_x.push_back(vertex_pos[0]);
-                    v0.vertex_y.push_back(vertex_pos[1]);
-                    v0.vertex_z.push_back(vertex_pos[2]);
-                    v0.vertex_chi2.push_back(vertex->getChi2());
-                    double probability = vertex->getProbability();
-                    v0.vertex_prob.push_back(probability);
+                string collection_name = Type_to_VertexCollection[type];
+                EVENT::LCCollection* vertexes = lcio_event->getCollection(collection_name.c_str());
+                for(int i_vertex=0; i_vertex < vertexes->getNumberOfElements(); ++i_vertex){
+                    EVENT::Vertex *lcio_vertex =
+                            static_cast<EVENT::Vertex *>(vertexes->getElementAt(i_vertex));
+                    Fill_Vertex_From_LCIO(&v0, lcio_vertex);
                     v0.vertex_type.push_back(type);
-//                    const std::string &xxx= vertex->getAlgorithmType(); // TargetConstrained/Unconstrained/...
-//                    cout << "Vertex of type: " << xxx << "\n";
+//                    EVENT::Vertex *vertex = lcio_part->getStartVertex();
+//                    const float *vertex_pos = vertex->getPosition();
+//                    v0.vertex_x.push_back(vertex_pos[0]);
+//                    v0.vertex_y.push_back(vertex_pos[1]);
+//                    v0.vertex_z.push_back(vertex_pos[2]);
+//                    v0.vertex_chi2.push_back(vertex->getChi2());
+//                    double probability = vertex->getProbability();
+//                    v0.vertex_prob.push_back(probability);
 
-                    EVENT::ReconstructedParticle *sub_part = vertex->getAssociatedParticle();
-                    const vector<EVENT::Track *> &tracks = lcio_part->getTracks();
-                    const EVENT::ClusterVec &cluster_vec = lcio_part->getClusters();
-                    const EVENT::ReconstructedParticleVec &daughters = lcio_part->getParticles();
-                    if(daughters.size() != 2){
-                        cout << "LcioReader:: Vertex should have 2 and only 2 daughters, but this one has:" <<
-                        daughters.size() << " !\n";
-                    }
-                    EVENT::ReconstructedParticle *electron;
-                    EVENT::ReconstructedParticle *positron;
-                    if( daughters[0]->getCharge() < 0 ){ // Daughter 0 is an electron.
-                        electron = daughters[0];
-                        positron = daughters[1];  // NOTE: for Mollers they are both electron. Whatever.
-                    }else{
-                        electron = daughters[1];
-                        positron = daughters[0];
-                    }
-                    Fill_SubPart_From_LCIO(&v0.em, electron, lcio_event);
-                    Fill_SubPart_From_LCIO(&v0.ep, positron, lcio_event);
                 }
             }
 
@@ -544,6 +523,85 @@ long LcioReader::Run(int nevent){
     }
     return(0);
 };
+
+void LcioReader::Fill_Vertex_From_LCIO(Vertex_Particle_t *vp, EVENT::Vertex *lcio_vert) {
+    // Fill a vertex from the LCIO EVENT::Vertex object.
+    // Note that the Parameters has a different (ad hoc) meaning for 2016 (older hps-java) and 2019 (later hps-jave) LCIO files.
+    const float *vertex_pos = lcio_vert->getPosition();
+    vp->vertex_x.push_back(vertex_pos[0]);
+    vp->vertex_y.push_back(vertex_pos[1]);
+    vp->vertex_z.push_back(vertex_pos[2]);
+    vp->vertex_chi2.push_back(lcio_vert->getChi2());
+    vp->vertex_prob.push_back(lcio_vert->getProbability());
+//   const std::string &xxx= vertex->getAlgorithmType(); // TargetConstrained/Unconstrained/...
+//   cout << "Vertex of type: " << xxx << "\n";
+    std::vector<float> params = lcio_vert->getParameters();
+    if (params.size() == 8 ){  // The older algorithm, mostly for 2016 data.
+        // invM,p1X, p2Y, p2X, p1Z, p2Z, p1Y,invMerr
+        vp->mass.push_back(params[0]);
+        vp->mass_err.push_back(params[7]);
+        TVector3 p1(params[1],params[6],params[4]);
+        TVector3 p2(params[3],params[2],params[5]);
+        TVector3 pv = p1+p2;
+        vp->px.push_back(pv.Px());
+        vp->py.push_back(pv.Py());
+        vp->pz.push_back(pv.Pz());
+
+    }else{  // Newer algorithm, 2019 data.
+        //0 V0PzErr, 1 invMass, 2 V0Pz, 3 vXErr, 4 V0Py, 5 V0Px, 6 V0PErr, 7 V0TargProjY, 8 vZErr,
+        //9 V0TargProjXErr, 10 vYErr, 11 V0TargProjYErr, 12 invMassError, 13 p1X, 14 p2Y, 15 p2X,
+        // 16 V0P, 17 p1Z, 18 p1Y, 19 p2Z, 20 V0TargProjX, 21 layerCode, 22 V0PxErr, 23 V0PyErr
+        vp->mass.push_back(params[1]);
+        vp->mass_err.push_back(params[12]);
+//        TVector3 p1(params[13],params[18],params[17]);
+//        TVector3 p2(params[15],params[14],params[19]);
+//        TVector3 pv = p1+p2;
+        vp->px.push_back(params[5]);
+        vp->py.push_back(params[4]);
+        vp->pz.push_back(params[2]);
+    }
+
+    //
+    // ToDo: Call Fill_Part_From_LCIO instead, but then don't set px,py,pz in Fill_Vertex_From_LCIO!
+    //
+    EVENT::ReconstructedParticle *vertex_part = lcio_vert->getAssociatedParticle();
+    double check_vx_energy = vertex_part->getEnergy();
+    v0.energy.push_back(check_vx_energy);
+    EVENT::ParticleID *lcio_part_id = vertex_part->getParticleIDUsed();
+    if(lcio_part_id){
+        int pdg = lcio_part_id->getPDG();
+        v0.pdg.push_back(pdg);
+    }else{
+        v0.pdg.push_back(0);
+    }
+    v0.charge.push_back(vertex_part->getCharge());
+    v0.goodness_of_pid.push_back(vertex_part->getGoodnessOfPID());
+
+    double check_vx_mass = vertex_part->getMass();
+    const double *check_vx_mom = vertex_part->getMomentum();
+    double check_vx_px = check_vx_mom[0];
+    double check_vx_py = check_vx_mom[1];
+    double check_vx_pz = check_vx_mom[2];
+
+    //const vector<EVENT::Track *> &tracks = vertex_part->getTracks();
+    //const EVENT::ClusterVec &cluster_vec = vertex_part->getClusters();
+    const EVENT::ReconstructedParticleVec &daughters = vertex_part->getParticles();
+    if(daughters.size() != 2){
+        cout << "LcioReader:: Vertex should have 2 and only 2 daughters, but this one has:" <<
+             daughters.size() << " !\n";
+    }
+    EVENT::ReconstructedParticle *electron;
+    EVENT::ReconstructedParticle *positron;
+    if( daughters[0]->getCharge() < 0 ){ // Daughter 0 is an electron.
+        electron = daughters[0];
+        positron = daughters[1];  // NOTE: for Mollers they are both electron. Whatever.
+    }else{
+        electron = daughters[1];
+        positron = daughters[0];
+    }
+    Fill_SubPart_From_LCIO(&v0.em, electron, lcio_event);
+    Fill_SubPart_From_LCIO(&v0.ep, positron, lcio_event);
+}
 
 void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::ReconstructedParticle *daughter,
                                         EVENT::LCEvent *lcio_evnet){
@@ -581,12 +639,25 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
         md_abort_tree_fill = true;
         return;
     }
-
+    // ToDo: Clean this up, instead of running over the tracks, use the previously found track_ptr to index maps.
+    // ToDo: Since we check both GBL and Matched tracks, make sure we can distinguish the two.
+    //
+    // The tracks associated with a vertex should always come from the GBLTracks collection.
+    // At August 2020, for the 2019 data set, this is not the case, so we also search the MatchedTracks collection.
     EVENT::Track *track = tracks[0];
     EVENT::LCCollection* gbl_tracks = lcio_event->getCollection("GBLTracks");
+    EVENT::LCCollection* matched_tracks = lcio_event->getCollection("MatchedTracks");
     bool track_found = false;
-    for(int i_trk=0; i_trk < gbl_tracks->getNumberOfElements(); ++i_trk){
-        EVENT::Track *lcio_track = static_cast<EVENT::Track *>(gbl_tracks->getElementAt(i_trk));
+    int n_gbl_tracks = gbl_tracks->getNumberOfElements();
+    int n_matched_tracks = matched_tracks->getNumberOfElements();
+    int total_tracks = n_gbl_tracks + n_matched_tracks;
+    EVENT::Track *lcio_track{nullptr};
+    for(int i_trk=0; i_trk < total_tracks; ++i_trk){
+        if( i_trk < n_gbl_tracks) {
+            lcio_track = static_cast<EVENT::Track *>(gbl_tracks->getElementAt(i_trk));
+        }else{
+            lcio_track = static_cast<EVENT::Track *>(matched_tracks->getElementAt(i_trk-n_gbl_tracks));
+        }
         if(lcio_track == track){
             // We found the matching track.
             // Double check that Chi2 is the same.
@@ -595,11 +666,20 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
                 "  chi2_2 = " << track_chi2[i_trk] << "\n";
             }
             sub->track.push_back(i_trk);  // Store the index.
-            sub->track_time.push_back(track_time[i_trk]);
-            sub->track_nhit.push_back(track_n_hits[i_trk]);
-            sub->chi2.push_back(lcio_track->getChi2());
-            sub->pos_ecal_x.push_back(track_x_at_ecal[i_trk]);
-            sub->pos_ecal_y.push_back(track_y_at_ecal[i_trk]);
+
+            if( i_trk < track_time.size()){
+                sub->track_time.push_back(track_time[i_trk]);
+                sub->track_nhit.push_back(track_n_hits[i_trk]);
+                sub->chi2.push_back(lcio_track->getChi2());
+                sub->pos_ecal_x.push_back(track_x_at_ecal[i_trk]);
+                sub->pos_ecal_y.push_back(track_y_at_ecal[i_trk]);
+            }else{
+                sub->track_time.push_back(-99.);
+                sub->track_nhit.push_back(-99);
+                sub->chi2.push_back(-99.);
+                sub->pos_ecal_x.push_back(-99.);
+                sub->pos_ecal_y.push_back(-99.);
+            }
             track_found = true;
             break;
         }
@@ -650,7 +730,12 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
             return;
         }
     }else{ // Clusterless track. Fill cluster stuff with -99.
-
+        sub->clus_energy.push_back(-99.);
+        sub->clus_time.push_back(-99.);
+        sub->clus_pos_x.push_back(-99.);
+        sub->clus_pos_y.push_back(-99.);
+        sub->clus_ix.push_back(-99.);
+        sub->clus_iy.push_back(-99.);
     }
 }
 

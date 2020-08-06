@@ -125,6 +125,8 @@ void MiniDst::Start() {
     branch_map.try_emplace("v0_type", &v0.type);          // Always 3, but should be able to check.
     branch_map.try_emplace("v0_energy", &v0.energy);
     branch_map.try_emplace("v0_mass", &v0.mass);
+    branch_map.try_emplace("v0_mass_err", &v0.mass_err);
+
     branch_map.try_emplace("v0_px", &v0.px);
     branch_map.try_emplace("v0_py", &v0.py);
     branch_map.try_emplace("v0_pz", &v0.pz);

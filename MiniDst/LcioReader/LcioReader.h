@@ -70,6 +70,7 @@ public:
     virtual void End() override;
 
     virtual void Fill_Part_From_LCIO(Basic_Particle_t *bp,EVENT::ReconstructedParticle *lcio_part);
+    virtual void Fill_Vertex_From_LCIO(Vertex_Particle_t *bp,EVENT::Vertex *lcio_vert);
     virtual void Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::ReconstructedParticle *daughter,
                                         EVENT::LCEvent *lcio_event);
 
@@ -79,7 +80,6 @@ public:
     vector<string> input_file_list{};
 
     unsigned long evt_count{0}; // Event sequence number.
-    unsigned long Counter_Freq{10}; // How often to print a status line.
     const vector<string> *col_names; // Store the collection names from the first event.
     bool data_type_is_known{false};  // The LCIO data is different between 2015/2016 and 2019. This is true when that is known.
     bool is_2016_data{false};  // True for 2015 and 2016 data: i.e. there is Trigger info in the TriggerBank

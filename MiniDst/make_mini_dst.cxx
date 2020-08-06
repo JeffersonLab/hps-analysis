@@ -121,8 +121,9 @@ int main(int argc, char **argv){
     dst->write_tracks = !no_tracks;
     dst->write_only_gbl_tracks = gbl_tracks_only;
     dst->SetOutputFileName(outfile);
-#ifdef DEBUG_X
-    dst->fCounter_Freq = 1;
+#ifdef DEBUG
+    cout << "Extra debug code compiled.\n";
+    dst->Counter_Freq =1;
 #endif
     dst->Start();
     dst->Run(num_evt);

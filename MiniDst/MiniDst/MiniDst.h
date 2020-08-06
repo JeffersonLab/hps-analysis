@@ -82,6 +82,8 @@ public:
 
     Int_t   md_Debug{0x07};  // Start at Info+Warning+Error level.
     string  md_output_file_name;
+    unsigned long Counter_Freq{1000}; // How often to print a status line.
+
     TFile *md_output_file{nullptr};
     TTree *md_output_tree{nullptr};
     bool md_abort_tree_fill{false};
@@ -243,8 +245,14 @@ public:
         vector<double> vertex_prob;
         vector<int>    vertex_type;
 
+        // Mass uncertainty from fit:
+        vector<double> mass_err;
+
         Sub_Particle_t em;  // Electron
         Sub_Particle_t ep;  // Positron
+
+        // ToDo: Add the covariance matrix.
+        // vector<double> covar;
     };
 
     Vertex_Particle_t v0;

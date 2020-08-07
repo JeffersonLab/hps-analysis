@@ -17,7 +17,7 @@ void MiniDst::Start() {
     // Non vector entries are added to the branch directly.
     //
     // They do not take up much space (so disabling is not so important) and it would
-    // complicate any operations (like clear) on the members.
+    // complicate any operations (like Clear) on the members.
     // Though it can be implemented, it complicates the required variant visitor.
     // See for instance: https://arne-mertz.de/2018/05/overload-build-a-variant-visitor-on-the-fly/
     //
@@ -38,15 +38,16 @@ void MiniDst::Start() {
     //    std::get<std::vector<double>* >(branch_map["hidden_double"])->push_back(run_number);
     //
     // Thus the preferred way is to add the variables to the output tree with a handle.
-    // Doing this, rather than direct output_tree->Branch(...), allow for automatic clear() and other operations.
+    // Doing this, rather than direct output_tree->Branch(...), allow for automatic Clear() and other operations.
     // (See note above on implementing a visitor.)
     // This way, the output tree is also automatically sorted alphabetically by name :-)
 
     if( write_ecal_hits) {
-        branch_map.try_emplace("ecal_hit_index_x", &ecal_hit_index_x);
-        branch_map.try_emplace("ecal_hit_index_y", &ecal_hit_index_y);
         branch_map.try_emplace("ecal_hit_energy", &ecal_hit_energy);
         branch_map.try_emplace("ecal_hit_time", &ecal_hit_time);
+        branch_map.try_emplace("ecal_hit_index_x", &ecal_hit_index_x);
+        branch_map.try_emplace("ecal_hit_index_y", &ecal_hit_index_y);
+
     }
 
     if( write_ecal_cluster) {
@@ -97,9 +98,9 @@ void MiniDst::Start() {
         branch_map.try_emplace("track_lambda_kinks", &track_lambda_kinks);
         branch_map.try_emplace("track_phi_kinks", &track_phi_kinks);
         branch_map.try_emplace("track_particle", & track_particle); /** Reference to the reconstructed particle associated with this track. */
-        branch_map.try_emplace("track_svt_hits",&track_svt_hits);/** Reference to the 3D hits associated with this track. */
         branch_map.try_emplace("track_gbl_ref", & track_gbl_ref);
         branch_map.try_emplace("track_ref", & track_ref);
+        branch_map.try_emplace("track_svt_hits",&track_svt_hits);/** Reference to the 3D hits associated with this track. */
     }
 
     branch_map.try_emplace("part_type", &part.type);
@@ -112,78 +113,64 @@ void MiniDst::Start() {
     branch_map.try_emplace("part_px", &part.px);
     branch_map.try_emplace("part_py", &part.py);
     branch_map.try_emplace("part_pz", &part.pz);
-//    branch_map.try_emplace("part_corr_px", &part.corr_px);
-//    branch_map.try_emplace("part_corr_py", &part.corr_py);
-//    branch_map.try_emplace("part_corr_pz", &part.corr_pz);
-//    branch_map.try_emplace("part_vertex_x", &part.vertex_x);
-//    branch_map.try_emplace("part_vertex_y", &part.vertex_y);
-//    branch_map.try_emplace("part_vertex_z", &part.vertex_z);
-//    branch_map.try_emplace("part_vertex_chi2", &part.vertex_chi2); // Always zero.
     branch_map.try_emplace("part_track", &part.track);
+    branch_map.try_emplace("part_track_chi2", &part.track_chi2);
     branch_map.try_emplace("part_ecal_cluster", &part.ecal_cluster);
 
-    branch_map.try_emplace("v0_type", &v0.type);          // Always 3, but should be able to check.
+    branch_map.try_emplace("v0_type", &v0.type);
+    branch_map.try_emplace("v0_lcio_type", &v0.lcio_type);
     branch_map.try_emplace("v0_energy", &v0.energy);
     branch_map.try_emplace("v0_mass", &v0.mass);
-    branch_map.try_emplace("v0_mass_err", &v0.mass_err);
-
+    branch_map.try_emplace("v0_pdg", &v0.pdg);
+    branch_map.try_emplace("v0_charge", &v0.charge);
+    branch_map.try_emplace("v0_goodness_of_pid", &v0.goodness_of_pid);
     branch_map.try_emplace("v0_px", &v0.px);
     branch_map.try_emplace("v0_py", &v0.py);
     branch_map.try_emplace("v0_pz", &v0.pz);
-//    branch_map.try_emplace("v0_corr_px", &v0.corr_px);
-//    branch_map.try_emplace("v0_corr_py", &v0.corr_py);
-//    branch_map.try_emplace("v0_corr_pz", &v0.corr_pz);
+    branch_map.try_emplace("v0_n_daughter", &v0.n_daughter);
+
     branch_map.try_emplace("v0_vertex_x", &v0.vertex_x);
     branch_map.try_emplace("v0_vertex_y", &v0.vertex_y);
     branch_map.try_emplace("v0_vertex_z", &v0.vertex_z);
     branch_map.try_emplace("v0_vertex_chi2", &v0.vertex_chi2);
     branch_map.try_emplace("v0_vertex_prob", &v0.vertex_prob);
-    branch_map.try_emplace("v0_vertex_type", &v0.vertex_type);
 
-    branch_map.try_emplace("v0_n_daughter", &v0.n_daughter);
-//    branch_map.try_emplace("v0_parts", &v0.parts);
-//    branch_map.try_emplace("v0_tracks", &v0.tracks);
-//    branch_map.try_emplace("v0_ecal_clusters", &v0.ecal_clusters);
+    branch_map.try_emplace("v0_mass_err", &v0.mass_err);
+
 
     branch_map.try_emplace("v0_em_part", &v0.em.part);
-    branch_map.try_emplace("v0_ep_part", &v0.ep.part);
-    branch_map.try_emplace("v0_ep_track", &v0.ep.track);
     branch_map.try_emplace("v0_em_track", &v0.em.track);
     branch_map.try_emplace("v0_em_track_nhit", &v0.em.track_nhit);
-    branch_map.try_emplace("v0_ep_track_nhit", &v0.ep.track_nhit);
-
     branch_map.try_emplace("v0_em_p", &v0.em.p);
-    branch_map.try_emplace("v0_ep_p", &v0.ep.p);
-
-    branch_map.try_emplace("v0_ep_chi2", &v0.ep.chi2);
     branch_map.try_emplace("v0_em_chi2", &v0.em.chi2);
-    branch_map.try_emplace("v0_ep_good_pid", &v0.ep.good_pid);
     branch_map.try_emplace("v0_em_good_pid", &v0.em.good_pid);
     branch_map.try_emplace("v0_em_track_time", &v0.em.track_time);
-    branch_map.try_emplace("v0_ep_track_time", &v0.ep.track_time);
     branch_map.try_emplace("v0_em_pos_ecal_x", &v0.em.pos_ecal_x);
     branch_map.try_emplace("v0_em_pos_ecal_y", &v0.em.pos_ecal_y);
-    branch_map.try_emplace("v0_ep_pos_ecal_x", &v0.ep.pos_ecal_x);
-    branch_map.try_emplace("v0_ep_pos_ecal_y", &v0.ep.pos_ecal_y);
     branch_map.try_emplace("v0_em_clus", &v0.em.clus);
-    branch_map.try_emplace("v0_ep_clus", &v0.ep.clus);
     branch_map.try_emplace("v0_em_clus_energy", &v0.em.clus_energy);
-    branch_map.try_emplace("v0_ep_clus_energy", &v0.ep.clus_energy);
     branch_map.try_emplace("v0_em_clus_time", &v0.em.clus_time);
-    branch_map.try_emplace("v0_ep_clus_time", &v0.ep.clus_time);
     branch_map.try_emplace("v0_em_clus_ix", &v0.em.clus_ix);
     branch_map.try_emplace("v0_em_clus_iy", &v0.em.clus_iy);
-    branch_map.try_emplace("v0_ep_clus_ix", &v0.ep.clus_ix);
-    branch_map.try_emplace("v0_ep_clus_iy", &v0.ep.clus_iy);
     branch_map.try_emplace("v0_em_clus_pos_x", &v0.em.clus_pos_x);
     branch_map.try_emplace("v0_em_clus_pos_y", &v0.em.clus_pos_y);
+
+    branch_map.try_emplace("v0_ep_part", &v0.ep.part);
+    branch_map.try_emplace("v0_ep_track", &v0.ep.track);
+    branch_map.try_emplace("v0_ep_track_nhit", &v0.ep.track_nhit);
+    branch_map.try_emplace("v0_ep_p", &v0.ep.p);
+    branch_map.try_emplace("v0_ep_chi2", &v0.ep.chi2);
+    branch_map.try_emplace("v0_ep_good_pid", &v0.ep.good_pid);
+    branch_map.try_emplace("v0_ep_track_time", &v0.ep.track_time);
+    branch_map.try_emplace("v0_ep_pos_ecal_x", &v0.ep.pos_ecal_x);
+    branch_map.try_emplace("v0_ep_pos_ecal_y", &v0.ep.pos_ecal_y);
+    branch_map.try_emplace("v0_ep_clus", &v0.ep.clus);
+    branch_map.try_emplace("v0_ep_clus_energy", &v0.ep.clus_energy);
+    branch_map.try_emplace("v0_ep_clus_time", &v0.ep.clus_time);
+    branch_map.try_emplace("v0_ep_clus_ix", &v0.ep.clus_ix);
+    branch_map.try_emplace("v0_ep_clus_iy", &v0.ep.clus_iy);
     branch_map.try_emplace("v0_ep_clus_pos_x", &v0.ep.clus_pos_x);
     branch_map.try_emplace("v0_ep_clus_pos_y", &v0.ep.clus_pos_y);
-
-
-    branch_map.try_emplace("v0_pdg", &v0.pdg);            // Not usefull, always zero ???
-    branch_map.try_emplace("v0_charge", &v0.charge);      // Not usefull, always zero ???
-    branch_map.try_emplace("v0_goodness_of_pid", &v0.goodness_of_pid); // Not usefull, always zero ???
 
 
     if(write_mc_particles) {
@@ -219,8 +206,10 @@ void MiniDst::Start() {
     }
 }
 
-void MiniDst::clear(){
-    // Clear the event. We can now just use the map.
+void MiniDst::Clear(){
+    // Clear the event storage vectors.
+    // We use the map to Clear all the vectors. Note that this means you *must* have each vector in the branch_map,
+    // otherwise you will create an ever growing vector.
     for( auto const& [nam, bran] : branch_map ){
         std::visit([](auto &&arg){arg->clear();},bran);
     }

@@ -25,6 +25,7 @@ public:
     explicit Dst2016(TTree *tree=nullptr, string out_file_name="minidst2016.root");
     ~Dst2016(){};
 
+    void Clear() override;
     virtual void Start() override;
     virtual long Run(int nevt) override;
     virtual void End() override;

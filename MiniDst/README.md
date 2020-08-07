@@ -62,10 +62,17 @@ store the integers.
     recommend using 6.22, or the master branch from git.
     * You need to compile ROOT with the C++17 option: -Dcxx17=ON
 * LCIO
-    * Since we are converting LCIO to ROOT we need to be able to read the LCIO. You can install LCIO from their GitHub
-    repository: [LCIO](https://github.com/iLCSoft/LCIO.git) and follow the installation instructions. 
-    You need a c++17 capable version of LCIO. I successfully used "master". An alternate is Omar's version 2.7.5 of LCIO
-    which is made c++17 compatible: [Omar's LCIO](https://github.com/LDMX-Software/lcio)
+    * Since we are converting LCIO to ROOT we need to be able to read the LCIO. 
+    * The original repository of LCIO is at their GitHub repository: [LCIO](https://github.com/iLCSoft/LCIO.git) and
+    contains detailed the installation instructions. Unfortunately, as of August 2020, the master and v02-14-x versions 
+    of LCIO have very serious memory leaks for simple event loops, making this branch of the code useless. 
+    * HPS has been using the older v02.07.05 version of LCIO, because that one is still Java compatible. For this code, 
+    you need a c++17 capable version of LCIO. You can find Omar's version 2.7.5 of LCIO
+    which is made c++17 compatible: [Omar's LCIO](https://github.com/LDMX-Software/lcio).
+    A fork of that version is also MacOS compatible, and _attempts_ to clean _all_ the issues with c++17 compilation
+    is also available at [Maurik's LCIO](https://github.com/mholtrop/LCIO.git). You should use the default branch:
+    v02-07-05-cxx17.
+    
     
 #### At JLAB
 

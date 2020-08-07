@@ -6,13 +6,14 @@
 #define MINIDST_MINIDST_H
 #include <iostream>
 #include <variant>
+#include <chrono>
 #include "TObject.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TVector3.h"
 
 // In theory, the Multi_Value variant could also contain "int" and "double" types, however, doing so
-// will complicate the "visit" functions for operations like clear(), while really providing little benefit.
+// will complicate the "visit" functions for operations like Clear(), while really providing little benefit.
 // So only vector types are in the variant.
 using Multi_Value = std::variant < std::vector<double>* , std::vector<int>*,
         std::vector< std::vector<int> >*, std::vector< std::vector<double> >*>;
@@ -54,6 +55,25 @@ using TriggerBits_int_t = union{
 class MiniDst : public TObject {
 
 public:
+    MiniDst(): md_output_file_name("minidst.root"){};
+    explicit MiniDst(string_view output_file_name): md_output_file_name(output_file_name){};
+    ~MiniDst() override = default;
+    virtual void Clear();  // Clear all the vectors and event storage.
+    virtual void Start();
+    virtual long Run(int nevt);
+    virtual void End();
+    virtual void SetOutputFileName(const string& outfile){md_output_file_name=outfile;};
+    virtual void SetDebugLevel(const int level){ md_Debug = level;};
+    //std::map<std::string, vector<double>* > &Get_brmap(){return branch_map;};
+    // #define FULL_CLEAR(xxx)  { for( auto p: xxx){delete p;}; xxx.Clear(); };
+
+    template<typename T> inline void FULL_CLEAR(T& xxx){
+        for(auto p: xxx){ delete p; }
+        xxx.clear();
+    }
+
+
+public:
 
     enum Debug_codes {
         kDebug_Quiet   = 0x00,
@@ -80,7 +100,7 @@ public:
 
 public:
 
-    Int_t   md_Debug{0x07};  // Start at Info+Warning+Error level.
+    unsigned int md_Debug{0x07};  // Start at Info+Warning+Error level.
     string  md_output_file_name;
     unsigned long Counter_Freq{1000}; // How often to print a status line.
 
@@ -121,8 +141,8 @@ public:
     unsigned int svt_status{0};  // Only useful for some 2016 data.
     unsigned int trigger{0};     // Packed trigger bits. For 2019 - prescaled bits
     unsigned int ext_trigger{0};     // Ext trigger bits. For 2019 - un-prescaled bits, N/A for 2016
-    double rf_time1;
-    double rf_time2;
+    double rf_time1{0};
+    double rf_time2{0};
 
     // Ecal Hits
     vector<double> ecal_hit_energy;
@@ -200,14 +220,13 @@ public:
         vector<double> px;
         vector<double> py;
         vector<double> pz;
-//        vector<double> corr_px;
-//        vector<double> corr_py;
-//        vector<double> corr_pz;
-    };
+   };
 
     struct Single_Particle_t : Basic_Particle_t{
         vector<int>    track;       // At most one track per particle.
         vector<int>    ecal_cluster; // At most one ecal cluster per particle.
+        // Useful extra items obtained from track:
+        vector<double> track_chi2;
     };
 
     Single_Particle_t part;
@@ -243,7 +262,6 @@ public:
         vector<double> vertex_z;
         vector<double> vertex_chi2;
         vector<double> vertex_prob;
-        vector<int>    vertex_type;
 
         // Mass uncertainty from fit:
         vector<double> mass_err;
@@ -275,24 +293,6 @@ public:
     vector<double> mc_part_charge;
     vector< vector<int> > mc_part_daughters;
     vector< vector<int> > mc_part_parents;
-
-public:
-    MiniDst(): md_output_file_name("minidst.root"){};
-    MiniDst(string_view output_file_name): md_output_file_name(output_file_name){};
-    ~MiniDst(){};
-    virtual void Start();
-    virtual long Run(int nevt=0);
-    virtual void End();
-    virtual void SetOutputFileName(const string& outfile){md_output_file_name=outfile;};
-    virtual void SetDebugLevel(const int level){ md_Debug = level;};
-    void clear();  // Clear all the vectors.
-    //std::map<std::string, vector<double>* > &Get_brmap(){return branch_map;};
-    // #define FULL_CLEAR(xxx)  { for( auto p: xxx){delete p;}; xxx.clear(); };
-
-    template<typename T> inline void FULL_CLEAR(T& xxx){
-        for(auto p: xxx){ delete p; };
-        xxx.clear();
-    }
 
 };
 

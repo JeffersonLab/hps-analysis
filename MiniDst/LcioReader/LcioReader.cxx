@@ -9,18 +9,39 @@
 
 void LcioReader::Start(){
     MiniDst::Start();
-};
-long LcioReader::Run(int nevent){
+}
 
-    for(string file: input_file_list){
-        data_type_is_known=false;
+void LcioReader::Clear(){
+    /// Clear the event storage.
+    // Make sure you also call the "super"
+    MiniDst::Clear();
+
+    // Clear all the maps
+    ecal_hit_to_index_map.clear();
+    ecal_cluster_to_index_map.clear();
+    svt_hit_to_index_map.clear();
+    gbl_track_to_index_map.clear();
+    matched_track_to_index_map.clear();
+    any_track_to_index_map.clear();
+}
+
+long LcioReader::Run(int nevent) {
+
+    /// LCIO Decoders. We need these instantiated only once.
+    ///
+    UTIL::BitField64 ecal_hit_field_decoder("system:6,layer:2,ix:-8,iy:-6");
+    UTIL::BitField64 raw_svt_hit_decoder("system:6,barrel:3,layer:4,module:12,sensor:1,side:32:-2,strip:12");
+
+    for (const string &file: input_file_list) {
+        data_type_is_known = false;
         is_2016_data = false;
         is_2019_data = false;
         lcio_reader->open(file);
 
-        while( (lcio_event = lcio_reader->readNextEvent())){
+        while ((lcio_event = lcio_reader->readNextEvent())) {
 
-            clear();  // Clear all the vectors that contain data, so we can push_back on them again.
+            Clear();  // Clear all the vectors that contain data, so we can push_back on them again.
+
 
             /////////////////////////////////////////////////////////////////////////////////////////////
             ///
@@ -180,9 +201,6 @@ long LcioReader::Run(int nevent){
             ///
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
-            map<IMPL::CalorimeterHitImpl*, int> hit_pointer_to_index; // Store a map to speed up hit to cluster linking.
-            UTIL::BitField64 ecal_hit_field_decoder("system:6,layer:2,ix:-8,iy:-6");
-
             if(write_ecal_hits || write_ecal_cluster){ // Need the hits to fill the clusters!
                 EVENT::LCCollection* ecal_hits =
                         static_cast<EVENT::LCCollection*>(lcio_event->getCollection("EcalCalHits"));
@@ -191,7 +209,7 @@ long LcioReader::Run(int nevent){
                     IMPL::CalorimeterHitImpl* lcio_hit
                             = static_cast<IMPL::CalorimeterHitImpl*>(ecal_hits->getElementAt(ihit));
 
-                    hit_pointer_to_index[lcio_hit] = ihit;
+                    ecal_hit_to_index_map[lcio_hit] = ihit;
                     // Gets the CellID which identifies the crystal.
                     // int id0 = lcio_hit->getCellID0();
                     // 0.1 ns resolution is sufficient to distinguish any 2 hits on the same crystal.
@@ -214,9 +232,9 @@ long LcioReader::Run(int nevent){
             if(write_ecal_cluster){
                 EVENT::LCCollection* clusters =
                         static_cast<EVENT::LCCollection*>(lcio_event->getCollection("EcalClustersCorr"));
-                for(int iclus=0;  iclus< clusters->getNumberOfElements(); ++iclus){
-                    IMPL::ClusterImpl* lcio_clus = static_cast<IMPL::ClusterImpl*>(clusters->getElementAt(iclus));
-
+                for(int i_clus=0; i_clus < clusters->getNumberOfElements(); ++i_clus){
+                    auto lcio_clus = dynamic_cast<IMPL::ClusterImpl*>(clusters->getElementAt(i_clus));
+                    ecal_cluster_to_index_map[lcio_clus] = i_clus;
                     ecal_cluster_energy.push_back(lcio_clus->getEnergy());
                     const float *position = lcio_clus->getPosition();
                     ecal_cluster_x.push_back(position[0]);
@@ -237,12 +255,12 @@ long LcioReader::Run(int nevent){
                         if( hit->getEnergy() >  seed_energy ){
                             seed_energy = hit->getEnergy();
                             seed_time = hit->getTime();
-                            seed_index = hit_pointer_to_index[hit];
+                            seed_index = ecal_hit_to_index_map[hit];
                             seed_cellid0 = Long64_t(hit->getCellID0() & 0xffffffff) |
                                              (Long64_t(hit->getCellID1()) << 32);
 
                         }
-                        int hit_index = hit_pointer_to_index[hit];
+                        int hit_index = ecal_hit_to_index_map[hit];
                         clus_hit_indexes.push_back(hit_index);
                     }
                     ecal_cluster_time.push_back(seed_time);        // The cluster time = seed hit time.
@@ -264,14 +282,12 @@ long LcioReader::Run(int nevent){
             ///
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
-            std::map<IMPL::TrackerHitImpl*, int> svt_hit_map;
             if(write_svt_hits || write_tracks){  // Need the svt hitmap either way.
-                UTIL::BitField64 raw_svt_hit_decoder("system:6,barrel:3,layer:4,module:12,sensor:1,side:32:-2,strip:12");
                 EVENT::LCCollection* tracker_hits = lcio_event->getCollection("RotatedHelicalTrackHits");
                 for (int i_svt_hit = 0; i_svt_hit< tracker_hits->getNumberOfElements(); ++i_svt_hit) {
-                    IMPL::TrackerHitImpl* lcio_svt_hit =
-                            static_cast<IMPL::TrackerHitImpl*>(tracker_hits->getElementAt(i_svt_hit));
-                    svt_hit_map[lcio_svt_hit] = i_svt_hit;
+                    auto lcio_svt_hit =
+                            dynamic_cast<IMPL::TrackerHitImpl*>(tracker_hits->getElementAt(i_svt_hit));
+                    svt_hit_to_index_map[lcio_svt_hit] = i_svt_hit;
 
                     if(write_svt_hits){
                         svt_hit_time.push_back(lcio_svt_hit->getTime());
@@ -282,9 +298,9 @@ long LcioReader::Run(int nevent){
                         svt_hit_edep.push_back(lcio_svt_hit->getEDep()); // Not in 2016 data.
 
                         EVENT::LCObjectVec raw_hits = lcio_svt_hit->getRawHits();
-                        EVENT::TrackerRawData *lcio_raw_hit = static_cast<EVENT::TrackerRawData *>(raw_hits.at(0));
-                        ULong64_t value = EVENT::long64(lcio_raw_hit->getCellID0() & 0xffffffff) |
-                                          (EVENT::long64(lcio_raw_hit->getCellID1()) << 32);
+                        auto lcio_raw_hit = dynamic_cast<EVENT::TrackerRawData *>(raw_hits.at(0));
+                        ULong64_t value = (ULong64_t(lcio_raw_hit->getCellID0()) & 0xffffffff) |
+                                          (ULong64_t(lcio_raw_hit->getCellID1()) << 32);
                         raw_svt_hit_decoder.setValue(value);
 
 //                            int system = raw_svt_hit_decoder["system"];
@@ -308,9 +324,6 @@ long LcioReader::Run(int nevent){
                     n_matched_tracks = matched_tracks->getNumberOfElements();
                 }
 
-                map<EVENT::Track*, int> gbl_track_to_index_map;
-                map<EVENT::Track*, int> matched_track_to_index_map;
-
                 int n_gbl_track = gbl_tracks->getNumberOfElements();
                 int n_total_tracks = n_gbl_track + n_matched_tracks;
                 EVENT::Track* lcio_track{nullptr};
@@ -329,6 +342,7 @@ long LcioReader::Run(int nevent){
                         track_gbl_ref.push_back(-99);  // Seed track needs to be resolved later.
                         track_ref.push_back(track_number); // Seed track points to itself.
                     }
+                    any_track_to_index_map[lcio_track] = track_number;
                     track_particle.push_back(-99); // Pointer to particle is resolved *way* later.
 
                     track_d0.push_back(lcio_track->getD0());
@@ -422,9 +436,8 @@ long LcioReader::Run(int nevent){
                     vector<int> svt_hits;
                     svt_hits.reserve(gbl_tracker_hits.size());
                     for(int i_trk=0; i_trk < gbl_tracker_hits.size(); ++i_trk){
-                        IMPL::TrackerHitImpl* trk_hit =
-                                static_cast<IMPL::TrackerHitImpl*>(gbl_tracker_hits[i_trk]);
-                        int hit_index = svt_hit_map[trk_hit];
+                        auto trk_hit = dynamic_cast<IMPL::TrackerHitImpl*>(gbl_tracker_hits[i_trk]);
+                        int hit_index = svt_hit_to_index_map[trk_hit];
                         svt_hits.push_back(hit_index);
                     }
                     track_svt_hits.push_back(svt_hits);
@@ -475,20 +488,19 @@ long LcioReader::Run(int nevent){
             ///
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
-            // Single particles.
+            // Single particles: These are part_xxx in the output tree.
             for( auto type : particle_types_single){
                 string collection_name = Type_to_Collection[type];
                 EVENT::LCCollection* particles = lcio_event->getCollection(collection_name.c_str());
                 for(int i_part=0; i_part < particles->getNumberOfElements(); ++i_part){
                     EVENT::ReconstructedParticle *lcio_part =
                             static_cast<EVENT::ReconstructedParticle*>(particles->getElementAt(i_part));
-                    Fill_Part_From_LCIO(&part, lcio_part);
+                    Fill_Single_Particle_From_LCIO(&part, lcio_part);
                     part.type.push_back(type);
                 }
-
             }
 
-            // Double Track Particles, i.e.  Constrained V0 Candidates.
+            // Double Track Particles, i.e.  Constrained V0 Candidates: These are v0_xxx in the output tree.
             for(int type: particle_types_double) {
                 string collection_name = Type_to_VertexCollection[type];
                 EVENT::LCCollection* vertexes = lcio_event->getCollection(collection_name.c_str());
@@ -496,17 +508,8 @@ long LcioReader::Run(int nevent){
                     EVENT::Vertex *lcio_vertex =
                             static_cast<EVENT::Vertex *>(vertexes->getElementAt(i_vertex));
                     Fill_Vertex_From_LCIO(&v0, lcio_vertex);
-                    v0.vertex_type.push_back(type);
-//                    EVENT::Vertex *vertex = lcio_part->getStartVertex();
-//                    const float *vertex_pos = vertex->getPosition();
-//                    v0.vertex_x.push_back(vertex_pos[0]);
-//                    v0.vertex_y.push_back(vertex_pos[1]);
-//                    v0.vertex_z.push_back(vertex_pos[2]);
-//                    v0.vertex_chi2.push_back(vertex->getChi2());
-//                    double probability = vertex->getProbability();
-//                    v0.vertex_prob.push_back(probability);
-
-                }
+                    v0.type.push_back(type);
+               }
             }
 
             if(md_output_tree){
@@ -562,20 +565,22 @@ void LcioReader::Fill_Vertex_From_LCIO(Vertex_Particle_t *vp, EVENT::Vertex *lci
     }
 
     //
-    // ToDo: Call Fill_Part_From_LCIO instead, but then don't set px,py,pz in Fill_Vertex_From_LCIO!
+    // ToDo: Call Fill_Basic_Particle_From_LCIO instead, but then don't set px,py,pz in Fill_Vertex_From_LCIO!
     //
     EVENT::ReconstructedParticle *vertex_part = lcio_vert->getAssociatedParticle();
+    Fill_Basic_Particle_From_LCIO(vp, vertex_part, false);
+
     double check_vx_energy = vertex_part->getEnergy();
-    v0.energy.push_back(check_vx_energy);
+//    v0.energy.push_back(check_vx_energy);
     EVENT::ParticleID *lcio_part_id = vertex_part->getParticleIDUsed();
     if(lcio_part_id){
         int pdg = lcio_part_id->getPDG();
-        v0.pdg.push_back(pdg);
+ //       v0.pdg.push_back(pdg);
     }else{
-        v0.pdg.push_back(0);
+   //     v0.pdg.push_back(0);
     }
-    v0.charge.push_back(vertex_part->getCharge());
-    v0.goodness_of_pid.push_back(vertex_part->getGoodnessOfPID());
+    // v0.charge.push_back(vertex_part->getCharge());
+    // v0.goodness_of_pid.push_back(vertex_part->getGoodnessOfPID());
 
     double check_vx_mass = vertex_part->getMass();
     const double *check_vx_mom = vertex_part->getMomentum();
@@ -599,12 +604,11 @@ void LcioReader::Fill_Vertex_From_LCIO(Vertex_Particle_t *vp, EVENT::Vertex *lci
         electron = daughters[1];
         positron = daughters[0];
     }
-    Fill_SubPart_From_LCIO(&v0.em, electron, lcio_event);
-    Fill_SubPart_From_LCIO(&v0.ep, positron, lcio_event);
+    Fill_SubPart_From_LCIO(&v0.em, electron);
+    Fill_SubPart_From_LCIO(&v0.ep, positron);
 }
 
-void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::ReconstructedParticle *daughter,
-                                        EVENT::LCEvent *lcio_evnet){
+void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::ReconstructedParticle *daughter){
     // Fill the Sub_Particle_t structure from the LCIO daughter particle.
 
     // Find the particle assoc with this sub particle from FINAL_STATE_PARTICLES.
@@ -659,6 +663,10 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
             lcio_track = static_cast<EVENT::Track *>(matched_tracks->getElementAt(i_trk-n_gbl_tracks));
         }
         if(lcio_track == track){
+            int i_test_index = any_track_to_index_map[lcio_track];
+            if(i_test_index != i_trk ){
+                cout << "Dang, the map does not work! i_trk:" << i_trk << " t1: " << i_test_index <<" \n";
+            }
             // We found the matching track.
             // Double check that Chi2 is the same.
             if(abs(lcio_track->getChi2()- track_chi2[i_trk])>1.0E-6){
@@ -668,6 +676,11 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
             sub->track.push_back(i_trk);  // Store the index.
 
             if( i_trk < track_time.size()){
+                // Test if we stored the track. This is needed, because:
+                //   A: The cooking may have Matched tracks associated with particles, but we may not store those.
+                //   B: We may not have computed the GBL tracks either.
+                // Todo: Avoid case B, either by always filling the track_xxx for GBL tracks, or by rewriting this to get it from lcio_track.
+                //
                 sub->track_time.push_back(track_time[i_trk]);
                 sub->track_nhit.push_back(track_n_hits[i_trk]);
                 sub->chi2.push_back(lcio_track->getChi2());
@@ -702,33 +715,41 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
 
     if(clusters.size() == 1) {
         IMPL::ClusterImpl *clus = static_cast<IMPL::ClusterImpl *>(clusters[0]);
-
-        EVENT::LCCollection *lcio_clusters =
-                static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalClustersCorr"));
-        bool cluster_found = false;
-        for (int iclus = 0; iclus < lcio_clusters->getNumberOfElements(); ++iclus) {
-            IMPL::ClusterImpl *lcio_clus = static_cast<IMPL::ClusterImpl *>(lcio_clusters->getElementAt(iclus));
-            if (clus == lcio_clus) {
-                sub->clus.push_back(iclus);
-                if( abs(ecal_cluster_energy[iclus] - lcio_clus->getEnergy())> 1.E-6 ){
-                    cout << "Not sure we found the correct cluster. Clus1_E = " << ecal_cluster_energy[iclus] <<
-                    " Clus2_E = " << lcio_clus->getEnergy() << "\n";
-                }
-                sub->clus_energy.push_back(lcio_clus->getEnergy());
-                sub->clus_time.push_back(ecal_cluster_time[iclus]);
-                sub->clus_pos_x.push_back(ecal_cluster_x[iclus]);
-                sub->clus_pos_y.push_back(ecal_cluster_y[iclus]);
-                sub->clus_ix.push_back(ecal_cluster_seed_ix[iclus]);
-                sub->clus_iy.push_back(ecal_cluster_seed_iy[iclus]);
-                cluster_found = true;
-                break;
-            }
-        }
-        if (!cluster_found) {
-            cout << "ERROR -- Fill_SubPart_From_LCIO -- Did not find associated cluster!!!!\n";
+#ifdef DEBUG
+        if(write_ecal_cluster && ecal_cluster_to_index_map.find(clus) == ecal_cluster_to_index_map.end()){
+            cout << "ERROR == Cluster pointer from LCIO without associated index. CHECK THIS!! \n";
             md_abort_tree_fill=true;
             return;
         }
+#endif
+
+        int iclus = ecal_cluster_to_index_map[clus];
+        sub->clus.push_back(iclus);
+#ifdef DEBUG
+        if( write_ecal_cluster && iclus >= ecal_cluster_energy.size() ) {
+            cout << "ERROR -- Cluster index larger than stored cluster vector. CHECK THIS!!!\n";
+            md_abort_tree_fill=true;
+            return;
+        }
+#endif
+        if(write_ecal_cluster) {
+            sub->clus_energy.push_back(clus->getEnergy());
+            sub->clus_time.push_back(ecal_cluster_time[iclus]);
+            sub->clus_pos_x.push_back(ecal_cluster_x[iclus]);
+            sub->clus_pos_y.push_back(ecal_cluster_y[iclus]);
+            sub->clus_ix.push_back(ecal_cluster_seed_ix[iclus]);
+            sub->clus_iy.push_back(ecal_cluster_seed_iy[iclus]);
+        }else{
+            // ToDo: We should still fill the missing items here by finding the seed cluster (same algorighm as filling a cluster.)
+            sub->clus_energy.push_back(clus->getEnergy());
+            sub->clus_time.push_back(-101.);
+            const float *position = clus->getPosition();
+            sub->clus_pos_x.push_back(position[0]);
+            sub->clus_pos_y.push_back(position[1]);
+            sub->clus_ix.push_back(-101);
+            sub->clus_iy.push_back(-101);
+        }
+
     }else{ // Clusterless track. Fill cluster stuff with -99.
         sub->clus_energy.push_back(-99.);
         sub->clus_time.push_back(-99.);
@@ -739,11 +760,49 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
     }
 }
 
-void LcioReader::Fill_Part_From_LCIO(Basic_Particle_t *bp, EVENT::ReconstructedParticle *lcio_part) {
+void LcioReader::Fill_Single_Particle_From_LCIO(Single_Particle_t *bp, EVENT::ReconstructedParticle *lcio_part) {
+    Fill_Basic_Particle_From_LCIO(dynamic_cast<Basic_Particle_t *>(bp),lcio_part);
+
+    const vector<EVENT::Track *> &tracks = lcio_part->getTracks();
+#ifdef DEBUG
+    if(tracks.size()>1) {
+        cout << "Single Particle with more than one associated track. Hmmm, check the LCIO!! \n";
+    }
+#endif
+    if( tracks.size() == 1) {
+        EVENT::Track *track = tracks[0];
+        bp->track.push_back(any_track_to_index_map[track]);
+        bp->track_chi2.push_back(track->getChi2());
+    }else{ // No track for this particle, then it is most likely a neutral.
+        bp->track.push_back(-1);
+        bp->track_chi2.push_back(-99.);
+    }
+
+    const vector<EVENT::Cluster *> &clusters = lcio_part->getClusters();
+#ifdef DEBUG
+    if(clusters.size()>1){
+        cout << "Single particle with more than one cluster. Yikes. Check the LCIO!! \n";
+    }
+#endif
+    if( clusters.size() == 1){
+        auto cluster = dynamic_cast<IMPL::ClusterImpl*>(clusters[0]);
+        if(write_ecal_cluster && ecal_cluster_to_index_map.find(cluster) == ecal_cluster_to_index_map.end() ){
+            cout << "Um, sorry, but I could not find the cluster associated with the particle, though I expected one. \n";
+            bp->ecal_cluster.push_back(-101);
+        }else {
+            int cluster_index = ecal_cluster_to_index_map[cluster];
+            bp->ecal_cluster.push_back(cluster_index);
+        }
+    }else{  // Ecal hole track.
+        bp->ecal_cluster.push_back(-1);
+    }
+}
+
+void LcioReader::Fill_Basic_Particle_From_LCIO(Basic_Particle_t *bp, EVENT::ReconstructedParticle *lcio_part,
+                                               bool fill_momentum) {
     // Fill the Basic_Particle_t structure with the information from a ReconstructedParticle.
     bp->lcio_type.push_back(lcio_part->getType());
     bp->energy.push_back(lcio_part->getEnergy());
-    bp->mass.push_back(lcio_part->getMass());
     EVENT::ParticleID *lcio_part_id = lcio_part->getParticleIDUsed();
     if(lcio_part_id){
         int pdg = lcio_part_id->getPDG();
@@ -754,10 +813,15 @@ void LcioReader::Fill_Part_From_LCIO(Basic_Particle_t *bp, EVENT::ReconstructedP
 
     bp->charge.push_back(lcio_part->getCharge());
     bp->goodness_of_pid.push_back(lcio_part->getGoodnessOfPID());
-    const double *momentum = lcio_part->getMomentum();
-    bp->px.push_back(momentum[0]);
-    bp->py.push_back(momentum[1]);
-    bp->pz.push_back(momentum[2]);
+    if(fill_momentum) {
+        // For Vertex particles, it is "better" to fill these directly from the vertex parameters.
+        // Better? Not sure, it seems the information is simply duplicated between the vertex and the vertex-particle.
+        bp->mass.push_back(lcio_part->getMass());
+        const double *momentum = lcio_part->getMomentum();
+        bp->px.push_back(momentum[0]);
+        bp->py.push_back(momentum[1]);
+        bp->pz.push_back(momentum[2]);
+    }
 }
 
 void LcioReader::End(){

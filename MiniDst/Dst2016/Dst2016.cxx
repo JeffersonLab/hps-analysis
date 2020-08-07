@@ -14,6 +14,11 @@ Dst2016::Dst2016(TTree *tree, string out_file_name): BaseAna(tree), MiniDst(out_
     fCounter_Freq = 10000;
 }
 
+void Dst2016::Clear(){
+    MiniDst::Clear();
+    BaseAna::Clear();
+}
+
 void Dst2016::Start() {
     SlaveBegin();
     MiniDst::Start();
@@ -42,7 +47,8 @@ void Dst2016::SlaveBegin(TTree *tree) {
 
 Bool_t  Dst2016::Process(Long64_t entry) {
 
-    clear();
+    Clear();
+
     int stat =GetEntry(entry);
     if(  stat <= 0 ){
         if(md_Debug & MiniDst::kDebug_Error){

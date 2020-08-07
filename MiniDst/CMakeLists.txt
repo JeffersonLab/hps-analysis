@@ -96,6 +96,10 @@ add_executable(make_mini_dst make_mini_dst.cxx)
 target_link_libraries(make_mini_dst MiniDst Dst2016 LcioReader ${ROOT_LIBRARIES})
 install(TARGETS make_mini_dst)
 
+add_executable(lcio_test_reader lcio_test_reader.cpp)
+target_link_libraries(lcio_test_reader ${LCIO_LIBRARIES})
+install(TARGETS lcio_test_reader)
+
 message("-----------------------------------------------")
 message("* Configuration Summary: ")
 message("*")

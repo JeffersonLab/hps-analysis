@@ -58,21 +58,22 @@ class LcioReader : public MiniDst {
     };
 
 public:
-    LcioReader(const string input_file=""){
+    explicit LcioReader(const string &input_file=""){
         if(!input_file.empty()) input_file_list.push_back(input_file);
     };
-    LcioReader(const vector<string> infile_list): input_file_list(infile_list){};
-    ~LcioReader(){};
+    explicit LcioReader(const vector<string> &infile_list): input_file_list(infile_list){};
+    ~LcioReader() override = default;
 
+    void Clear() override;
+    void Start() override;
+    long Run(int nevt) override;
+    void End() override;
 
-    virtual void Start() override;
-    virtual long Run(int nevt=0) override;
-    virtual void End() override;
-
-    virtual void Fill_Part_From_LCIO(Basic_Particle_t *bp,EVENT::ReconstructedParticle *lcio_part);
+    virtual void Fill_Basic_Particle_From_LCIO(Basic_Particle_t *bp, EVENT::ReconstructedParticle *lcio_part,
+                                               bool fill_momentum=true);
+    virtual void Fill_Single_Particle_From_LCIO(Single_Particle_t *bp,EVENT::ReconstructedParticle *lcio_part);
     virtual void Fill_Vertex_From_LCIO(Vertex_Particle_t *bp,EVENT::Vertex *lcio_vert);
-    virtual void Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::ReconstructedParticle *daughter,
-                                        EVENT::LCEvent *lcio_event);
+    virtual void Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::ReconstructedParticle *daughter);
 
 public:
     IO::LCReader* lcio_reader{IOIMPL::LCFactory::getInstance()->createLCReader()};
@@ -80,11 +81,24 @@ public:
     vector<string> input_file_list{};
 
     unsigned long evt_count{0}; // Event sequence number.
-    const vector<string> *col_names; // Store the collection names from the first event.
+    const vector<string> *col_names{nullptr}; // Store the LCIO collection names from the first event.
     bool data_type_is_known{false};  // The LCIO data is different between 2015/2016 and 2019. This is true when that is known.
     bool is_2016_data{false};  // True for 2015 and 2016 data: i.e. there is Trigger info in the TriggerBank
     bool is_2019_data{false};  // True for 2019 data: i.e. there is a TSBank and a VTPBank.
     bool is_MC_data{false};    // True is there is an MCParticles bank.
+
+    /// Maps to help navigate the event.
+    /// Set them up here so that they are available in different sections.
+    /// Note: Each map must be cleared at the start of the event to avoid potential cross event contamination.
+    /// Clearing is done in Clear().
+    map<IMPL::CalorimeterHitImpl*, int> ecal_hit_to_index_map; // Map to link calorimeter hit to index.
+    map<IMPL::ClusterImpl*, int> ecal_cluster_to_index_map; // Map to link calorimeter hit to index.
+    std::map<IMPL::TrackerHitImpl*, int> svt_hit_to_index_map;         // Map to link svt hit to index.
+    map<EVENT::Track*, int> gbl_track_to_index_map;           // Map to link GBL only track to index.
+    map<EVENT::Track*, int> matched_track_to_index_map;       // Map to link Matched only track to index.
+    map<EVENT::Track*, int> any_track_to_index_map;           // Map to link any track to index.
+
+
 
 };
 

@@ -30,7 +30,13 @@ int main(int argc, char **argv) {
 
     options.parse_positional({"inputfiles"});
     auto args = options.parse(argc, argv);
-    auto& infiles = args["inputfiles"].as<std::vector<std::string>>();
+
+    vector<string> infiles;
+    if(args["inputfiles"].count()) {
+        infiles = args["inputfiles"].as<std::vector<std::string>>();
+    }else{
+        infiles = {"/data/HPS/data/physrun2019/slcio/hps_010735_00000.slcio"};
+    }
     int debug = args.count("debug");
 
     IO::LCReader* lcio_reader{IOIMPL::LCFactory::getInstance()->createLCReader()};

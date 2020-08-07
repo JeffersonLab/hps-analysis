@@ -400,8 +400,8 @@ long LcioReader::Run(int nevent) {
 
                     // Instantiate an LCRelation navigator which will allow faster access
                     // to TrackData objects
-                    UTIL::LCRelationNavigator* track_data_nav
-                            = new UTIL::LCRelationNavigator(track_data);
+                    unique_ptr<UTIL::LCRelationNavigator> track_data_nav =
+                            make_unique<UTIL::LCRelationNavigator>(UTIL::LCRelationNavigator(track_data));
 
                     // Get the list of TrackData associated with the LCIO Track
                     EVENT::LCObjectVec track_data_list = track_data_nav->getRelatedFromObjects(lcio_track);
@@ -427,7 +427,7 @@ long LcioReader::Run(int nevent) {
                         track_volume.push_back(-1);
                     }
                     track_isolation.push_back(iso_values);
-                    delete track_data_nav;
+                    // delete track_data_nav;
 
                     // Get the collection of 3D hits associated with a LCIO Track
                     EVENT::TrackerHitVec gbl_tracker_hits = lcio_track->getTrackerHits();
@@ -455,8 +455,8 @@ long LcioReader::Run(int nevent) {
 
                 // Instantiate an LCRelation navigator which will allow faster access
                 // to the seed to GBL LCRelations
-                UTIL::LCRelationNavigator* seed_to_gbl_relations_nav =
-                        new UTIL::LCRelationNavigator(seed_to_gbl_relations);
+                unique_ptr<UTIL::LCRelationNavigator> seed_to_gbl_relations_nav =
+                        make_unique<UTIL::LCRelationNavigator>(UTIL::LCRelationNavigator(seed_to_gbl_relations));
 
                 for( auto const &[gbl_track, gbl_track_index] : gbl_track_to_index_map){
                     EVENT::LCObjectVec seed_to_gbl_list

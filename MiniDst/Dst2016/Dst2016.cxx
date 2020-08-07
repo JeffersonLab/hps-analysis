@@ -338,7 +338,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             if(hps_part->svt_tracks->GetEntries() == 1) {
                 GblTrack *gbl_track = (GblTrack *)hps_part->svt_tracks->At(0);
                 tmp_track_chi2 = gbl_track->getChi2();
-                
+
                 for (int k = 0; k < GetNumberOfGblTracks(); k++) {
                     GblTrack *test_track = GetGblTrack(k);
                     if (test_track == gbl_track) {

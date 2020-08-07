@@ -334,9 +334,11 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             }
 #endif
             int track_idx = -10;
+            double tmp_track_chi2 = -99.;
             if(hps_part->svt_tracks->GetEntries() == 1) {
                 GblTrack *gbl_track = (GblTrack *)hps_part->svt_tracks->At(0);
-
+                tmp_track_chi2 = gbl_track->getChi2();
+                
                 for (int k = 0; k < GetNumberOfGblTracks(); k++) {
                     GblTrack *test_track = GetGblTrack(k);
                     if (test_track == gbl_track) {
@@ -346,6 +348,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                 }
             }
             part.track.push_back(track_idx); // No track for this particle = neutral.
+            part.track_chi2.push_back(tmp_track_chi2);
 
 
             // Find and linkup the Ecal clusters. Only one!

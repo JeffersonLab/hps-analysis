@@ -123,7 +123,7 @@ int main(int argc, char **argv){
     dst->SetOutputFileName(outfile);
 #ifdef DEBUG
     cout << "Extra debug code compiled.\n";
-    dst->Counter_Freq =1;
+    dst->Counter_Freq =10000;
 #endif
     dst->Start();
     dst->Run(num_evt);

@@ -17,9 +17,10 @@ link_directories("/data/HPS/lib")
 add_library(${PROJECT_NAME} SHARED Dst2016.cxx Dst2016Dict.cxx)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC MiniDst BaseAna2 ${ROOT_LIBRARIES})
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "Dst2016.h")
 # Selective linking:
 #target_link_libraries(${PROJECT_NAME} PUBLIC BaseAna ROOT::Core ROOT::Hist ROOT::Tree ROOT::Physics )
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR} )
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCDIR})
 
 # install ROOT pcm file
 # install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libDst2016_rdict.pcm DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)

@@ -90,7 +90,7 @@ long LcioReader::Run(int nevent) {
 
             event_number = lcio_event->getEventNumber();
             if( (++evt_count)%Counter_Freq == 0) {
-                printf("i: %10lu   event: %10d  run: %5d\n", evt_count, event_number, run_number);
+                printf("i: %10lu   event: %'10d  run: %5d\n", evt_count, event_number, run_number);
             }
             time_stamp = lcio_event->getTimeStamp();
 
@@ -243,6 +243,9 @@ long LcioReader::Run(int nevent) {
 
                     // Link the hits to the cluster.
                     EVENT::CalorimeterHitVec clus_hits = lcio_clus->getCalorimeterHits();
+
+                    ecal_cluster_nhits.push_back(clus_hits.size());
+
                     double seed_energy{-99.};
                     double seed_time{-99};
                     int    seed_index{-99};

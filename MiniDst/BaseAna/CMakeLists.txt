@@ -10,6 +10,10 @@ add_library(${PROJECT_NAME} STATIC BaseAna.cpp BaseAnaDict.cxx
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${ROOT_LIBRARIES})
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "BaseAna.h")
+
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCDIR} )
+
 
 # Selective linking:
 # target_link_libraries(${PROJECT_NAME} PUBLIC BaseAna ROOT::Core ROOT::Hist ROOT::Tree ROOT::Physics )

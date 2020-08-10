@@ -6,10 +6,13 @@
 #include "TChain.h"
 #include "Dst2016.h"
 #include "LcioReader.h"
+#include <locale.h>
 
 using namespace std;
 
 int main(int argc, char **argv){
+
+    setlocale(LC_NUMERIC, "");
 
     cxxopts::Options options(argv[0], " - Write a ROOT MiniDst for HPS data.\n");
     options

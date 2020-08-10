@@ -8,6 +8,7 @@
 #include "LcioReader.h"
 
 void LcioReader::Start(){
+    printf("LCIO READER version 0.1.1\n");
     MiniDst::Start();
 }
 

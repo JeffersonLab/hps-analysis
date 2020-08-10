@@ -1,6 +1,4 @@
 #
-# Based on the CMakeLists.txt file from Omar Moreno for hps-dst
-#
 # Specify the minimum CMake version required.  If the cmake version 
 # minimum is not met, cmake will fail.
 cmake_minimum_required(VERSION 3.5.0 FATAL_ERROR)
@@ -45,7 +43,7 @@ set(CMAKE_INSTALL_DOCDIR           "${CMAKE_INSTALL_PREFIX}/doc" CACHE PATH "Ins
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(LCIO REQUIRED)
-include_directories("${LCIO_INCLUDE_DIR}")
+include_directories( AFTER "${LCIO_INCLUDE_DIR}")
 
 # You need to tell CMake where to find the ROOT installation.
 #   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
@@ -60,8 +58,6 @@ message(STATUS " ")
 include(${ROOT_USE_FILE})
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-# Add the hps-dst include directories.
 
 if(APPLE)
   # use, i.e. don't skip the full RPATH for the build tree

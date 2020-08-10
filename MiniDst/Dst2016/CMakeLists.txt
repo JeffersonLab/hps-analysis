@@ -2,17 +2,20 @@
 cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
 project(Dst2016)
 
-include_directories("../BaseAna")
-#
+link_directories("/data/HPS/lib")
+
 # The ROOT_GENERATE_DICTIONARY does not seem to respect the included target_link_libraries target.
 # We thus need to get the include directories from the target by hand and add them to the include path.
-#
+# These need to go at the END of this file, so that the BEFORE statememt properly puts the include directories early.
+# These directories should be listed before the location where the headers are installed, so that changes to header files
+# are properly picked up.
+get_property(BaseAna_Include TARGET BaseAna2 PROPERTY INCLUDE_DIRECTORIES)
+include_directories(BEFORE ${BaseAna_Include})
+
 get_property(MiniDstLib_Include TARGET MiniDst PROPERTY INCLUDE_DIRECTORIES)
-include_directories(${MiniDstLib_Include})
+include_directories(BEFORE ${MiniDstLib_Include})
 
 ROOT_GENERATE_DICTIONARY(Dst2016Dict Dst2016.h MODULE ${PROJECT_NAME} LINKDEF Dst2016LinkDef.h )
-
-link_directories("/data/HPS/lib")
 
 add_library(${PROJECT_NAME} SHARED Dst2016.cxx Dst2016Dict.cxx)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

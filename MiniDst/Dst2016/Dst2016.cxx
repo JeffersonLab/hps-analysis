@@ -186,7 +186,8 @@ Bool_t  Dst2016::Process(Long64_t entry) {
 
         }
 #endif
-        for(int i=0;i < GetNumberOfGblTracks(); ++i) {
+        track_n_gbl = GetNumberOfGblTracks();
+        for(int i=0;i < track_n_gbl; ++i) {
             GblTrack *track = GetGblTrack(i);
             vector<double> iso(track->isolation, track->isolation + 14);
             track_isolation.push_back(iso);

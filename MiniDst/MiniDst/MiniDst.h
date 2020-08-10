@@ -174,7 +174,7 @@ public:
 
     // SVT Hits
     vector<int> svt_hit_layer;
-     vector<double> svt_hit_x;
+    vector<double> svt_hit_x;
     vector<double> svt_hit_y;
     vector<double> svt_hit_z;
     vector<double> svt_hit_cxx;
@@ -187,6 +187,7 @@ public:
     vector<double> svt_hit_edep;  // Energy deposit. Not is 2016 DST.
 
     // SVT Tracks
+    int track_n_gbl{0}; /// Number of GBL tracks. The rest will be matched tracks.
     vector<int>  track_n_hits; /** The number of 3D hits associated with this track. */
     vector<int>  track_volume; /** The volume to which this track belongs to. */
     vector<int>  track_type;   /** The track type. */

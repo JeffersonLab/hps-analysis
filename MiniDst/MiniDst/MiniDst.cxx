@@ -29,7 +29,7 @@ void MiniDst::Start() {
     md_output_tree->Branch("ext_trigger",&ext_trigger);
     md_output_tree->Branch("rf_time1", &rf_time1);
     md_output_tree->Branch("rf_time2", &rf_time2);
-
+    md_output_tree->Branch("track_n_gbl", & track_n_gbl); /// Number of GBL tracks. The rest are matched tracks.
     // Notes on branch_map:
     //    You do not HAVE to create the handles to the vectors in "this":
     //         branch_map.try_emplace("hidden_double", new std::vector<double>());
@@ -80,27 +80,28 @@ void MiniDst::Start() {
     }
 
     if( write_tracks){
-        branch_map.try_emplace("track_n_hits", & track_n_hits); /** The number of 3D hits associated with this track. */
-        branch_map.try_emplace("track_volume", & track_volume); /** The volume to which this track belongs to. */
-        branch_map.try_emplace("track_type", & track_type);   /** The track type. */
-        branch_map.try_emplace("track_d0", &track_d0);   /** The distance of closest approach to the reference point. */
-        branch_map.try_emplace("track_phi0", &track_phi0);     //* The azimuthal angle of the momentum at the position of closest approach to the reference point.
-        branch_map.try_emplace("track_omega", &track_omega); //* The track curvature. The curvature is positive (negative) if the particle has a positive (negative) charge.
-        branch_map.try_emplace("track_tan_lambda", &track_tan_lambda); // The slope of the track in the SY plane where S is the arc length of the helix in the xz plane.
-        branch_map.try_emplace("track_z0", &track_z0);      // The y position of the track at the distance of closest approach in the xz plane.
-        branch_map.try_emplace("track_chi2", &track_chi2); /** The chi^2 of the track fit. */
-        branch_map.try_emplace("track_time", &track_time); /** The time of the track.  This is currently the average time of all hits composing the track. **/
-        branch_map.try_emplace("track_x_at_ecal", &track_x_at_ecal); /** The x position of the extrapolated track at the Ecal face. */
-        branch_map.try_emplace("track_y_at_ecal", &track_y_at_ecal); /** The y position of the extrapolated track at the Ecal face. */
-        branch_map.try_emplace("track_z_at_ecal", &track_z_at_ecal); /** The z position of the extrapolated track at the Ecal face. */
-        branch_map.try_emplace("track_isolation", &track_isolation); /** Array used to store the isolation variables for each of the sensor layers. */
-        branch_map.try_emplace("track_covmatrix", &track_covmatrix);   /** The 1/2 Covariant Matrix. This is the lower 1/2. **/
+        branch_map.try_emplace("track_n_hits", & track_n_hits); /// The number of 3D hits associated with this track.
+        branch_map.try_emplace("track_volume", & track_volume); /// The volume to which this track belongs to.
+        branch_map.try_emplace("track_type", & track_type);   /// The track type.
+
+        branch_map.try_emplace("track_d0", &track_d0);   /// The distance of closest approach to the reference point.
+        branch_map.try_emplace("track_phi0", &track_phi0);     /// The azimuthal angle of the momentum at the position of closest approach to the reference point.
+        branch_map.try_emplace("track_omega", &track_omega); /// The track curvature. The curvature is positive (negative) if the particle has a positive (negative) charge.
+        branch_map.try_emplace("track_tan_lambda", &track_tan_lambda); /// The slope of the track in the SY plane where S is the arc length of the helix in the xz plane.
+        branch_map.try_emplace("track_z0", &track_z0);      /// The y position of the track at the distance of closest approach in the xz plane.
+        branch_map.try_emplace("track_chi2", &track_chi2); /// The chi^2 of the track fit.
+        branch_map.try_emplace("track_time", &track_time); /// The time of the track.  This is currently the average time of all hits composing the track.
+        branch_map.try_emplace("track_x_at_ecal", &track_x_at_ecal); /// The x position of the extrapolated track at the Ecal face.
+        branch_map.try_emplace("track_y_at_ecal", &track_y_at_ecal); /// The y position of the extrapolated track at the Ecal face.
+        branch_map.try_emplace("track_z_at_ecal", &track_z_at_ecal); /// The z position of the extrapolated track at the Ecal face.
+        branch_map.try_emplace("track_isolation", &track_isolation); /// Array used to store the isolation variables for each of the sensor layers.
+        branch_map.try_emplace("track_covmatrix", &track_covmatrix);   /// The 1/2 Covariant Matrix. This is the lower 1/2.
         branch_map.try_emplace("track_lambda_kinks", &track_lambda_kinks);
         branch_map.try_emplace("track_phi_kinks", &track_phi_kinks);
-        branch_map.try_emplace("track_particle", & track_particle); /** Reference to the reconstructed particle associated with this track. */
+        branch_map.try_emplace("track_particle", & track_particle); /// Reference to the reconstructed particle associated with this track.
         branch_map.try_emplace("track_gbl_ref", & track_gbl_ref);
         branch_map.try_emplace("track_ref", & track_ref);
-        branch_map.try_emplace("track_svt_hits",&track_svt_hits);/** Reference to the 3D hits associated with this track. */
+        branch_map.try_emplace("track_svt_hits",&track_svt_hits);/// Reference to the 3D hits associated with this track.
     }
 
     branch_map.try_emplace("part_type", &part.type);

@@ -91,7 +91,7 @@ long LcioReader::Run(int nevent) {
 
             event_number = lcio_event->getEventNumber();
             if( (++evt_count)%Counter_Freq == 0) {
-                printf("i: %10lu   event: %'10d  run: %5d\n", evt_count, event_number, run_number);
+                printf("i: %'10lu   event: %'10d  run: %5d\n", evt_count, event_number, run_number);
             }
             time_stamp = lcio_event->getTimeStamp();
 
@@ -328,19 +328,20 @@ long LcioReader::Run(int nevent) {
                     n_matched_tracks = matched_tracks->getNumberOfElements();
                 }
 
-                int n_gbl_track = gbl_tracks->getNumberOfElements();
-                int n_total_tracks = n_gbl_track + n_matched_tracks;
+                // int track_n_gbl =
+                track_n_gbl = gbl_tracks->getNumberOfElements();
+                int n_total_tracks = track_n_gbl + n_matched_tracks;
                 EVENT::Track* lcio_track{nullptr};
                 for(int track_number =0; track_number < n_total_tracks; ++track_number){
                     // We go through all the GBL tracks first, and if asked for, then go through all the
                     // matched tracks.
-                    if(track_number < n_gbl_track) {
+                    if(track_number < track_n_gbl) {
                         lcio_track = static_cast<EVENT::Track *>(gbl_tracks->getElementAt(track_number));
                         gbl_track_to_index_map[lcio_track] = track_number;
                         track_gbl_ref.push_back(track_number); // GBL Track points to itself.
                         track_ref.push_back(-99); // Pointer to seed track is resolved later.
                     }else{
-                        int matched_track_number = track_number - n_gbl_track;
+                        int matched_track_number = track_number - track_n_gbl;
                         lcio_track = static_cast<EVENT::Track *>(matched_tracks->getElementAt(matched_track_number));
                         matched_track_to_index_map[lcio_track] = track_number;
                         track_gbl_ref.push_back(-99);  // Seed track needs to be resolved later.
@@ -656,15 +657,17 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
     EVENT::LCCollection* gbl_tracks = lcio_event->getCollection("GBLTracks");
     EVENT::LCCollection* matched_tracks = lcio_event->getCollection("MatchedTracks");
     bool track_found = false;
-    int n_gbl_tracks = gbl_tracks->getNumberOfElements();
+
+    // The track_n_gbl would possibly be set already in the "Track" section, but we cannot guarantee.
+    track_n_gbl = gbl_tracks->getNumberOfElements();
     int n_matched_tracks = matched_tracks->getNumberOfElements();
-    int total_tracks = n_gbl_tracks + n_matched_tracks;
+    int total_tracks = track_n_gbl + n_matched_tracks;
     EVENT::Track *lcio_track{nullptr};
     for(int i_trk=0; i_trk < total_tracks; ++i_trk){
-        if( i_trk < n_gbl_tracks) {
+        if( i_trk < track_n_gbl) {
             lcio_track = static_cast<EVENT::Track *>(gbl_tracks->getElementAt(i_trk));
         }else{
-            lcio_track = static_cast<EVENT::Track *>(matched_tracks->getElementAt(i_trk-n_gbl_tracks));
+            lcio_track = static_cast<EVENT::Track *>(matched_tracks->getElementAt(i_trk-track_n_gbl));
         }
         if(lcio_track == track){
             int i_test_index = any_track_to_index_map[lcio_track];

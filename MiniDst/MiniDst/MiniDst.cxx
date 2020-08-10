@@ -14,22 +14,16 @@ void MiniDst::Start() {
 
     md_output_tree = new TTree("MiniDST","HPS mini-DST");
 
-    // Non vector entries are added to the branch directly.
-    //
-    // They do not take up much space (so disabling is not so important) and it would
-    // complicate any operations (like Clear) on the members.
-    // Though it can be implemented, it complicates the required variant visitor.
-    // See for instance: https://arne-mertz.de/2018/05/overload-build-a-variant-visitor-on-the-fly/
-    //
-    md_output_tree->Branch("run_number",&run_number);
-    md_output_tree->Branch("event_number", &event_number);
-    md_output_tree->Branch("time_stamp", &time_stamp);
-    md_output_tree->Branch("svt_status",&svt_status);
-    md_output_tree->Branch("trigger",&trigger);
-    md_output_tree->Branch("ext_trigger",&ext_trigger);
-    md_output_tree->Branch("rf_time1", &rf_time1);
-    md_output_tree->Branch("rf_time2", &rf_time2);
-    md_output_tree->Branch("track_n_gbl", & track_n_gbl); /// Number of GBL tracks. The rest are matched tracks.
+    branch_map.try_emplace("run_number", &run_number);
+    branch_map.try_emplace("event_number", &event_number);
+    branch_map.try_emplace("time_stamp", &time_stamp);
+    branch_map.try_emplace("svt_status",&svt_status);
+    branch_map.try_emplace("trigger",&trigger);
+    branch_map.try_emplace("ext_trigger",&ext_trigger);
+    branch_map.try_emplace("rf_time1", &rf_time1);
+    branch_map.try_emplace("rf_time2", &rf_time2);
+    branch_map.try_emplace("track_n_gbl", & track_n_gbl); /// Number of GBL tracks. The rest are matched tracks.
+
     // Notes on branch_map:
     //    You do not HAVE to create the handles to the vectors in "this":
     //         branch_map.try_emplace("hidden_double", new std::vector<double>());
@@ -196,25 +190,47 @@ void MiniDst::Start() {
     }
 
     // Now set all the branches in the tree:
-    // for( auto const& [nam, bran] : branch_map ){ // auto does not work with a Lambda, since no type declaration at all!
-    for(std::map<std::string,Multi_Value>::iterator it = branch_map.begin(); it != branch_map.end(); ++it ){
+    // for( auto const& [nam, bran] : branch_map ){ // <-- Cannot do this, "auto" does not work with a Lambda, since no type declaration at all!
+    //
+    for(std::map<std::string,Multi_Value>::iterator it = branch_map.begin(); it != branch_map.end(); ++it ){  // Iterate over the map.
         if(md_Debug & kDebug_L1) cout << "Creating branch " << it->first << endl;
         //
-        // Explicit specification:
-        //if(bran.index() == 0){ output_tree->Branch(nam.c_str(), std::get< vector<double>*>(bran));}
-        //if(bran.index() == 1){ output_tree->Branch(nam.c_str(), std::get< vector<int>*>(bran));}
+        // Simple visitor works here since each argument has exactly the same operation.
+        //
         std::visit([this,&it](auto&& arg){md_output_tree->Branch(it->first.c_str(), arg);}, it->second);
     }
 }
+
+// The following templates are needed to get an overloaded visitor.
+// helper type for the visitor
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+// explicit deduction guide (not needed as of C++20)
+template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 void MiniDst::Clear(){
     // Clear the event storage vectors.
     // We use the map to Clear all the vectors. Note that this means you *must* have each vector in the branch_map,
     // otherwise you will create an ever growing vector.
     for( auto const& [nam, bran] : branch_map ){
-        std::visit([](auto &&arg){arg->clear();},bran);
+        // std::visit([](auto &&arg){arg->clear();},bran);  Using simple lambda if the variant only contains vectors.
+        //
+        // Instead, we use an overloaded lambda. See: https://en.cppreference.com/w/cpp/utility/variant/visit
+        // Also: https://arne-mertz.de/2018/05/overload-build-a-variant-visitor-on-the-fly/
+        // We need one line for each type that is contained in our variant.
+        //
+        std::visit(overloaded{
+                [](int *arg)    { (*arg) = 0; },
+                [](unsigned int *arg)    { (*arg) = 0; },
+                [](double *arg)    { (*arg) = 0; },
+                [](ULong64_t *arg)    { (*arg) = 0; },
+                [](vector<int> *arg)    { arg->clear(); },
+                [](vector<double> *arg) { arg->clear(); },
+                [](vector< vector<int> > *arg) { arg->clear(); },
+                [](vector< vector<double> >*arg) {arg->clear(); }
+        },bran);
     }
 }
+
 
 long MiniDst::Run(int nevt){
     std::cout << "MiniDst::Run() called. =====================<<<<<<<<<<<<<======\n";

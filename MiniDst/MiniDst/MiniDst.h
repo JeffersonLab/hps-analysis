@@ -12,13 +12,21 @@
 #include "TTree.h"
 #include "TVector3.h"
 
-// In theory, the Multi_Value variant could also contain "int" and "double" types, however, doing so
-// will complicate the "visit" functions for operations like Clear(), while really providing little benefit.
-// So only vector types are in the variant.
-using Multi_Value = std::variant < std::vector<double>* , std::vector<int>*,
+//
+// The following construction defines a "Variant", a type in C++17 and later that can contain different kinds of object.
+// In our case the variant contains each of the possible types that we have in the output tree.
+// Note that using a variant is not always straight forward, and often requires a "visitor". Sometimes the visitor is
+// simple, sometimes more complicated. See the "Clear()" function.
+// Note that each added type in the variant will need a corresponding type in the visitor used in Clear().
+//
+using Multi_Value = std::variant < int *, double *, unsigned int *, ULong64_t *, std::vector<double>* , std::vector<int>*,
         std::vector< std::vector<int> >*, std::vector< std::vector<double> >*>;
-using Multi_Branch = std::map<std::string, Multi_Value >;
-
+//
+// Each variable that goes into the output is stored into the Multi_Branch object.
+// The Multi_Branch maps the name of the TTree branch to the variable in the code.
+//
+using Multi_Branch = std::map<std::string, Multi_Value>;
+//
 //
 // Same structure/union for 2019 trigger as EVIOTool::TSBank
 //

@@ -12,13 +12,22 @@
 #include "TTree.h"
 #include "TVector3.h"
 
-// In theory, the Multi_Value variant could also contain "int" and "double" types, however, doing so
-// will complicate the "visit" functions for operations like Clear(), while really providing little benefit.
-// So only vector types are in the variant.
-using Multi_Value = std::variant < std::vector<double>* , std::vector<int>*,
+//
+// The following construction defines a "Variant", a type in C++17 and later that can contain different kinds of object.
+// In our case the variant contains each of the possible types that we have in the output tree.
+// Note that using a variant is not always straight forward, and often requires a "visitor". Sometimes the visitor is
+// simple, sometimes more complicated. See the "Clear()" function.
+// Note that each added type in the variant will need a corresponding type in the visitor used in Clear().
+//
+using Multi_Value = std::variant < int *, double *, unsigned int *, ULong64_t *, std::vector<double>* , std::vector<int>*,
         std::vector< std::vector<int> >*, std::vector< std::vector<double> >*>;
-using Multi_Branch = std::map<std::string, Multi_Value >;
+//
+// Each variable that goes into the output is stored into the Multi_Branch object.
+// The Multi_Branch maps the name of the TTree branch to the variable in the code.
+//
+using Multi_Branch = std::map<std::string, Multi_Value>;
 
+//
 //
 // Same structure/union for 2019 trigger as EVIOTool::TSBank
 //
@@ -58,14 +67,21 @@ public:
     MiniDst(): md_output_file_name("minidst.root"){};
     explicit MiniDst(string_view output_file_name): md_output_file_name(output_file_name){};
     ~MiniDst() override = default;
-    virtual void Clear();  // Clear all the vectors and event storage.
+    virtual void Clear();  /// Clear all the vectors and event storage.
     virtual void Start();
+    virtual void DefineBranchMap(); /// Setup the branch_map and branch_map_active
+    virtual void SetBranchMap();    /// Use the branch_map to set the branches in the TTree that are active.
     virtual long Run(int nevt);
     virtual void End();
     virtual void SetOutputFileName(const string& outfile){md_output_file_name=outfile;};
     virtual void SetDebugLevel(const int level){ md_Debug = level;};
     //std::map<std::string, vector<double>* > &Get_brmap(){return branch_map;};
     // #define FULL_CLEAR(xxx)  { for( auto p: xxx){delete p;}; xxx.Clear(); };
+
+    virtual std::vector<std::string> GetBranchNames();           /// Return a list of all the POSSIBLE branch names as a vector.
+    virtual std::vector<std::string> GetActiveBranchNames();     /// Return a list of all the ACTIVE branch names as a vector.
+    virtual void SetBranchActive(std::string, bool active=true); /// Manipulate whether a branch is active or not.
+
 
     template<typename T> inline void FULL_CLEAR(T& xxx){
         for(auto p: xxx){ delete p; }
@@ -120,8 +136,15 @@ public:
     vector<int> particle_types_single{FINAL_STATE_PARTICLE, OTHER_ELECTRONS}; // No vertex
     vector<int> particle_types_double{TC_V0_CANDIDATE, UC_VC_CANDIDATE}; // Yes vertex.
 
-    // Vector type helpers.
+    /// Map that contains the name and address of each branch in the TTree.
     Multi_Branch branch_map;
+    std::map<std::string, bool> branch_map_active;
+
+    // Simple helper function that does two things, fill the branch map and add the name to the active list.
+    void branch_map_try_emplace(std::string name, Multi_Value address) {
+        branch_map.try_emplace(name, address);
+        branch_map_active.try_emplace(name, true);
+    }
 
     /// All the items that we could possibly write out are here so that direct access
     /// to the variables is possible throughout the code, and to each class that derives from the MiniDst.

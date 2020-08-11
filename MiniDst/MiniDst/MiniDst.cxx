@@ -260,6 +260,36 @@ template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 // explicit deduction guide (not needed as of C++20)
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
+void MiniDst::SetBranchAddressesOnTree(TTree *read_tree) {
+    /// Connect the variables/vectors to the TTree for *reading* the tree.
+
+    // Get the list of branches on the tree, so we can check if we can set the addresses.
+    TObjArray *branch_list = read_tree->GetListOfBranches();
+
+    for(std::map<std::string,Multi_Value>::iterator it = branch_map.begin(); it != branch_map.end(); ++it ){  // Iterate over the map.
+
+        if(branch_map_active[it->first]){ // Only the active branches.
+            if( branch_list->FindObject(it->first.c_str()) != nullptr){  // Check that the tree being read has the variable
+                if(md_Debug & kDebug_L1) cout << "Connecting address for " << it->first << " to tree.\n";
+                // We need an overloaded visitor:
+                // For primitive, we set the branch to the address of the primitive:
+                //             int run_number;
+                //             t->SetBranchAddress("run_number", &run_number);
+                // For STL containers, we set the branch to the address of the pointer to the vector<>:
+                //             vector<int> *part_pdg;
+                //             t->SetBranchAddress("part_pdg", &part_pdg);
+                std::visit( overloaded{
+                    [&read_tree, &it](int *arg){ read_tree->SetBranchAddress(it->first.c_str(), arg);},
+                    [&read_tree, &it](unsigned int *arg){ read_tree->SetBranchAddress(it->first.c_str(), arg);},
+                    [&read_tree, &it](double *arg){ read_tree->SetBranchAddress(it->first.c_str(), arg);},
+                    [&read_tree, &it](ULong64_t *arg){ read_tree->SetBranchAddress(it->first.c_str(), arg);},
+                    [&read_tree, &it](auto &&arg){ read_tree->SetBranchAddress(it->first.c_str(), &arg);}    // All other's are vectors
+                }, it->second);
+            }
+        }
+    }
+}
+
 void MiniDst::Clear(){
     // Clear the event storage vectors.
     // We use the map to Clear all the vectors. Note that this means you *must* have each vector in the branch_map,

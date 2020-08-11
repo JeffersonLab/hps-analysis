@@ -71,6 +71,7 @@ public:
     virtual void Start();
     virtual void DefineBranchMap(); /// Setup the branch_map and branch_map_active
     virtual void SetBranchMap();    /// Use the branch_map to set the branches in the TTree that are active.
+    virtual void SetBranchAddressesOnTree(TTree *); /// Connect the variables/vectors to the TTree for *reading* the tree.
     virtual long Run(int nevt);
     virtual void End();
     virtual void SetOutputFileName(const string& outfile){md_output_file_name=outfile;};

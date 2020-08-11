@@ -26,7 +26,7 @@ void LcioReader::Clear(){
     any_track_to_index_map.clear();
 }
 
-long LcioReader::Run(int nevent) {
+long LcioReader::Run(int max_event) {
 
     /// LCIO Decoders. We need these instantiated only once.
     ///
@@ -94,7 +94,7 @@ long LcioReader::Run(int nevent) {
                 printf("i: %'10lu   event: %'10d  run: %5d\n", evt_count, event_number, run_number);
             }
 
-            if( evt_count > nevent) break;  // End the loop, we are done.
+            if(max_event>0 && evt_count > max_event) break;  // End the loop, we are done.
 
             time_stamp = lcio_event->getTimeStamp();
 

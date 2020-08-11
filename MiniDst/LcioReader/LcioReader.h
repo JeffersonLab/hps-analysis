@@ -66,7 +66,7 @@ public:
 
     void Clear() override;
     void Start() override;
-    long Run(int nevt) override;
+    long Run(int max_event) override;
     void End() override;
 
     virtual void Fill_Basic_Particle_From_LCIO(Basic_Particle_t *bp, EVENT::ReconstructedParticle *lcio_part,

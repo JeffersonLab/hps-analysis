@@ -93,6 +93,9 @@ long LcioReader::Run(int nevent) {
             if( (++evt_count)%Counter_Freq == 0) {
                 printf("i: %'10lu   event: %'10d  run: %5d\n", evt_count, event_number, run_number);
             }
+
+            if( evt_count > nevent) break;  // End the loop, we are done.
+
             time_stamp = lcio_event->getTimeStamp();
 
             // The following quantities from the LCIO header were set for 2016 data, but not consistently.

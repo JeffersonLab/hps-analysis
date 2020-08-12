@@ -228,7 +228,7 @@ long LcioReader::Run(int max_event) {
                         ecal_hit_field_decoder.setValue(value);
 
                         ecal_hit_index_x.push_back(ecal_hit_field_decoder["ix"]);
-                        ecal_hit_index_x.push_back(ecal_hit_field_decoder["iy"]);
+                        ecal_hit_index_y.push_back(ecal_hit_field_decoder["iy"]);
                     }
                 }
             }

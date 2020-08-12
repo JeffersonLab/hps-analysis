@@ -87,7 +87,7 @@ add_subdirectory(MiniDst)
 add_subdirectory(Dst2016)
 add_subdirectory(LcioReader)
 
-link_directories("/data/HPS/lib")
+# link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 
 add_executable(make_mini_dst make_mini_dst.cxx)
 target_link_libraries(make_mini_dst MiniDst Dst2016 LcioReader ${ROOT_LIBRARIES})

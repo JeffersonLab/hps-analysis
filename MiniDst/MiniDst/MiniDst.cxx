@@ -268,9 +268,10 @@ void MiniDst::SetBranchAddressesOnTree(TTree *read_tree) {
 
     for(std::map<std::string,Multi_Value>::iterator it = branch_map.begin(); it != branch_map.end(); ++it ){  // Iterate over the map.
 
+        if(md_Debug & kDebug_L1) cout << "Looking at setting the branch for " << it->first << " which is " << branch_map_active[it->first] << endl;
+
         if(branch_map_active[it->first]){ // Only the active branches.
             if( branch_list->FindObject(it->first.c_str()) != nullptr){  // Check that the tree being read has the variable
-                if(md_Debug & kDebug_L1) cout << "Connecting address for " << it->first << " to tree.\n";
                 // We need an overloaded visitor:
                 // For primitive, we set the branch to the address of the primitive:
                 //             int run_number;
@@ -279,11 +280,22 @@ void MiniDst::SetBranchAddressesOnTree(TTree *read_tree) {
                 //             vector<int> *part_pdg;
                 //             t->SetBranchAddress("part_pdg", &part_pdg);
                 std::visit( overloaded{
-                    [&read_tree, &it](int *arg){ read_tree->SetBranchAddress(it->first.c_str(), arg);},
-                    [&read_tree, &it](unsigned int *arg){ read_tree->SetBranchAddress(it->first.c_str(), arg);},
-                    [&read_tree, &it](double *arg){ read_tree->SetBranchAddress(it->first.c_str(), arg);},
-                    [&read_tree, &it](ULong64_t *arg){ read_tree->SetBranchAddress(it->first.c_str(), arg);},
-                    [&read_tree, &it](auto &&arg){ read_tree->SetBranchAddress(it->first.c_str(), &arg);}    // All other's are vectors
+                    [&read_tree, &it, this](int *arg){
+                        if(md_Debug & kDebug_L1) cout << "Setting " << it->first.c_str() << " int arg_ptr: " << arg << endl;
+                        read_tree->SetBranchAddress(it->first.c_str(), arg);
+                        },
+                    [&read_tree, &it, this](unsigned int *arg){
+                        if(md_Debug & kDebug_L1) cout << "Setting " << it->first.c_str() << " uns int arg_ptr: " << arg << endl;
+                        read_tree->SetBranchAddress(it->first.c_str(), arg);},
+                    [&read_tree, &it, this](double *arg){
+                        if(md_Debug & kDebug_L1) cout << "Setting " << it->first.c_str() << " double  arg_ptr: " << arg << endl;
+                        read_tree->SetBranchAddress(it->first.c_str(), arg);},
+                    [&read_tree, &it, this](ULong64_t *arg){
+                        if(md_Debug & kDebug_L1) cout << "Setting " << it->first.c_str() << " ulong   arg_ptr: " << arg << endl;
+                        read_tree->SetBranchAddress(it->first.c_str(), arg);},
+                    [&read_tree, &it, this](auto &&arg){
+                        if(md_Debug & kDebug_L1) cout << "Setting " << it->first.c_str() << " vector  arg_ptr: " << arg << " with address: " << &arg << endl;
+                        read_tree->SetBranchAddress(it->first.c_str(), &arg);}    // All other's are vectors
                 }, it->second);
             }
         }

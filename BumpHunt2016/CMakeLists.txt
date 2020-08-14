@@ -37,7 +37,7 @@ set(CMAKE_INSTALL_DOCDIR           "${CMAKE_INSTALL_PREFIX}/doc" CACHE PATH "Ins
 
 # list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-find_package(ROOT REQUIRED COMPONENTS ROOTDataFrame ROOTVECOPS)
+find_package(ROOT REQUIRED COMPONENTS ROOTDataFrame ROOTVecOps)
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})
 message(STATUS "ROOT found at: ${ROOT_DIR} using use file: ${ROOT_USE_FILE}")

@@ -97,6 +97,16 @@ add_executable(lcio_test_reader lcio_test_reader.cpp)
 target_link_libraries(lcio_test_reader ${LCIO_LIBRARIES})
 install(TARGETS lcio_test_reader)
 
+#
+# Somehow on Linux the stdc++ does not (always) get properly picked up.
+#
+IF(CMAKE_SYSTEM_NAME STREQUAL Linux)
+   target_link_libraries(make_mini_dst -lstdc++ )   
+   target_link_libraries(lcio_test_reader -lstdc++ )   
+endif(CMAKE_SYSTEM_NAME STREQUAL Linux)
+
+
+
 message("-----------------------------------------------")
 message("* Configuration Summary: ")
 message("*")

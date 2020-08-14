@@ -245,13 +245,35 @@ public:
         vector<double> px;
         vector<double> py;
         vector<double> pz;
+        int Add(Basic_Particle_t &base,int id){
+            /// Add particle base@id and return index of added particle.
+            type.push_back(base.type[id]);
+            lcio_type.push_back(base.lcio_type[id]);
+            energy.push_back(base.energy[id]);
+            mass.push_back(base.mass[id]);
+            pdg.push_back(base.pdg[id]);
+            charge.push_back(base.charge[id]);
+            goodness_of_pid.push_back(base.goodness_of_pid[id]);
+            px.push_back(base.px[id]);
+            py.push_back(base.py[id]);
+            pz.push_back(base.pz[id]);
+            return int(base.type.size() -1);
+        }
    };
 
     struct Single_Particle_t : Basic_Particle_t{
-        vector<int>    track;       // At most one track per particle.
         vector<int>    ecal_cluster; // At most one ecal cluster per particle.
+        vector<int>    track;       // At most one track per particle.
         // Useful extra items obtained from track:
         vector<double> track_chi2;
+        int Add(Single_Particle_t &single, int id, int new_cluster_id, int new_track_id){
+            /// Add particle single@id and return index of added particle.
+            Basic_Particle_t::Add(single, id);
+            ecal_cluster.push_back(new_cluster_id);
+            track.push_back(new_track_id);
+            track_chi2.push_back(single.track_chi2[id]);
+            return int(track.size() -1);
+        }
     };
 
     Single_Particle_t part;

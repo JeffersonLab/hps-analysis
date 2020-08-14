@@ -90,10 +90,11 @@ long LcioReader::Run(int max_event) {
             }
 
             event_number = lcio_event->getEventNumber();
-            if( (++evt_count)%Counter_Freq == 0) {
-                printf("i: %'10lu   event: %'10d  run: %5d\n", evt_count, event_number, run_number);
+            if( md_Debug>0 ) {
+                if ((++evt_count) % Counter_Freq == 0) {
+                    printf("i: %'10lu   event: %'10d  run: %5d\n", evt_count, event_number, run_number);
+                }
             }
-
             if(max_event>0 && evt_count > max_event) break;  // End the loop, we are done.
 
             time_stamp = lcio_event->getTimeStamp();
@@ -228,7 +229,7 @@ long LcioReader::Run(int max_event) {
                         ecal_hit_field_decoder.setValue(value);
 
                         ecal_hit_index_x.push_back(ecal_hit_field_decoder["ix"]);
-                        ecal_hit_index_x.push_back(ecal_hit_field_decoder["iy"]);
+                        ecal_hit_index_y.push_back(ecal_hit_field_decoder["iy"]);
                     }
                 }
             }

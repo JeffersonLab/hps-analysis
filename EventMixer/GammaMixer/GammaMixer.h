@@ -9,10 +9,10 @@
 
 class GammaMixer : public MiniDst {
 public:
-    explicit GammaMixer(const string &input_file=""){
+    explicit GammaMixer(const string &input_file=""): MiniDst("mixed_photons.root"){
         if(!input_file.empty()) input_file_list.push_back(input_file);
     };
-    explicit GammaMixer(const vector<string> &infile_list): input_file_list(infile_list){};
+    explicit GammaMixer(const vector<string> &infile_list): input_file_list(infile_list), MiniDst("mixed_photons.root"){};
     ~GammaMixer() override = default;
 
     void Start() override;
@@ -32,7 +32,11 @@ public:
     MiniDst event_out;
     int event_number2;
 
+    std::vector<double> two_photon_sum_original_energy1;
+    std::vector<double> two_photon_sum_original_energy2;
+    std::vector<double> two_photon_sum_mixed_energy;
     double ecal_cluster_sum_max{2.5};
+    double delta_esum_tolerance{0.1};
 };
 
 

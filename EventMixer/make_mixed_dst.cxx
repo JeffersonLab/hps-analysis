@@ -28,6 +28,7 @@ int main(int argc, char **argv) {
                      cxxopts::value<std::vector<std::string>>())
                     ("n,num_evt","Only process num_evt event to output.", cxxopts::value<long>()->default_value("0"))
                     ("x,mix_mult","Mixing multiplier number", cxxopts::value<int>()->default_value("10"))
+                    ("t,esum_tolerance","Energy difference tolerance for esum (0.1)", cxxopts::value<double>()->default_value("0.1"))
                     ("h,help", "Print help")
             ;
 
@@ -61,7 +62,10 @@ int main(int argc, char **argv) {
 
     auto gamma_mixer = GammaMixer(infiles);
     gamma_mixer.SetDebugLevel(debug);
+    gamma_mixer.SetOutputFileName(outfile);
     gamma_mixer.mix_multiplyer = mix_mult;
+    gamma_mixer.Counter_Freq = 10000;
+    gamma_mixer.delta_esum_tolerance=args["esum_tolerance"].as<double>();
     gamma_mixer.Start();
     gamma_mixer.Run(num_evt);
     gamma_mixer.End();

@@ -115,7 +115,7 @@ int main(int argc, char **argv){
         debug_code = 0x0A + ( (debug-1) << 4);
         printf("Debug code = 0x%02X \n",debug_code);
     }
-    cout << "Debug code = " << debug_code << endl;
+    if(debug>0) cout << "Debug code = " << debug_code << endl;
     dst->SetDebugLevel(debug_code);
     dst->write_mc_particles = store_mc_particles;
     dst->write_ecal_cluster = store_ecal_clusters || store_all;

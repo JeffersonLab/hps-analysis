@@ -44,7 +44,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(LCIO REQUIRED)
 include_directories( AFTER "${LCIO_INCLUDE_DIR}")
-
+message(STATUS "LCIO includes: ${LCIO_INCLUDE_DIR}")
 # You need to tell CMake where to find the ROOT installation.
 #   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
 # find ROOT installation

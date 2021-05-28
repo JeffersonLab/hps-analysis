@@ -36,9 +36,14 @@ void GammaMixer::Start() {
     }
     // Add one more branch for event_number2
     branch_map_try_emplace("event_number2", &event_number2);
-    branch_map_try_emplace("two_photon_sum_original_energy1", &two_photon_sum_original_energy1);
-    branch_map_try_emplace("two_photon_sum_original_energy2", &two_photon_sum_original_energy2);
-    branch_map_try_emplace("two_photon_sum_mixed_energy", &two_photon_sum_mixed_energy);
+    branch_map_try_emplace("two_photon_esum_original1", &two_photon_esum_original1);
+    branch_map_try_emplace("two_photon_esum_original2", &two_photon_esum_original2);
+    branch_map_try_emplace("two_photon_esum_mixed", &two_photon_esum_mixed);
+    branch_map_try_emplace("two_photon_mass_original1", &two_photon_mass_original1);
+    branch_map_try_emplace("two_photon_mass_original2", &two_photon_mass_original2);
+    branch_map_try_emplace("two_photon_mass_mixed", &two_photon_mass_mixed);
+    branch_map_try_emplace("n_evt1", &n_evt1);
+    branch_map_try_emplace("n_evt2", &n_evt2);
 
     SetBranchMap();  // Connect the branches to the standard output tree.
 
@@ -80,70 +85,94 @@ long GammaMixer::Run(int max_event) {
             int e1_gamma_1 =0;
             int e1_gamma_2 = 1;
             bool gamma1_ok;
-            int n_evt_for_current_evt1 = 0;
+            int number_of_evt1 = 0;  // Count how many times i_evt1 is re-used. Should be ~ mix_multiplyer.
+            // Note: Cannot keep count in n_evt1 because it is set to zero in Clear().
             while(Find_Good_Photon_Pair(event1, e1_gamma_1, e1_gamma_2 ) &&
-                    n_evt_for_current_evt1 < mix_multiplyer){
-                   for(long i_evt2 = i_evt1+1; i_evt2 < max_entries && n_evt_for_current_evt1 < mix_multiplyer; ++i_evt2){
-                       tree2->GetEntry(i_evt2);
-                       n_evt_in2++;
-                       int e2_gamma_1 =0;
-                       int e2_gamma_2 = 1;
-                       bool gamma2_ok;
-                       while(Find_Good_Photon_Pair(event2, e2_gamma_1, e2_gamma_2)){
-                           ///////////////////////////////////// Event1 - Event2 Photon Pair matching conditions /////////////
-                           ///
-                           /// Select same time difference < 2 ns.
-                           /// Select same energy sum range.
-                           ///
-                           //////////////////////////////////////////////////////////////////////////////////////////////////
-                           int i_clus1 = event1.part.ecal_cluster[e1_gamma_1];
-                           int i_clus2 = event1.part.ecal_cluster[e1_gamma_2];
-                           double esum_pair_i = event1.ecal_cluster_energy[i_clus1] + event1.ecal_cluster_energy[i_clus2];
+                  number_of_evt1 < mix_multiplyer){
+                for(long i_evt2 = i_evt1+1; i_evt2 < max_entries && number_of_evt1 < mix_multiplyer; ++i_evt2){
+                    tree2->GetEntry(i_evt2);
+                    n_evt_in2++;
+                    int e2_gamma_1 =0;
+                    int e2_gamma_2 = 1;
+                    bool gamma2_ok;
+                    int number_of_evt2 = 0; // Count how many times i_evt2 is re-used.
+                    while(Find_Good_Photon_Pair(event2, e2_gamma_1, e2_gamma_2)){
+                        ///////////////////////////////////// Event1 - Event2 Photon Pair matching conditions /////////////
+                        ///
+                        /// Select same time difference < 2 ns.
+                        /// Select same energy sum range.
+                        ///
+                        //////////////////////////////////////////////////////////////////////////////////////////////////
+                        int i_clus1 = event1.part.ecal_cluster[e1_gamma_1];
+                        int i_clus2 = event1.part.ecal_cluster[e1_gamma_2];
+                        double esum_pair_i = event1.ecal_cluster_energy[i_clus1] + event1.ecal_cluster_energy[i_clus2];
 
-                           int j_clus1 = event2.part.ecal_cluster[e2_gamma_1];
-                           int j_clus2 = event2.part.ecal_cluster[e2_gamma_2];
-                           double esum_pair_j = event2.ecal_cluster_energy[j_clus1] + event2.ecal_cluster_energy[j_clus2];
-                           int gamma1{0};
-                           int gamma2{0};
-                           for(int i=0; i<2; ++i) for(int j=0; j<2; ++j){
-                               if(i==0) gamma1 = e1_gamma_1;
-                               else     gamma1 = e1_gamma_2;
-                               if(j==0) gamma2 = e2_gamma_1;
-                               else     gamma2 = e2_gamma_2;
-                               int clus1 = event1.part.ecal_cluster[gamma1];
-                               int clus2 = event2.part.ecal_cluster[gamma2];
-                               double esum_mixed = event1.ecal_cluster_energy[clus1] + event2.ecal_cluster_energy[clus2];
-                               if( abs( esum_mixed - esum_pair_i ) < delta_esum_tolerance ){
-                                   // First clear the old event.
-                                   Clear();
+                        int j_clus1 = event2.part.ecal_cluster[e2_gamma_1];
+                        int j_clus2 = event2.part.ecal_cluster[e2_gamma_2];
+                        double esum_pair_j = event2.ecal_cluster_energy[j_clus1] + event2.ecal_cluster_energy[j_clus2];
+                        int gamma1{0};
+                        int gamma2{0};
+                        for(int i=0; i<2; ++i) for(int j=0; j<2; ++j){
+                                if(i==0) gamma1 = e1_gamma_1;
+                                else     gamma1 = e1_gamma_2;
+                                if(j==0) gamma2 = e2_gamma_1;
+                                else     gamma2 = e2_gamma_2;
+                                int clus1 = event1.part.ecal_cluster[gamma1];
+                                int clus2 = event2.part.ecal_cluster[gamma2];
+                                double esum_mixed = event1.ecal_cluster_energy[clus1] + event2.ecal_cluster_energy[clus2];
+                                if( abs( esum_mixed - esum_pair_i ) < delta_esum_tolerance ){
+                                    // First clear the old event.
+                                    Clear();
 
-                                   two_photon_sum_original_energy1.push_back(esum_pair_i);
-                                   two_photon_sum_original_energy2.push_back(esum_pair_j);
-                                   two_photon_sum_mixed_energy.push_back(esum_mixed);
+                                    two_photon_esum_original1 = esum_pair_i;
+                                    two_photon_esum_original2 = esum_pair_j;
+                                    two_photon_esum_mixed= esum_mixed;
 
-                                   Write_Mixed_Photon_Events(event1, e1_gamma_1, event2, e2_gamma_2);
+                                    n_evt1 = number_of_evt1;
+                                    n_evt2 = number_of_evt2;
 
-                                   // Fill the output TTree
-                                   md_output_tree->Fill();
+                                    // Convenience: Compute the two photon invariant masses.
+                                    ROOT::Math::PxPyPzMVector p1(event1.part.px[e1_gamma_1], event1.part.py[e1_gamma_1], event1.part.pz[e1_gamma_1], 0.);
+                                    ROOT::Math::PxPyPzMVector p2(event1.part.px[e1_gamma_2], event1.part.py[e1_gamma_2], event1.part.pz[e1_gamma_2], 0.);
+                                    auto psum = p1+p2;
+                                    two_photon_mass_original1 = psum.mass();
 
-                                   // Update output counter and inform user.
-                                   n_evt_out++;
-                                   if( n_evt_out%Counter_Freq == 0){
-                                       printf("out: %'10ld  n1: %'10ld  n2: %'10ld  event1: %'8d  event2: %'8d  run: %5d\n",
-                                              n_evt_out, n_evt_in1, n_evt_in2, event1.event_number, event2.event_number, event1.run_number);
-                                   }
+                                    p1 = ROOT::Math::PxPyPzMVector(event2.part.px[e2_gamma_1], event2.part.py[e2_gamma_1], event2.part.pz[e2_gamma_1],0);
+                                    p2 = ROOT::Math::PxPyPzMVector(event2.part.px[e2_gamma_2], event2.part.py[e2_gamma_2], event2.part.pz[e2_gamma_2],0);
+                                    psum = p1+p2;
+                                    two_photon_mass_original2 = psum.mass();
 
-                                   // Enough already?
-                                   if(max_event>0 && n_evt_out >= max_event) return(n_evt_out);
-                               }
-                           }
-                           e2_gamma_1++;
-                           e2_gamma_2 = e2_gamma_1 +1;
-                           n_evt_for_current_evt1++;
-                       }
-                   }
-                   e1_gamma_1++;
-                   e1_gamma_2 = e1_gamma_1 +1;
+                                    p1 = ROOT::Math::PxPyPzMVector(event1.part.px[gamma1], event1.part.py[gamma1], event1.part.pz[gamma1],0);
+                                    p2 = ROOT::Math::PxPyPzMVector(event2.part.px[gamma2], event2.part.py[gamma2], event2.part.pz[gamma2],0);
+                                    psum = p1+p2;
+                                    two_photon_mass_mixed = psum.mass();
+
+                                    Write_Mixed_Photon_Events(event1, e1_gamma_1, event2, e2_gamma_2);
+
+                                    number_of_evt1++;
+                                    number_of_evt2++;
+
+                                    // Fill the output TTree
+                                    md_output_tree->Fill();
+
+                                    // Update output counter and inform user.
+                                    n_evt_out++;
+
+                                    if( n_evt_out%Counter_Freq == 0){
+                                        printf("out: %'10ld  n1: %'10ld  n2: %'10ld  event1: %'8d  event2: %'8d  run: %5d\n",
+                                               n_evt_out, n_evt_in1, n_evt_in2, event1.event_number, event2.event_number, event1.run_number);
+                                    }
+
+                                    // Enough already?
+                                    if(max_event>0 && n_evt_out >= max_event) return(n_evt_out);
+                                }
+                            }
+                        e2_gamma_1++;
+                        e2_gamma_2 = e2_gamma_1 +1;
+                    }
+                }
+                e1_gamma_1++;
+                e1_gamma_2 = e1_gamma_1 +1;
             }
         }
     }
@@ -174,7 +203,7 @@ bool GammaMixer::Find_Good_Photon_Pair(MiniDst &event, int &found1, int &found2)
             /////////////////////////////////////////////////////////////////////////////////////////////
             double clus_time1 = event.ecal_cluster_time[i_clus1];
             double clus_time2 = event.ecal_cluster_time[i_clus2];
-            if( abs(clus_time1 - clus_time2) > 2.) continue;  // Too far apart in time.
+            if( abs(clus_time1 - clus_time2) > ecal_cluster_delta_t_max ) continue;  // Too far apart in time.
 
             double clus_energy1 = event.ecal_cluster_energy[i_clus1];
             double clus_energy2 = event.ecal_cluster_energy[i_clus2];

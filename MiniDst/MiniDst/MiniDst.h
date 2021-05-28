@@ -128,6 +128,7 @@ public:
     /// Switches that allow turning output on/off.
     bool write_ecal_cluster{true};
     bool write_ecal_hits{true};
+    bool write_svt_raw_hits{false};
     bool write_svt_hits{true};
     bool write_tracks{true};
     bool write_only_gbl_tracks{false};
@@ -188,9 +189,8 @@ public:
     vector<int> ecal_cluster_nhits; // Not strictly needed, but handy. (could use ecal_cluster_hits[i].size())
 
     // RAW SVT Hits  == Not available in the 2016 DST, but could be useful for some LCIO based studies.
-    // ToDo: Add these later?
     //
-    // svt_raw_hit_layer
+    vector<int> svt_raw_hit_layer;
     // svt_raw_hit_strip
     // svt_raw_hit_charge
     // svt_raw_hit_time

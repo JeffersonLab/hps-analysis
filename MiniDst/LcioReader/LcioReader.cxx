@@ -307,6 +307,9 @@ long LcioReader::Run(int max_event) {
                         svt_hit_z.push_back(pos[2]);
                         svt_hit_edep.push_back(lcio_svt_hit->getEDep()); // Not in 2016 data.
 
+                        ULong64_t value2 = (ULong64_t(lcio_svt_hit->getCellID0()) & 0xffffffff) |
+                                          (ULong64_t(lcio_svt_hit->getCellID1()) << 32);
+
                         EVENT::LCObjectVec raw_hits = lcio_svt_hit->getRawHits();
                         auto lcio_raw_hit = dynamic_cast<EVENT::TrackerRawData *>(raw_hits.at(0));
                         ULong64_t value = (ULong64_t(lcio_raw_hit->getCellID0()) & 0xffffffff) |

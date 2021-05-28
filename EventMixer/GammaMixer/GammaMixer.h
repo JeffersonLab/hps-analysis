@@ -6,6 +6,8 @@
 #define HPS_ANALYSIS_GAMMAMIXER_H
 
 #include "MiniDst.h"
+#include "Math/LorentzVector.h"
+#include "Math/Vector4D.h"
 
 class GammaMixer : public MiniDst {
 public:
@@ -32,10 +34,17 @@ public:
     MiniDst event_out;
     int event_number2;
 
-    std::vector<double> two_photon_sum_original_energy1;
-    std::vector<double> two_photon_sum_original_energy2;
-    std::vector<double> two_photon_sum_mixed_energy;
+    double two_photon_esum_original1;  /// Energy sum of original photon pair1.
+    double two_photon_esum_original2;  /// Energy sum of original photon pair2.
+    double two_photon_esum_mixed;      /// Energy sum of mixed photon pair.
+    double two_photon_mass_original1;  /// Invariant mass of original photon pair1.
+    double two_photon_mass_original2;  /// Invariant mass of original photon pair2.
+    double two_photon_mass_mixed;    /// Invariant mass of mixed photon pair.
+    int n_evt1;     /// Number of times evt1 is used in output events.
+    int n_evt2;     /// Number of times evt2 is used in output events.
+
     double ecal_cluster_sum_max{2.5};
+    double ecal_cluster_delta_t_max{2.};
     double delta_esum_tolerance{0.1};
 };
 

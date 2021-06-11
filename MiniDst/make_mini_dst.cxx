@@ -14,28 +14,38 @@ int main(int argc, char **argv){
 
     setlocale(LC_NUMERIC, "");
 
+    // This is a nicer way to do options in C++. See cxxopts.hpp file.
     cxxopts::Options options(argv[0], " - Write a ROOT MiniDst for HPS data.\n");
     options
             .positional_help(" infile1 infile2 ...")
             .show_positional_help();
 
-    bool apple = false;
-
-    options
-            .add_options()
+    options.add_options()
                     ("d,debug", "Increase debug level")
                     ("q,quiet", "Run quiet.")
-                    ("a,all", "Store all known values in file. Equivalent to -c -e -s",
+                    ("a,all", "Store all known values in file, except the raw stuff. Equivalent to -c -e -s",
                      cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
                     ("c,ecal_clusters", "Store Ecal Clusters",
                             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
                     ("e,ecal_hits", "Store Ecal Hits",
                      cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-                    ("s,svt_hits", "Store SVT Hits",
+                    ("s,svt_hits", "Store SVT 3D and/or strip Hits",
                      cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-                    ("g,gbl_tracks_only", "Only store GBL tracks",
+                    ("r,raw_svt_hits", "Store SVT RAW Hits",
+                         cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+                    ("g,gbl_tracks", "Store GBL tracks",
                      cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-                    ("T,no_tracks", "DO NOT Store tracks",
+                    ("G,gbl_kinks", "Store GBL track kink data",
+                     cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+                    ("k,kf_tracks", "Store KF tracks",
+                     cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+                    ("t,matched_tracks", "Store Matched tracks",
+                     cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+                    ("T,all_tracks", "Store all tracks (set gbl, kf and matched track to true).",
+                     cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+                    ("no_kf_particles","Do NOT store the KF particles or vertexes.",
+                     cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+                    ("no_gbl_particles","Do NOT store the GBL particles or vertexes.",
                      cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
                     ("M,no_mc_particles", "DO NOT Store MCParticles, even if they are in the input",
                      cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
@@ -61,11 +71,10 @@ int main(int argc, char **argv){
     auto& infiles = args["inputfiles"].as<std::vector<std::string>>();
     auto& outfile = args["output"].as<std::string>();
     auto& store_all = args["all"].as<bool>();
-    auto& store_ecal_clusters = args["ecal_clusters"].as<bool>();
-    auto& store_ecal_hits = args["ecal_hits"].as<bool>();
     auto& store_svt_hits = args["svt_hits"].as<bool>();
-    auto& no_tracks = args["no_tracks"].as<bool>();
-    auto& gbl_tracks_only = args["gbl_tracks_only"].as<bool>();
+    auto& all_tracks = args["all_tracks"].as<bool>();
+    auto& kf_tracks = args["kf_tracks"].as<bool>();
+    auto& matched_tracks = args["matched_tracks"].as<bool>();
     auto& no_mc_particles = args["no_mc_particles"].as<bool>();
     auto& store_mc_particles = args["no_mc_particles"].as<bool>();
     auto& num_evt = args["num_evt"].as<long>();
@@ -83,8 +92,6 @@ int main(int argc, char **argv){
         }
         cout << endl;
         cout << "Output: " << outfile << endl;
-        if(store_ecal_clusters) cout << "Storing the ECAL clusters.\n";
-        if(store_ecal_hits) cout << "Storing the ECAL hits.\n";
     }
 
     MiniDst *dst{nullptr};
@@ -118,12 +125,46 @@ int main(int argc, char **argv){
     if(debug>0) cout << "Debug code = " << debug_code << endl;
     dst->SetDebugLevel(debug_code);
     dst->write_mc_particles = store_mc_particles;
-    dst->write_ecal_cluster = store_ecal_clusters || store_all;
-    dst->write_ecal_hits = store_ecal_hits || store_all;
+    dst->write_ecal_cluster = store_all || args["ecal_clusters"].as<bool>();
+    dst->write_ecal_hits = store_all || args["ecal_hits"].as<bool>();
     dst->write_svt_hits = store_svt_hits || store_all;
-    dst->write_tracks = !no_tracks;
-    dst->write_only_gbl_tracks = gbl_tracks_only;
+    dst->write_svt_raw_hits = args["raw_svt_hits"].as<bool>();
+    dst->write_kf_tracks = kf_tracks || all_tracks || store_all;
+    dst->write_gbl_tracks = all_tracks || store_all || args["gbl_tracks"].as<bool>();
+    dst->write_gbl_kink_data = store_all || args["gbl_kinks"].as<bool>();
+    dst->write_matched_tracks = matched_tracks || all_tracks || store_all;
+    dst->write_kf_particles = !args["no_kf_particles"].as<bool>();
+    dst->write_gbl_particles = !args["no_gbl_particles"].as<bool>();
     dst->SetOutputFileName(outfile);
+
+    if(args["no_kf_particles"].as<bool>()){  // Erase and and all KF particle types in the output list.
+        vector<int> copy_single(dst->particle_types_single); // make a copy
+        dst->particle_types_single.clear();
+        for(int p: copy_single){
+            if(p >= dst->FINAL_STATE_PARTICLE_GBL) dst->particle_types_single.push_back(p);
+        }
+        vector<int> copy_double(dst->particle_types_double); // make a copy
+        dst->particle_types_double.clear();
+        for(int p: copy_double){
+            if(p >= dst->FINAL_STATE_PARTICLE_GBL) dst->particle_types_single.push_back(p);
+        }
+    }
+
+    if(args["no_gbl_particles"].as<bool>()){  // Erase and and all GBL particle types in the output list.
+        vector<int> copy_single(dst->particle_types_single); // make a copy
+        dst->particle_types_single.clear();
+        for(int p: copy_single){
+            if(p < dst->FINAL_STATE_PARTICLE_GBL) dst->particle_types_single.push_back(p);
+        }
+        vector<int> copy_double(dst->particle_types_double); // make a copy
+        dst->particle_types_double.clear();
+        for(int p: copy_double){
+            if(p < dst->FINAL_STATE_PARTICLE_GBL) dst->particle_types_single.push_back(p);
+        }
+    }
+
+
+
 #ifdef DEBUG
     cout << "Extra debug code compiled.\n";
     dst->Counter_Freq =10000;

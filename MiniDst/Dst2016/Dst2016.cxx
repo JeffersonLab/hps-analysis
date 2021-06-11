@@ -148,6 +148,12 @@ Bool_t  Dst2016::Process(Long64_t entry) {
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    /// SVT Hit level
+    ///
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
     if(write_svt_hits){
         for(int i =0; i< GetNumberOfSvtHits(); ++i){
             SvtHit *svthit = GetSvtHit(i);
@@ -161,11 +167,13 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             svt_hit_cyz.push_back(svthit->cyz);
             svt_hit_czz.push_back(svthit->czz);
             svt_hit_time.push_back(svthit->time);
-            svt_hit_layer.push_back(svthit->layer);
+            vector<int> layer;
+            layer.push_back(svthit->layer);
+            svt_hit_layer.push_back(layer);
         }
     }
 
-    if(write_tracks){
+    if(write_kf_tracks){
 #ifdef DEBUG
         // Does EVERY GBL track have a valid SEED?
         for(int i=0;i < GetNumberOfGblTracks(); ++i) {
@@ -233,7 +241,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
         }
     }
 
-    if(write_tracks && !write_only_gbl_tracks){
+    if(write_kf_tracks){
         for(int i=0;i < GetNumberOfTracks(); ++i) {
             SvtTrack *track = GetTrack(i);
             vector<double> iso(track->isolation, track->isolation + 14);

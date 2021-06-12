@@ -359,12 +359,16 @@ long LcioReader::Run(int max_event) {
                     raw_svt_hit_decoder.setValue(value);
 
                     EVENT::LCObjectVec raw_hit_fit_result_list = raw_hit_nav->getRelatedToObjects(raw_hit);
+                    vector<short> raw_hit_adc_short = raw_hit->getADCValues();
+                    vector<int> raw_hit_adc(raw_hit_adc_short.begin(),raw_hit_adc_short.end());
+
                     if(raw_hit_fit_result_list.size() < 1){
                         cout << "Error retrieving the fits for a raw hit.\n";
                     }else{
                         pair<int, int> store_indexes{-1,-2};
                         for(int i_raw_fit=0; i_raw_fit < raw_hit_fit_result_list.size(); ++i_raw_fit) {
                             auto raw_hit_fit = static_cast<IMPL::LCGenericObjectImpl *>(raw_hit_fit_result_list.at(i_raw_fit));
+                            svt_raw_hit_adc.push_back(raw_hit_adc);
                             svt_raw_hit_fit_no.push_back(i_raw_fit);
                             svt_raw_hit_layer.push_back(raw_svt_hit_decoder["layer"]);
                             svt_raw_hit_module.push_back(raw_svt_hit_decoder["module"]);

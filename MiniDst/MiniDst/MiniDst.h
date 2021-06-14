@@ -12,6 +12,7 @@
 #include "TTree.h"
 #include "TVector3.h"
 
+#define __MiniDst__Version__ "1.0.1"
 //
 // The following construction defines a "Variant", a type in C++17 and later that can contain different kinds of object.
 // In our case the variant contains each of the possible types that we have in the output tree.
@@ -64,6 +65,7 @@ using TriggerBits_int_t = union{
 class MiniDst : public TObject {
 
 public:
+    static string _version_(){return(__MiniDst__Version__);};
     MiniDst(): md_output_file_name("minidst.root"){};
     explicit MiniDst(string_view output_file_name): md_output_file_name(output_file_name){};
     ~MiniDst() override = default;
@@ -380,8 +382,6 @@ public:
     vector<double> mc_part_charge;
     vector< vector<int> > mc_part_daughters;
     vector< vector<int> > mc_part_parents;
-
 };
-
 
 #endif //MINIDST_MINIDST_H

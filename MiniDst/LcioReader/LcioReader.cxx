@@ -23,6 +23,7 @@ void LcioReader::Clear(){
     ecal_hit_to_index_map.clear();
     ecal_cluster_to_index_map.clear();
     svt_hit_to_index_map.clear();
+    svt_raw_hit_to_index_map.clear();
     kf_track_to_index_map.clear();
     gbl_track_to_index_map.clear();
     matched_track_to_index_map.clear();
@@ -352,7 +353,7 @@ long LcioReader::Run(int max_event) {
                 EVENT::LCCollection *raw_svt_hit_rel = lcio_event->getCollection("SVTFittedRawTrackerHits");
                 unique_ptr<UTIL::LCRelationNavigator> raw_hit_nav =
                         make_unique<UTIL::LCRelationNavigator>(raw_svt_hit_rel);
-                for(int i_rhit; i_rhit < raw_svt_hits->getNumberOfElements(); ++i_rhit){
+                for(int i_rhit=0; i_rhit < raw_svt_hits->getNumberOfElements(); ++i_rhit){
                     auto raw_hit = static_cast<EVENT::TrackerRawData *>(raw_svt_hits->getElementAt(i_rhit));
                     ULong64_t value = (ULong64_t(raw_hit->getCellID0()) & 0xffffffff) |
                                       (ULong64_t(raw_hit->getCellID1()) << 32);
@@ -379,7 +380,7 @@ long LcioReader::Run(int max_event) {
                             svt_raw_hit_amp_err.push_back(raw_hit_fit->getDoubleVal(3));
                             svt_raw_hit_chi2.push_back(raw_hit_fit->getDoubleVal(4));
                             if(i_raw_fit == 0) store_indexes.first = svt_raw_hit_fit_no.size()-1;
-                            if(i_raw_fit == 1) store_indexes.second = svt_raw_hit_fit_no.size() -1;
+                            if(i_raw_fit == 1) store_indexes.second = svt_raw_hit_fit_no.size()-1;
                         }
                         svt_raw_hit_to_index_map[raw_hit] = store_indexes;
                     }
@@ -389,19 +390,29 @@ long LcioReader::Run(int max_event) {
             /// Parse the "RotatedHelicalTrackHits"       - These are the hits used by the GBL tracker.
             /// and "StripClusterer_SiTrackerHitStrip1D"  - These are the hits used by the KF tracker.
             if (write_svt_hits) {
+                int i_svt_hit_type = -1;
                 for( auto collection_name: svt_hit_collections) {
+                    i_svt_hit_type++;
                     EVENT::LCCollection *tracker_hits = lcio_event->getCollection(collection_name); //
                     for (int i_svt_hit = 0; i_svt_hit < tracker_hits->getNumberOfElements(); ++i_svt_hit) {
                         auto lcio_svt_hit =
                                 dynamic_cast<IMPL::TrackerHitImpl *>(tracker_hits->getElementAt(i_svt_hit));
                         svt_hit_to_index_map[lcio_svt_hit] = i_svt_hit;
 
+                        svt_hit_type.push_back(i_svt_hit_type);
                         svt_hit_time.push_back(lcio_svt_hit->getTime());
                         const double *pos = lcio_svt_hit->getPosition();
                         svt_hit_x.push_back(pos[0]);
                         svt_hit_y.push_back(pos[1]);
                         svt_hit_z.push_back(pos[2]);
                         svt_hit_edep.push_back(lcio_svt_hit->getEDep()); // Not in 2016 data.
+                        const vector<float> cov_mat = lcio_svt_hit->getCovMatrix();
+                        svt_hit_cxx.push_back(cov_mat[0]);
+                        svt_hit_cxy.push_back(cov_mat[1]);
+                        svt_hit_cyy.push_back(cov_mat[2]);
+                        svt_hit_cxz.push_back(cov_mat[3]);
+                        svt_hit_cyz.push_back(cov_mat[4]);
+                        svt_hit_czz.push_back(cov_mat[5]);
 
                         //ULong64_t value2 = (ULong64_t(lcio_svt_hit->getCellID0()) & 0xffffffff) |
                         //                   (ULong64_t(lcio_svt_hit->getCellID1()) << 32);
@@ -414,10 +425,17 @@ long LcioReader::Run(int max_event) {
                         for (int i_hit = 0; i_hit < raw_hits.size(); ++i_hit) {
                             auto lcio_raw_hit = static_cast<EVENT::TrackerRawData *>(raw_hits.at(i_hit));
                             if(write_svt_raw_hits){
-                                // TODO: Insert raw hit search from map.
                                 auto hit_index_ptr = svt_raw_hit_to_index_map.find(lcio_raw_hit);
                                 if( hit_index_ptr != svt_raw_hit_to_index_map.end() ) {
-                                    raw_index.push_back(hit_index_ptr->second.first);
+                                    /// We try to disambiguate the two possible fits. The only handle we have is time.
+                                    int i_use_raw_index = hit_index_ptr->second.first; // default to the first.
+                                    if(hit_index_ptr->second.second >= 0){   // There is a second.
+                                        if( abs(svt_hit_time.back() - svt_raw_hit_t0[hit_index_ptr->second.first])
+                                            > abs(svt_hit_time.back() - svt_raw_hit_t0[hit_index_ptr->second.second])) {
+                                            i_use_raw_index = hit_index_ptr->second.second;
+                                        }
+                                    }
+                                    raw_index.push_back(i_use_raw_index);
                                 }else{
                                     raw_index.push_back(-1);
                                 }
@@ -434,6 +452,7 @@ long LcioReader::Run(int max_event) {
                             // int side = raw_svt_hit_decoder["side"];
                             strip.push_back(raw_svt_hit_decoder["strip"]);
                         }
+                        svt_hit_raw_index.push_back(raw_index);
                         svt_hit_layer.push_back(layer);
                         svt_hit_module.push_back(module);
                         svt_hit_strip.push_back(strip);
@@ -581,32 +600,36 @@ long LcioReader::Run(int max_event) {
                             track_py.push_back(track_info->getFloatVal(2));
                             track_pz.push_back(track_info->getFloatVal(3));
                         }else {
-                            track_px.push_back(-99.);
-                            track_py.push_back(-99.);
-                            track_pz.push_back(-99.);
+                            track_px.push_back(-999.);
+                            track_py.push_back(-999.);
+                            track_pz.push_back(-999.);
                         }
                         track_volume.push_back(track_info->getIntVal(0));
                     } else {
                         if(track_is_gbl) cout << "Track without TrackData for type GBL\n";
                         if(track_is_kf) cout << "Track without KFTrackData for type KF\n";
-                        track_time.push_back(-99.);
+                        track_time.push_back(-999.);
                         track_volume.push_back(-1);
-                        track_px.push_back(-99.);
-                        track_py.push_back(-99.);
-                        track_pz.push_back(-99.);
+                        track_px.push_back(-999.);
+                        track_py.push_back(-999.);
+                        track_pz.push_back(-999.);
                     }
                     track_isolation.push_back(iso_values);
 
-                    if(write_svt_hits && track_is_gbl) {
+                    if(write_svt_hits ) {
                         // Get the collection of 3D hits associated with a LCIO Track
-                        EVENT::TrackerHitVec gbl_tracker_hits = lcio_track->getTrackerHits();
+                        EVENT::TrackerHitVec tracker_hits = lcio_track->getTrackerHits();
 
-                        track_n_hits.push_back(gbl_tracker_hits.size());
+                        track_n_hits.push_back(tracker_hits.size());
                         vector<int> svt_hits;
-                        if (write_svt_hits) {
-                            svt_hits.reserve(gbl_tracker_hits.size());
-                            for (int i_trk = 0; i_trk < gbl_tracker_hits.size(); ++i_trk) {
-                                auto trk_hit = dynamic_cast<IMPL::TrackerHitImpl *>(gbl_tracker_hits[i_trk]);
+                        svt_hits.reserve(tracker_hits.size());
+                        for (int i_trk = 0; i_trk < tracker_hits.size(); ++i_trk) {
+                            auto trk_hit = dynamic_cast<IMPL::TrackerHitImpl *>(tracker_hits[i_trk]);
+                            auto svt_hit_ptr = svt_hit_to_index_map.find(trk_hit);
+                            if (svt_hit_ptr == svt_hit_to_index_map.end()) {
+                                cout << "Track - hit association error. Hit not found in map.\n";
+                                svt_hits.push_back(-99);
+                            } else{
                                 int hit_index = svt_hit_to_index_map[trk_hit];
                                 svt_hits.push_back(hit_index);
                             }
@@ -923,6 +946,7 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
         sub->clus_ix.push_back(ecal_cluster_seed_ix[iclus]);
         sub->clus_iy.push_back(ecal_cluster_seed_iy[iclus]);
     }else{ // Clusterless track. Fill cluster stuff with -99.
+        sub->clus.push_back(-99);
         sub->clus_energy.push_back(-99.);
         sub->clus_time.push_back(-99.);
         sub->clus_pos_x.push_back(-99.);

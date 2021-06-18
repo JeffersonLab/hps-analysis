@@ -229,6 +229,7 @@ public:
     vector<double> svt_raw_hit_chi2;
 
     // SVT Hits
+    vector<int>    svt_hit_type; /// 0 -> StripClusterer_SiTrackerHitStrip1D ; 1 -> RotatedHelicalTrackHits
     vector<double> svt_hit_x;
     vector<double> svt_hit_y;
     vector<double> svt_hit_z;
@@ -344,7 +345,6 @@ public:
     };
 
     struct Vertex_Particle_t: Basic_Particle_t{
-        vector<double> n_daughter; // Not needed, should alsways be = 2.
         /// Since this is for HPS data, the subs are always an e+ and an e-.
         vector<double> vertex_x;
         vector<double> vertex_y;

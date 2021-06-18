@@ -90,6 +90,7 @@ void MiniDst::DefineBranchMap() {
     branch_map_try_emplace("svt_raw_hit_chi2", &svt_raw_hit_chi2, write_svt_raw_hits);
     branch_map_try_emplace("svt_raw_hit_fit_no", &svt_raw_hit_fit_no, write_svt_raw_hits);
 
+    branch_map_try_emplace("svt_hit_type", &svt_hit_type, write_svt_hits);
     branch_map_try_emplace("svt_hit_x", &svt_hit_x, write_svt_hits);
     branch_map_try_emplace("svt_hit_y", &svt_hit_y, write_svt_hits);
     branch_map_try_emplace("svt_hit_z", &svt_hit_z, write_svt_hits);
@@ -161,7 +162,7 @@ void MiniDst::DefineBranchMap() {
     branch_map_try_emplace("v0_px", &v0.px, write_particles);
     branch_map_try_emplace("v0_py", &v0.py, write_particles);
     branch_map_try_emplace("v0_pz", &v0.pz, write_particles);
-    branch_map_try_emplace("v0_n_daughter", &v0.n_daughter, write_particles);
+
 
     branch_map_try_emplace("v0_vertex_x", &v0.vertex_x, write_particles);
     branch_map_try_emplace("v0_vertex_y", &v0.vertex_y, write_particles);

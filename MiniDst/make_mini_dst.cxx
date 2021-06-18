@@ -16,7 +16,7 @@ int main(int argc, char **argv){
 
     // This is a nicer way to do options in C++. See cxxopts.hpp file.
     string help_string = "Write a ROOT MiniDst for HPS data.\nVersion: 1.0.0, using MiniDst.h version "+MiniDst::_version_()+
-            "\nCompiled with "+__VERSION__;
+            "\nCompiled with "+__VERSION__+"\n";
     cxxopts::Options options(argv[0], help_string);
     options
             .positional_help(" infile1 infile2 ...")

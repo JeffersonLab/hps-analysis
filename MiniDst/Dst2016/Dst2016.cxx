@@ -401,9 +401,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             v0.vertex_y.push_back(hps_vert_part->vtx_y);
             v0.vertex_z.push_back(hps_vert_part->vtx_z);
             v0.vertex_chi2.push_back(hps_vert_part->vtx_fit_chi2);
-            v0.n_daughter.push_back(hps_vert_part->n_daughters);
 
-            // We only look for and store 2 daughter particles.
 #ifdef DEBUG
             if (hps_vert_part->n_daughters != 2)
                 std::cout << "Weird, but I expected 2 and only 2 daughters, but got " << hps_vert_part->n_daughters << std::endl;

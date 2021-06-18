@@ -94,7 +94,15 @@ public:
     explicit LcioReader(const string &input_file=""){
         if(!input_file.empty()) input_file_list.push_back(input_file);
     };
-    explicit LcioReader(const vector<string> &infile_list): input_file_list(infile_list){};
+    explicit LcioReader(const vector<string> &infile_list): input_file_list(infile_list){
+#ifdef DEBUG
+        {
+            for(auto file: infile_list){
+                std::cout << "File: " << file << std::endl;
+            }
+        }
+#endif
+    };
     ~LcioReader() override = default;
 
     void Clear() override;

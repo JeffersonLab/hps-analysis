@@ -44,7 +44,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(LCIO REQUIRED)
 include_directories( AFTER "${LCIO_INCLUDE_DIR}")
-
+message(STATUS "LCIO includes: ${LCIO_INCLUDE_DIR}")
 # You need to tell CMake where to find the ROOT installation.
 #   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
 # find ROOT installation
@@ -100,12 +100,10 @@ install(TARGETS lcio_test_reader)
 #
 # Somehow on Linux the stdc++ does not (always) get properly picked up.
 #
-IF(CMAKE_SYSTEM_NAME STREQUAL Linux)
-   target_link_libraries(make_mini_dst -lstdc++ )   
-   target_link_libraries(lcio_test_reader -lstdc++ )   
-endif(CMAKE_SYSTEM_NAME STREQUAL Linux)
-
-
+#IF(CMAKE_SYSTEM_NAME STREQUAL Linux)
+#   target_link_libraries(make_mini_dst -lstdc++ )
+#   target_link_libraries(lcio_test_reader -lstdc++ )
+#endif(CMAKE_SYSTEM_NAME STREQUAL Linux)
 
 message("-----------------------------------------------")
 message("* Configuration Summary: ")

@@ -148,6 +148,12 @@ Bool_t  Dst2016::Process(Long64_t entry) {
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    /// SVT Hit level
+    ///
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
     if(write_svt_hits){
         for(int i =0; i< GetNumberOfSvtHits(); ++i){
             SvtHit *svthit = GetSvtHit(i);
@@ -161,11 +167,13 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             svt_hit_cyz.push_back(svthit->cyz);
             svt_hit_czz.push_back(svthit->czz);
             svt_hit_time.push_back(svthit->time);
-            svt_hit_layer.push_back(svthit->layer);
+            vector<int> layer;
+            layer.push_back(svthit->layer);
+            svt_hit_layer.push_back(layer);
         }
     }
 
-    if(write_tracks){
+    if(write_kf_tracks){
 #ifdef DEBUG
         // Does EVERY GBL track have a valid SEED?
         for(int i=0;i < GetNumberOfGblTracks(); ++i) {
@@ -233,7 +241,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
         }
     }
 
-    if(write_tracks && !write_only_gbl_tracks){
+    if(write_kf_tracks){
         for(int i=0;i < GetNumberOfTracks(); ++i) {
             SvtTrack *track = GetTrack(i);
             vector<double> iso(track->isolation, track->isolation + 14);
@@ -393,9 +401,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             v0.vertex_y.push_back(hps_vert_part->vtx_y);
             v0.vertex_z.push_back(hps_vert_part->vtx_z);
             v0.vertex_chi2.push_back(hps_vert_part->vtx_fit_chi2);
-            v0.n_daughter.push_back(hps_vert_part->n_daughters);
 
-            // We only look for and store 2 daughter particles.
 #ifdef DEBUG
             if (hps_vert_part->n_daughters != 2)
                 std::cout << "Weird, but I expected 2 and only 2 daughters, but got " << hps_vert_part->n_daughters << std::endl;

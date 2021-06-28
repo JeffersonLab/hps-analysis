@@ -8,11 +8,51 @@
 #include "cxxopts.hpp"
 #include <IO/LCReader.h>
 #include <IOIMPL/LCFactory.h>
+#include <EVENT/LCEvent.h>
+#include <EVENT/LCGenericObject.h>
+#include <EVENT/LCCollection.h>
+#include <EVENT/CalorimeterHit.h>
+#include <EVENT/ParticleID.h>
+#include <EVENT/TrackerHit.h>
+#include <EVENT/TrackerRawData.h>
+#include <EVENT/Track.h>
+#include <EVENT/Vertex.h>
+#include <EVENT/ReconstructedParticle.h>
+#include <UTIL/LCRelationNavigator.h>
+#include <IMPL/CalorimeterHitImpl.h>
+#include <IMPL/ClusterImpl.h>
+#include <IMPL/TrackerHitImpl.h>
+#include <IMPL/LCGenericObjectImpl.h>
+#include <UTIL/BitField64.h>
+#include <locale.h>
 
 using namespace std;
 
+void print_collection_id(EVENT::LCEvent* lcio_event, string name){
+    // Print collection ids for tracker like collection name.
+    EVENT::LCCollection* collection = lcio_event->getCollection(name.c_str());
+    unsigned long long raw_value{0};
+    for(int i=0; i < collection->getNumberOfElements(); ++i){
+        auto track_hit = dynamic_cast<IMPL::TrackerHitImpl*>(collection->getElementAt(i));
+        unsigned long long value = ((unsigned long long)(track_hit->getCellID0()) & 0xffffffff) |
+                                   ( (unsigned long long)(track_hit->getCellID1()) << 32);
+
+        EVENT::LCObjectVec raw_hits = track_hit->getRawHits();
+        if(!raw_hits.empty()) {
+            auto lcio_raw_hit = dynamic_cast<EVENT::TrackerRawData *>(raw_hits.at(0));
+            raw_value = ((unsigned long long) (lcio_raw_hit->getCellID0()) & 0xffffffff) |
+                                       ((unsigned long long) (lcio_raw_hit->getCellID1()) << 32);
+        }else{
+            raw_value = 0;
+        }
+
+        printf("ID value from %35s: %'20llu =? %'20llu\n", name.c_str(), value, raw_value);
+    }
+}
+
 int main(int argc, char **argv) {
 
+    setlocale(LC_NUMERIC, "");
     cxxopts::Options options(argv[0], " - Write a ROOT MiniDst for HPS data.\n");
     options
             .positional_help(" infile1 infile2 ...")
@@ -52,6 +92,7 @@ int main(int argc, char **argv) {
 
         bool first_event_read{false};
 
+        int count{0};
         while ((lcio_event = lcio_reader->readNextEvent())) {
             run_number = lcio_event->getRunNumber();
             event_number = lcio_event->getEventNumber();
@@ -66,7 +107,11 @@ int main(int argc, char **argv) {
                 first_event_read = true;
             }
 
-
+            if( ++ count < 10) {
+                print_collection_id(lcio_event, "StripClusterer_SiTrackerHitStrip1D");
+                print_collection_id(lcio_event, "HelicalTrackHits");
+                print_collection_id(lcio_event, "RotatedHelicalTrackHits");
+            }
         }
         cout << "\nRun " << run_number << " last event: " << event_number << "\n\n";
         lcio_reader->close();

@@ -12,6 +12,7 @@
 #include "TTree.h"
 #include "TVector3.h"
 
+#define __MiniDst__Version__ "1.0.1"
 //
 // The following construction defines a "Variant", a type in C++17 and later that can contain different kinds of object.
 // In our case the variant contains each of the possible types that we have in the output tree.
@@ -19,8 +20,8 @@
 // simple, sometimes more complicated. See the "Clear()" function.
 // Note that each added type in the variant will need a corresponding type in the visitor used in Clear().
 //
-using Multi_Value = std::variant < int *, double *, unsigned int *, ULong64_t *, std::vector<double>* , std::vector<int>*,
-        std::vector< std::vector<int> >*, std::vector< std::vector<double> >*>;
+using Multi_Value = std::variant < int *, double *, unsigned int *, ULong64_t *, std::vector<double>* ,
+    std::vector<int>*, std::vector< std::vector<int> >*, std::vector< std::vector<double> >*>;
 //
 // Each variable that goes into the output is stored into the Multi_Branch object.
 // The Multi_Branch maps the name of the TTree branch to the variable in the code.
@@ -64,6 +65,7 @@ using TriggerBits_int_t = union{
 class MiniDst : public TObject {
 
 public:
+    static string _version_(){return(__MiniDst__Version__);};
     MiniDst(): md_output_file_name("minidst.root"){};
     explicit MiniDst(string_view output_file_name): md_output_file_name(output_file_name){};
     ~MiniDst() override = default;
@@ -104,7 +106,7 @@ public:
     };
 
     enum ParticleType {  // Copy of Vertex and Particle types from hps-dst.
-        FINAL_STATE_PARTICLE = 0,
+        FINAL_STATE_PARTICLE = 0,        // Kalman tracks are default.
         UC_V0_CANDIDATE      = 1,
         BSC_V0_CANDIDATE     = 2,
         TC_V0_CANDIDATE      = 3,
@@ -112,7 +114,25 @@ public:
         BSC_MOLLER_CANDIDATE = 5,
         TC_MOLLER_CANDIDATE  = 6,
         OTHER_ELECTRONS      = 7,
-        UC_VC_CANDIDATE      = 8
+        UC_VC_CANDIDATE      = 8,
+        FINAL_STATE_PARTICLE_KF = 0,
+        UC_V0_CANDIDATE_KF      = 1,
+        BSC_V0_CANDIDATE_KF     = 2,
+        TC_V0_CANDIDATE_KF      = 3,
+        UC_MOLLER_CANDIDATE_KF  = 4,
+        BSC_MOLLER_CANDIDATE_KF = 5,
+        TC_MOLLER_CANDIDATE_KF  = 6,
+        OTHER_ELECTRONS_KF      = 7,
+        UC_VC_CANDIDATE_KF      = 8,
+        FINAL_STATE_PARTICLE_GBL = 0+9,
+        UC_V0_CANDIDATE_GBL      = 1+9,
+        BSC_V0_CANDIDATE_GBL     = 2+9,
+        TC_V0_CANDIDATE_GBL      = 3+9,
+        UC_MOLLER_CANDIDATE_GBL  = 4+9,
+        BSC_MOLLER_CANDIDATE_GBL = 5+9,
+        TC_MOLLER_CANDIDATE_GBL  = 6+9,
+        OTHER_ELECTRONS_GBL      = 7+9,
+        UC_VC_CANDIDATE_GBL      = 8+9
     };
 
 public:
@@ -128,23 +148,31 @@ public:
     /// Switches that allow turning output on/off.
     bool write_ecal_cluster{true};
     bool write_ecal_hits{true};
+    bool write_svt_raw_hits{false};
     bool write_svt_hits{true};
-    bool write_tracks{true};
-    bool write_only_gbl_tracks{false};
+    bool write_kf_tracks{true};
+    bool write_gbl_tracks{true};
+    bool write_matched_tracks{true};
+    bool write_gbl_kink_data{true};
     bool write_mc_particles{false};
+    bool write_kf_particles{true};
+    bool write_gbl_particles{true};
 
     /// These determine what types of particles will be written out.
-    vector<int> particle_types_single{FINAL_STATE_PARTICLE, OTHER_ELECTRONS}; // No vertex
-    vector<int> particle_types_double{TC_V0_CANDIDATE, UC_VC_CANDIDATE}; // Yes vertex.
+    vector<int> particle_types_single{FINAL_STATE_PARTICLE_KF, OTHER_ELECTRONS_KF,
+                                      FINAL_STATE_PARTICLE_GBL, OTHER_ELECTRONS_GBL}; // No vertex
+    vector<int> particle_types_double{TC_V0_CANDIDATE_KF, UC_VC_CANDIDATE_KF,
+                                      TC_V0_CANDIDATE_GBL, UC_VC_CANDIDATE_GBL}; // Yes vertex.
 
     /// Map that contains the name and address of each branch in the TTree.
     Multi_Branch branch_map;
     std::map<std::string, bool> branch_map_active;
 
-    // Simple helper function that does two things, fill the branch map and add the name to the active list.
-    void branch_map_try_emplace(std::string name, Multi_Value address) {
+    /// Simple helper function that does two things, fill the branch map and add the name to the active list.
+    /// Note that you may want non-active branches. These will exist and get cleared, but are not written out.
+    void branch_map_try_emplace(std::string name, Multi_Value address, bool is_active=true) {
         branch_map.try_emplace(name, address);
-        branch_map_active.try_emplace(name, true);
+        branch_map_active.try_emplace(name, is_active);
     }
 
     /// All the items that we could possibly write out are here so that direct access
@@ -188,16 +216,20 @@ public:
     vector<int> ecal_cluster_nhits; // Not strictly needed, but handy. (could use ecal_cluster_hits[i].size())
 
     // RAW SVT Hits  == Not available in the 2016 DST, but could be useful for some LCIO based studies.
-    // ToDo: Add these later?
     //
-    // svt_raw_hit_layer
-    // svt_raw_hit_strip
-    // svt_raw_hit_charge
-    // svt_raw_hit_time
-    //
+    vector<int> svt_raw_hit_layer;
+    vector<int> svt_raw_hit_module;
+    vector<int> svt_raw_hit_strip;
+    vector<vector<int>> svt_raw_hit_adc;
+    vector<int> svt_raw_hit_fit_no;
+    vector<double> svt_raw_hit_t0;
+    vector<double> svt_raw_hit_t0_err;
+    vector<double> svt_raw_hit_amp;
+    vector<double> svt_raw_hit_amp_err;
+    vector<double> svt_raw_hit_chi2;
 
     // SVT Hits
-    vector<int> svt_hit_layer;
+    vector<int>    svt_hit_type; /// 0 -> StripClusterer_SiTrackerHitStrip1D ; 1 -> RotatedHelicalTrackHits
     vector<double> svt_hit_x;
     vector<double> svt_hit_y;
     vector<double> svt_hit_z;
@@ -209,9 +241,18 @@ public:
     vector<double> svt_hit_czz;
     vector<double> svt_hit_time;
     vector<double> svt_hit_edep;  // Energy deposit. Not is 2016 DST.
+    vector<vector<int>> svt_hit_raw_index;
+    vector<vector<int>> svt_hit_raw_other;
+    vector<vector<int>> svt_hit_layer;
+    vector<vector<int>> svt_hit_module;
+    vector<vector<int>> svt_hit_strip;
+
+
 
     // SVT Tracks
-    int track_n_gbl{0}; /// Number of GBL tracks. The rest will be matched tracks.
+    int track_n_gbl{0}; /// Number of GBL tracks. The rest will be matched tracks or Kalman tracks.
+    int track_n_kf{0};  /// Number of Kalman tracks.
+    int track_n_matched{0};
     vector<int>  track_n_hits; /** The number of 3D hits associated with this track. */
     vector<int>  track_volume; /** The volume to which this track belongs to. */
     vector<int>  track_type;   /** The track type. */
@@ -222,6 +263,9 @@ public:
     vector<double> track_z0;      // The y position of the track at the distance of closest approach in the xz plane.
     vector<double> track_chi2; /** The chi^2 of the track fit. */
     vector<double> track_time; /** The time of the track.  This is currently the average time of all hits composing the track. **/
+    vector<double> track_px;
+    vector<double> track_py;
+    vector<double> track_pz;
     vector<double> track_x_at_ecal; /** The x position of the extrapolated track at the Ecal face. */
     vector<double> track_y_at_ecal; /** The y position of the extrapolated track at the Ecal face. */
     vector<double> track_z_at_ecal; /** The z position of the extrapolated track at the Ecal face. */
@@ -302,7 +346,6 @@ public:
     };
 
     struct Vertex_Particle_t: Basic_Particle_t{
-        vector<double> n_daughter; // Not needed, should alsways be = 2.
         /// Since this is for HPS data, the subs are always an e+ and an e-.
         vector<double> vertex_x;
         vector<double> vertex_y;
@@ -340,8 +383,6 @@ public:
     vector<double> mc_part_charge;
     vector< vector<int> > mc_part_daughters;
     vector< vector<int> > mc_part_parents;
-
 };
-
 
 #endif //MINIDST_MINIDST_H

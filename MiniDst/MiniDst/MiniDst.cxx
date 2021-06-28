@@ -103,6 +103,7 @@ void MiniDst::DefineBranchMap() {
     branch_map_try_emplace("svt_hit_time", &svt_hit_time, write_svt_hits);
     branch_map_try_emplace("svt_hit_edep", &svt_hit_edep, write_svt_hits);
     branch_map_try_emplace("svt_hit_raw_index",&svt_hit_raw_index, write_svt_hits);
+    branch_map_try_emplace("svt_hit_raw_other",&svt_hit_raw_other, write_svt_hits);
     branch_map_try_emplace("svt_hit_layer", &svt_hit_layer, write_svt_hits);
     branch_map_try_emplace("svt_hit_module", &svt_hit_module, write_svt_hits);
     branch_map_try_emplace("svt_hit_strip", &svt_hit_strip, write_svt_hits);

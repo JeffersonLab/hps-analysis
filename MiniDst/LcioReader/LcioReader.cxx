@@ -419,6 +419,7 @@ long LcioReader::Run(int max_event) {
 
                         EVENT::LCObjectVec raw_hits = lcio_svt_hit->getRawHits();
                         vector<int> raw_index;
+                        vector<int> raw_other;
                         vector<int> layer;
                         vector<int> module;
                         vector<int> strip;
@@ -429,15 +430,19 @@ long LcioReader::Run(int max_event) {
                                 if( hit_index_ptr != svt_raw_hit_to_index_map.end() ) {
                                     /// We try to disambiguate the two possible fits. The only handle we have is time.
                                     int i_use_raw_index = hit_index_ptr->second.first; // default to the first.
+                                    int i_use_raw_other = hit_index_ptr->second.second; // default to the first.
                                     if(hit_index_ptr->second.second >= 0){   // There is a second.
                                         if( abs(svt_hit_time.back() - svt_raw_hit_t0[hit_index_ptr->second.first])
                                             > abs(svt_hit_time.back() - svt_raw_hit_t0[hit_index_ptr->second.second])) {
                                             i_use_raw_index = hit_index_ptr->second.second;
+                                            i_use_raw_other = hit_index_ptr->second.first;
                                         }
                                     }
                                     raw_index.push_back(i_use_raw_index);
+                                    raw_other.push_back(i_use_raw_other);
                                 }else{
                                     raw_index.push_back(-1);
+                                    raw_other.push_back(-1);
                                 }
                             }
                             ULong64_t value = (ULong64_t(lcio_raw_hit->getCellID0()) & 0xffffffff) |
@@ -453,12 +458,21 @@ long LcioReader::Run(int max_event) {
                             strip.push_back(raw_svt_hit_decoder["strip"]);
                         }
                         svt_hit_raw_index.push_back(raw_index);
+                        svt_hit_raw_other.push_back(raw_other);
                         svt_hit_layer.push_back(layer);
                         svt_hit_module.push_back(module);
                         svt_hit_strip.push_back(strip);
                     }
                 }
             }
+
+            ///////////////////////////////////////////////////////////////////////////////////////////////
+            ///
+            /// TODO: ADD SVT Truth relation for MC data.
+            ///
+            ///////////////////////////////////////////////////////////////////////////////////////////////
+
+
             // GBL Track collections: GBLTracks <= (TrackDataRelations)=< TrackData
             //                                  -(GBLKinkDataRelations)-> GBLKinkData
             //

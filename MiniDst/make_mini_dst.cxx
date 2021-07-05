@@ -105,14 +105,14 @@ int main(int argc, char **argv){
             }
             auto dst2016 = new Dst2016(chain);
             dst = static_cast<MiniDst*>(dst2016);
-            if(dst2016->event->getNumberOfMCParticles() > 0 && !dst->write_mc_particles && !no_mc_particles){
+            if(dst2016->event->getNumberOfMCParticles() > 0 && !dst->use_mc_particles && !no_mc_particles){
                 cout << "Warning: Input is MC Data, but write_mc_particles is not set. Turning on write_mc_particles!\n";
-                dst->write_mc_particles = true;
+                dst->use_mc_particles = true;
             }
         }else if( infiles.size()>0 && infiles[0].find(".slcio") != string::npos ) {
             auto dstlcio = new LcioReader(infiles);
             dst = static_cast<MiniDst*>(dstlcio);
-            if(!no_mc_particles) dst->write_mc_particles = true;  // will be set to false if no MCParticle collection in LcioReader.
+            if(!no_mc_particles) dst->use_mc_particles = true;  // will be set to false if no MCParticle collection in LcioReader.
         }
         int debug_code = 0;
         if( debug <= 0){
@@ -125,16 +125,16 @@ int main(int argc, char **argv){
         }
         if(debug>0) cout << "Debug code = " << debug_code << endl;
         dst->SetDebugLevel(debug_code);
-        dst->write_ecal_cluster = store_all || args["ecal_clusters"].as<bool>();
-        dst->write_ecal_hits = store_all || args["ecal_hits"].as<bool>();
-        dst->write_svt_hits = store_svt_hits || store_all;
-        dst->write_svt_raw_hits = args["raw_svt_hits"].as<bool>();
-        dst->write_kf_tracks = kf_tracks || all_tracks || store_all;
-        dst->write_gbl_tracks = all_tracks || store_all || args["gbl_tracks"].as<bool>();
-        dst->write_gbl_kink_data = store_all || args["gbl_kinks"].as<bool>();
-        dst->write_matched_tracks = matched_tracks || all_tracks || store_all;
-        dst->write_kf_particles = !args["no_kf_particles"].as<bool>();
-        dst->write_gbl_particles = !args["no_gbl_particles"].as<bool>();
+        dst->use_ecal_cluster = store_all || args["ecal_clusters"].as<bool>();
+        dst->use_ecal_hits = store_all || args["ecal_hits"].as<bool>();
+        dst->use_svt_hits = store_svt_hits || store_all;
+        dst->use_svt_raw_hits = args["raw_svt_hits"].as<bool>();
+        dst->use_kf_tracks = kf_tracks || all_tracks || store_all;
+        dst->use_gbl_tracks = all_tracks || store_all || args["gbl_tracks"].as<bool>();
+        dst->use_gbl_kink_data = store_all || args["gbl_kinks"].as<bool>();
+        dst->use_matched_tracks = matched_tracks || all_tracks || store_all;
+        dst->use_kf_particles = !args["no_kf_particles"].as<bool>();
+        dst->use_gbl_particles = !args["no_gbl_particles"].as<bool>();
         dst->SetOutputFileName(outfile);
 
         if(args["no_kf_particles"].as<bool>()){  // Erase and and all KF particle types in the output list.

@@ -146,17 +146,17 @@ public:
     bool md_abort_tree_fill{false};
 
     /// Switches that allow turning output on/off.
-    bool write_ecal_cluster{true};
-    bool write_ecal_hits{true};
-    bool write_svt_raw_hits{false};
-    bool write_svt_hits{true};
-    bool write_kf_tracks{true};
-    bool write_gbl_tracks{true};
-    bool write_matched_tracks{true};
-    bool write_gbl_kink_data{true};
-    bool write_mc_particles{false};
-    bool write_kf_particles{true};
-    bool write_gbl_particles{true};
+    bool use_ecal_cluster{true};
+    bool use_ecal_hits{true};
+    bool use_svt_raw_hits{false};
+    bool use_svt_hits{true};
+    bool use_kf_tracks{true};
+    bool use_gbl_tracks{true};
+    bool use_matched_tracks{true};
+    bool use_gbl_kink_data{true};
+    bool use_mc_particles{false};
+    bool use_kf_particles{true};
+    bool use_gbl_particles{true};
 
     /// These determine what types of particles will be written out.
     vector<int> particle_types_single{FINAL_STATE_PARTICLE_KF, OTHER_ELECTRONS_KF,

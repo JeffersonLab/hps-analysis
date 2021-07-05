@@ -92,7 +92,7 @@ long LcioReader::Run(int max_event) {
                     is_MC_data = true;
                     if (md_Debug & kInfo) cout << "LCIO -> This is Monte Carlo data. \n";
                 }else{
-                    write_mc_particles = false;
+                    use_mc_particles = false;
                 }
 
                 if (is_2016_data && is_2019_data) cout << "WOA - a file that is both 2016 and 2019 data!!!\n";
@@ -105,49 +105,49 @@ long LcioReader::Run(int max_event) {
                 ///
                 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-                if (write_ecal_hits && !has_collection("EcalCalHits")) {
+                if (use_ecal_hits && !has_collection("EcalCalHits")) {
                     cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit writing. \n";
-                    write_ecal_hits = false;
+                    use_ecal_hits = false;
                 }
 
-                if (write_ecal_cluster && !has_collection("EcalClustersCorr")) {
+                if (use_ecal_cluster && !has_collection("EcalClustersCorr")) {
                     cout
                             << "WARNING: The LCIO file does not have EcalClustersCorr. Turning of ECal cluster writing. \n";
-                    write_ecal_cluster = false;
+                    use_ecal_cluster = false;
                 }
 
-                if (write_svt_raw_hits && (!has_collection("SVTRawTrackerHits") ||
-                                           !has_collection("SVTShapeFitParameters") ||
-                                           !has_collection("SVTFittedRawTrackerHits"))) {
+                if (use_svt_raw_hits && (!has_collection("SVTRawTrackerHits") ||
+                                         !has_collection("SVTShapeFitParameters") ||
+                                         !has_collection("SVTFittedRawTrackerHits"))) {
                     cout
                             << "WARNING: The LCIO file does not have SVTRawTrackerHits or SVTShapeFitParameters or SVTFittedRawTrackerHits.\n";
                     cout << "         Turning of SVT raw hit writing. \n";
-                    write_svt_raw_hits = false;
+                    use_svt_raw_hits = false;
                 }
 
-                if (write_svt_hits && !(has_collection("RotatedHelicalTrackHits") ||
-                                        has_collection("StripClusterer_SiTrackerHitStrip1D"))) {
+                if (use_svt_hits && !(has_collection("RotatedHelicalTrackHits") ||
+                                      has_collection("StripClusterer_SiTrackerHitStrip1D"))) {
                     cout << "WARNING: The LCIO file does not have RotatedHelicalTrackHits. Turning of svt 3D hit writing. \n";
-                    write_svt_hits = false;
+                    use_svt_hits = false;
                 } else {
                     if (has_collection("StripClusterer_SiTrackerHitStrip1D"))
                         svt_hit_collections.push_back("StripClusterer_SiTrackerHitStrip1D");
                     if (has_collection("RotatedHelicalTrackHits"))
                         svt_hit_collections.push_back("RotatedHelicalTrackHits");
                 }
-                if ( (write_kf_tracks || write_kf_particles) && !has_collection("KalmanFullTracks")) {
+                if ((use_kf_tracks || use_kf_particles) && !has_collection("KalmanFullTracks")) {
                     cout << "WARNING: The LCIO file does not have KalmanFullTracks. Turning of KF track writing. \n";
-                    write_kf_tracks = false;
-                    write_kf_particles = false;
+                    use_kf_tracks = false;
+                    use_kf_particles = false;
                 }
-                if ( (write_gbl_tracks || write_gbl_particles) && !has_collection("GBLTracks")) {
+                if ((use_gbl_tracks || use_gbl_particles) && !has_collection("GBLTracks")) {
                     cout << "WARNING: The LCIO file does not have GBLTracks. Turning of GBL track writing. \n";
-                    write_gbl_tracks = false;
-                    write_gbl_particles = false;
+                    use_gbl_tracks = false;
+                    use_gbl_particles = false;
                 }
-                if (write_matched_tracks && !has_collection("MatchedTracks")) {
+                if (use_matched_tracks && !has_collection("MatchedTracks")) {
                     cout << "TWARNING: he LCIO file does not have MatchedTracks. Turning of matched track writing. \n";
-                    write_matched_tracks = false;
+                    use_matched_tracks = false;
                 }
                 for (auto type = particle_types_single.begin(); type< particle_types_single.end(); ++type) {
                     string collection_name = Type_to_Collection[*type];
@@ -280,7 +280,7 @@ long LcioReader::Run(int max_event) {
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
             /// Parse the "EcalCalHits"
-            if (write_ecal_hits) {
+            if (use_ecal_hits) {
                 EVENT::LCCollection *ecal_hits =
                         static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalCalHits"));
 
@@ -294,7 +294,7 @@ long LcioReader::Run(int max_event) {
                     // 0.1 ns resolution is sufficient to distinguish any 2 hits on the same crystal.
                     // int id1 = static_cast<int>(10.0*lcio_hit->getTime());
 
-                    if (write_ecal_hits) {  // Only store the results if we actually want them.
+                    if (use_ecal_hits) {  // Only store the results if we actually want them.
                         ecal_hit_energy.push_back(lcio_hit->getEnergy());
                         ecal_hit_time.push_back(lcio_hit->getTime());
 
@@ -309,7 +309,7 @@ long LcioReader::Run(int max_event) {
             }
 
             /// Parse "EcalClustersCorr" -- corrected Ecal clusters.
-            if (write_ecal_cluster) {
+            if (use_ecal_cluster) {
                 // Run this also if we only store particles, since the particles need some of this info.
                 EVENT::LCCollection *clusters =
                         static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalClustersCorr"));
@@ -339,7 +339,7 @@ long LcioReader::Run(int max_event) {
                         if (hit->getEnergy() > seed_energy) {
                             seed_energy = hit->getEnergy();
                             seed_time = hit->getTime();
-                            if (write_ecal_hits) {
+                            if (use_ecal_hits) {
                                 seed_index = ecal_hit_to_index_map[hit];
                             }
                             seed_cellid0 = Long64_t(hit->getCellID0() & 0xffffffff) |
@@ -347,7 +347,7 @@ long LcioReader::Run(int max_event) {
 
                         }
                         int hit_index = -99;
-                        if (write_ecal_hits)hit_index = ecal_hit_to_index_map[hit];
+                        if (use_ecal_hits)hit_index = ecal_hit_to_index_map[hit];
                         clus_hit_indexes.push_back(hit_index);
                     }
                     ecal_cluster_time.push_back(seed_time);        // The cluster time = seed hit time.
@@ -372,7 +372,7 @@ long LcioReader::Run(int max_event) {
             // We navigate to the SVTShapeFitParameters using the LCIORelations, so we do not access
             // the collection directly.
 
-            if(write_svt_raw_hits){
+            if(use_svt_raw_hits){
                 EVENT::LCCollection *raw_svt_hits = lcio_event->getCollection("SVTRawTrackerHits");
                 EVENT::LCCollection *raw_svt_hit_rel = lcio_event->getCollection("SVTFittedRawTrackerHits");
                 unique_ptr<UTIL::LCRelationNavigator> raw_hit_nav =
@@ -413,7 +413,7 @@ long LcioReader::Run(int max_event) {
 
             /// Parse the "RotatedHelicalTrackHits"       - These are the hits used by the GBL tracker.
             /// and "StripClusterer_SiTrackerHitStrip1D"  - These are the hits used by the KF tracker.
-            if (write_svt_hits) {
+            if (use_svt_hits) {
                 int i_svt_hit_type = -1;
                 for( auto collection_name: svt_hit_collections) {
                     i_svt_hit_type++;
@@ -449,7 +449,7 @@ long LcioReader::Run(int max_event) {
                         vector<int> strip;
                         for (int i_hit = 0; i_hit < raw_hits.size(); ++i_hit) {
                             auto lcio_raw_hit = static_cast<EVENT::TrackerRawData *>(raw_hits.at(i_hit));
-                            if(write_svt_raw_hits){
+                            if(use_svt_raw_hits){
                                 auto hit_index_ptr = svt_raw_hit_to_index_map.find(lcio_raw_hit);
                                 if( hit_index_ptr != svt_raw_hit_to_index_map.end() ) {
                                     /// We try to disambiguate the two possible fits. The only handle we have is time.
@@ -501,13 +501,13 @@ long LcioReader::Run(int max_event) {
             ///
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
-            if (write_kf_tracks || write_gbl_tracks || write_matched_tracks ||
-                write_kf_particles || write_gbl_particles) {
+            if (use_kf_tracks || use_gbl_tracks || use_matched_tracks ||
+                use_kf_particles || use_gbl_particles) {
                 // Also run this for particles, so we don't need to duplicate this code when filling particle struc.
                 EVENT::LCCollection *kf_tracks{nullptr};
                 unique_ptr<UTIL::LCRelationNavigator> track_data_kf_nav;
                 track_n_kf = 0;
-                if (write_kf_tracks || write_kf_particles) {
+                if (use_kf_tracks || use_kf_particles) {
                     kf_tracks = lcio_event->getCollection("KalmanFullTracks");
                     track_n_kf = kf_tracks->getNumberOfElements();
                     EVENT::LCCollection *track_data_kf_rel = lcio_event->getCollection("KFTrackDataRelations");
@@ -518,14 +518,14 @@ long LcioReader::Run(int max_event) {
                 unique_ptr<UTIL::LCRelationNavigator> track_data_gbl_nav;
                 unique_ptr<UTIL::LCRelationNavigator> gbl_kink_data_nav;
                 track_n_gbl = 0;
-                if (write_gbl_tracks || write_gbl_particles) {
+                if (use_gbl_tracks || use_gbl_particles) {
                     gbl_tracks = lcio_event->getCollection("GBLTracks");
                     track_n_gbl = gbl_tracks->getNumberOfElements();
                     EVENT::LCCollection *track_data_gbl_rel = static_cast<EVENT::LCCollection *>(
                             lcio_event->getCollection("TrackDataRelations"));
                     track_data_gbl_nav =  make_unique<UTIL::LCRelationNavigator>(track_data_gbl_rel);
 
-                    if(write_gbl_kink_data){
+                    if(use_gbl_kink_data){
                         EVENT::LCCollection *gbl_kink_data_rel =
                                 static_cast<EVENT::LCCollection *>(lcio_event->getCollection("GBLKinkDataRelations"));
                         gbl_kink_data_nav =
@@ -535,7 +535,7 @@ long LcioReader::Run(int max_event) {
 
                 EVENT::LCCollection *matched_tracks{nullptr};
                 track_n_matched = 0;
-                if (write_matched_tracks || write_gbl_particles) {
+                if (use_matched_tracks || use_gbl_particles) {
                     matched_tracks = lcio_event->getCollection("MatchedTracks");
                     track_n_matched = matched_tracks->getNumberOfElements();
                 }
@@ -647,7 +647,7 @@ long LcioReader::Run(int max_event) {
                     }
                     track_isolation.push_back(iso_values);
 
-                    if(write_svt_hits ) {
+                    if(use_svt_hits ) {
                         // Get the collection of 3D hits associated with a LCIO Track
                         EVENT::TrackerHitVec tracker_hits = lcio_track->getTrackerHits();
 
@@ -677,7 +677,7 @@ long LcioReader::Run(int max_event) {
                     track_covmatrix.push_back(cov_matrix_d);
 
                     /// Store the GBL Kink information, if you care to.
-                    if (write_gbl_kink_data && track_is_gbl) {     // This is GBL track.
+                    if (use_gbl_kink_data && track_is_gbl) {     // This is GBL track.
                         // Get the list of GBLKinkData associated with the LCIO Track
 
                         EVENT::LCObjectVec gbl_kink_data_list = gbl_kink_data_nav->getRelatedFromObjects(lcio_track);
@@ -739,7 +739,7 @@ long LcioReader::Run(int max_event) {
             ///
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
-            if(write_kf_particles || write_gbl_particles ){
+            if(use_kf_particles || use_gbl_particles ){
                 // Single particles: These are part_xxx in the output tree.
                 int i_part_all =0;
                 for (int type : particle_types_single) {
@@ -771,7 +771,7 @@ long LcioReader::Run(int max_event) {
             ///
             ///////////////////////////////////////////////////////////////////////////////////////////////
 
-            if(write_mc_particles){
+            if(use_mc_particles){
                 EVENT::LCCollection *mc_part_col = lcio_event->getCollection("MCParticle");
                 map<int, int> id_to_id;
                 for(int i_part=0; i_part < mc_part_col->getNumberOfElements(); ++i_part){
@@ -1096,7 +1096,7 @@ void LcioReader::Fill_Single_Particle_From_LCIO(Single_Particle_t *bp, EVENT::Re
 #endif
     if( clusters.size() == 1){
         auto cluster = dynamic_cast<IMPL::ClusterImpl*>(clusters[0]);
-        if(write_ecal_cluster && ecal_cluster_to_index_map.find(cluster) == ecal_cluster_to_index_map.end() ){
+        if(use_ecal_cluster && ecal_cluster_to_index_map.find(cluster) == ecal_cluster_to_index_map.end() ){
             cout << "Um, sorry, but I could not find the cluster associated with the particle, though I expected one. \n";
             bp->ecal_cluster.push_back(-101);
         }else {

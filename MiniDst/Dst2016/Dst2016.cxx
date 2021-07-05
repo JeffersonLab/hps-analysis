@@ -98,7 +98,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     /// ECAL hits.
-    if(write_ecal_hits){
+    if(use_ecal_hits){
         for(int i=0; i< GetNumberOfEcalHits(); ++i){
             EcalHit *hit = GetEcalHit(i);
             ecal_hit_energy.push_back(hit->energy);
@@ -109,7 +109,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
     }
 
     // ECAL Clusters.
-    if(write_ecal_cluster) {
+    if(use_ecal_cluster) {
         for (int i = 0; i < GetNumberOfEcalClusters(); ++i) {
             EcalCluster *clus = GetEcalCluster(i);
             ecal_cluster_energy.push_back(clus->energy);
@@ -154,7 +154,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
     ///
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    if(write_svt_hits){
+    if(use_svt_hits){
         for(int i =0; i< GetNumberOfSvtHits(); ++i){
             SvtHit *svthit = GetSvtHit(i);
             svt_hit_x.push_back(svthit->x);
@@ -173,7 +173,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
         }
     }
 
-    if(write_kf_tracks){
+    if(use_kf_tracks){
 #ifdef DEBUG
         // Does EVERY GBL track have a valid SEED?
         for(int i=0;i < GetNumberOfGblTracks(); ++i) {
@@ -216,7 +216,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             track_z_at_ecal.push_back(track->z_at_ecal);
 
             // Match the svt_hits to the hits on track
-            if (write_svt_hits) {
+            if (use_svt_hits) {
                 for (int j = 0; j < track->svt_hits->GetEntries(); ++j) {
                     SvtHit *svt_hit = (SvtHit *) track->svt_hits->At(j);
                     std::vector<int> svt_hit_store;
@@ -241,7 +241,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
         }
     }
 
-    if(write_kf_tracks){
+    if(use_kf_tracks){
         for(int i=0;i < GetNumberOfTracks(); ++i) {
             SvtTrack *track = GetTrack(i);
             vector<double> iso(track->isolation, track->isolation + 14);
@@ -263,7 +263,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             track_z_at_ecal.push_back(track->z_at_ecal);
 
             // Match the svt_hits to the hits on track
-            if (write_svt_hits) {
+            if (use_svt_hits) {
                 for (int j = 0; j < track->svt_hits->GetEntries(); ++j) {
                     SvtHit *svt_hit = (SvtHit *) track->svt_hits->At(j);
                     std::vector<int> svt_hit_store;
@@ -640,7 +640,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
         }
     }
 
-    if(write_mc_particles) {
+    if(use_mc_particles) {
         for (int i = 0; i < GetNumberOfMCParticles(); ++i) {
             MCParticle *mc_part = GetMCParticle(i);
             mc_part_energy.push_back(mc_part->energy_);

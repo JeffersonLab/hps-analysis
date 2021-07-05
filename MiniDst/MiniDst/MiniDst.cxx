@@ -212,6 +212,7 @@ void MiniDst::DefineBranchMap() {
     // MCParticles
     branch_map_try_emplace("mc_part_energy", &mc_part_energy, write_mc_particles);
     branch_map_try_emplace("mc_part_pdg_id", &mc_part_pdg_id, write_mc_particles);
+    branch_map_try_emplace("mc_part_pdg_id", &mc_part_id, write_mc_particles);
     branch_map_try_emplace("mc_part_gen_status", &mc_part_gen_status, write_mc_particles); /** Generator Status **/
     branch_map_try_emplace("mc_part_time", &mc_part_time, write_mc_particles);      /** The global creation time. */
     branch_map_try_emplace("mc_part_x", &mc_part_x, write_mc_particles);      /** The X vertex. */

@@ -58,9 +58,11 @@ long LcioReader::Run(int max_event) {
             /////////////////////////////////////////////////////////////////////////////////////////////
 
             run_number = lcio_event->getRunNumber();
-
             if (!data_type_is_known) { // Determine the data type by looking at the collections
-                if (run_number < 9000) { // The 2015 or 2016 engineering runs.
+                if (run_number == 0){  // Some form of MC data, probably SLIC output (?)
+                    is_MC_data = true;
+                }
+                else if (run_number < 9000) { // The 2015 or 2016 engineering runs.
                     is_2016_data = true;
                     if (md_Debug & kInfo) cout << "LCIO -> This is 2015/2016 data. \n";
                 } else if (run_number <= 10750) { // 2019 physics run
@@ -86,9 +88,11 @@ long LcioReader::Run(int max_event) {
 //                        is_2016_data = false;
 //                        if(md_Debug & kInfo) cout << "LCIO -> This is 2019 data. \n";
 //                    }
-                if(has_collection("MCParticles")) {
+                if (has_collection("MCParticle")) {
                     is_MC_data = true;
                     if (md_Debug & kInfo) cout << "LCIO -> This is Monte Carlo data. \n";
+                }else{
+                    write_mc_particles = false;
                 }
 
                 if (is_2016_data && is_2019_data) cout << "WOA - a file that is both 2016 and 2019 data!!!\n";
@@ -102,42 +106,55 @@ long LcioReader::Run(int max_event) {
                 /////////////////////////////////////////////////////////////////////////////////////////////////
 
                 if (write_ecal_hits && !has_collection("EcalCalHits")) {
-                    cout << "The LCIO file does not have EcalCalHits. Turning of ECal hit writing. \n";
+                    cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit writing. \n";
                     write_ecal_hits = false;
                 }
 
                 if (write_ecal_cluster && !has_collection("EcalClustersCorr")) {
-                    cout << "The LCIO file does not have EcalClustersCorr. Turning of ECal cluster writing. \n";
+                    cout
+                            << "WARNING: The LCIO file does not have EcalClustersCorr. Turning of ECal cluster writing. \n";
                     write_ecal_cluster = false;
                 }
 
                 if (write_svt_raw_hits && (!has_collection("SVTRawTrackerHits") ||
-                                           !has_collection("SVTShapeFitParameters"))) {
-                    cout << "The LCIO file does not have SVTRawTrackerHits or SVTShapeFitParameters. Turning of SVT raw hit writing. \n";
+                                           !has_collection("SVTShapeFitParameters") ||
+                                           !has_collection("SVTFittedRawTrackerHits"))) {
+                    cout
+                            << "WARNING: The LCIO file does not have SVTRawTrackerHits or SVTShapeFitParameters or SVTFittedRawTrackerHits.\n";
+                    cout << "         Turning of SVT raw hit writing. \n";
                     write_svt_raw_hits = false;
                 }
 
                 if (write_svt_hits && !(has_collection("RotatedHelicalTrackHits") ||
                                         has_collection("StripClusterer_SiTrackerHitStrip1D"))) {
-                    cout << "The LCIO file does not have RotatedHelicalTrackHits. Turning of svt 3D hit writing. \n";
+                    cout << "WARNING: The LCIO file does not have RotatedHelicalTrackHits. Turning of svt 3D hit writing. \n";
                     write_svt_hits = false;
-                }else{
-                    if(has_collection("StripClusterer_SiTrackerHitStrip1D"))
+                } else {
+                    if (has_collection("StripClusterer_SiTrackerHitStrip1D"))
                         svt_hit_collections.push_back("StripClusterer_SiTrackerHitStrip1D");
-                    if(has_collection("RotatedHelicalTrackHits"))
+                    if (has_collection("RotatedHelicalTrackHits"))
                         svt_hit_collections.push_back("RotatedHelicalTrackHits");
                 }
-                if (write_kf_tracks && !has_collection("KalmanFullTracks")) {
-                    cout << "The LCIO file does not have KalmanFullTracks. Turning of KF track writing. \n";
+                if ( (write_kf_tracks || write_kf_particles) && !has_collection("KalmanFullTracks")) {
+                    cout << "WARNING: The LCIO file does not have KalmanFullTracks. Turning of KF track writing. \n";
                     write_kf_tracks = false;
+                    write_kf_particles = false;
                 }
-                if (write_gbl_tracks && !has_collection("GBLTracks")) {
-                    cout << "The LCIO file does not have GBLTracks. Turning of GBL track writing. \n";
+                if ( (write_gbl_tracks || write_gbl_particles) && !has_collection("GBLTracks")) {
+                    cout << "WARNING: The LCIO file does not have GBLTracks. Turning of GBL track writing. \n";
                     write_gbl_tracks = false;
+                    write_gbl_particles = false;
                 }
                 if (write_matched_tracks && !has_collection("MatchedTracks")) {
-                    cout << "The LCIO file does not have MatchedTracks. Turning of matched track writing. \n";
+                    cout << "TWARNING: he LCIO file does not have MatchedTracks. Turning of matched track writing. \n";
                     write_matched_tracks = false;
+                }
+                for (auto type = particle_types_single.begin(); type< particle_types_single.end(); ++type) {
+                    string collection_name = Type_to_Collection[*type];
+                    if(!has_collection(collection_name.c_str())){
+                        cout << "WARNING: The LCIO file does not have " << collection_name <<". Removing from list.\n";
+                        particle_types_single.erase(type);
+                    }
                 }
             }
 
@@ -166,22 +183,27 @@ long LcioReader::Run(int max_event) {
                          (svt_event_header_good << 4);
 
             // Get the LCIO GenericObject collection containing the RF times
-            EVENT::LCCollection *rf_hits
-                    = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("RFHits"));
+            if(!is_MC_data) {
+                EVENT::LCCollection *rf_hits
+                        = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("RFHits"));
 
-            if (rf_hits->getNumberOfElements() != 1) {
-                if (md_Debug & kDebug_L1)
-                    cout << "Issue with rf_hits for event " << event_number << " == No rf hits found. \n";
-                rf_time1 = -99.;
-                rf_time2 = -99.;
-            } else {
-                EVENT::LCGenericObject *rf_times = static_cast<EVENT::LCGenericObject *>(rf_hits->getElementAt(0));
-                if (rf_times->getNDouble() != 2) {
-                    cout << "ERROR in LCIO - wrong number of hits. \n";
+                if (rf_hits->getNumberOfElements() != 1) {
+                    if (md_Debug & kDebug_L1)
+                        cout << "Issue with rf_hits for event " << event_number << " == No rf hits found. \n";
+                    rf_time1 = -99.;
+                    rf_time2 = -99.;
                 } else {
-                    rf_time1 = rf_times->getDoubleVal(0);
-                    rf_time2 = rf_times->getDoubleVal(1);
+                    EVENT::LCGenericObject *rf_times = static_cast<EVENT::LCGenericObject *>(rf_hits->getElementAt(0));
+                    if (rf_times->getNDouble() != 2) {
+                        cout << "ERROR in LCIO - wrong number of hits. \n";
+                    } else {
+                        rf_time1 = rf_times->getDoubleVal(0);
+                        rf_time2 = rf_times->getDoubleVal(1);
+                    }
                 }
+            }else{
+                rf_time1 = 0;
+                rf_time2 = 0;
             }
             //
             // For trigger bit parsing, see EvioTool::TSBank.h
@@ -287,7 +309,7 @@ long LcioReader::Run(int max_event) {
             }
 
             /// Parse "EcalClustersCorr" -- corrected Ecal clusters.
-            if (write_ecal_cluster || write_kf_particles || write_gbl_particles) {
+            if (write_ecal_cluster) {
                 // Run this also if we only store particles, since the particles need some of this info.
                 EVENT::LCCollection *clusters =
                         static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalClustersCorr"));
@@ -347,6 +369,8 @@ long LcioReader::Run(int max_event) {
             // Hits are in SVTRawTrackerHits, CellID + 6 ADC values.
             // Fits are in SVTShapeFitParameters, 5 doubles: t0, t0_err, Amp, Amp_err, Chi2
             // These two are related through the SVTFittedRawTrackerHits LCIORelations.
+            // We navigate to the SVTShapeFitParameters using the LCIORelations, so we do not access
+            // the collection directly.
 
             if(write_svt_raw_hits){
                 EVENT::LCCollection *raw_svt_hits = lcio_event->getCollection("SVTRawTrackerHits");
@@ -465,13 +489,6 @@ long LcioReader::Run(int max_event) {
                     }
                 }
             }
-
-            ///////////////////////////////////////////////////////////////////////////////////////////////
-            ///
-            /// TODO: ADD SVT Truth relation for MC data.
-            ///
-            ///////////////////////////////////////////////////////////////////////////////////////////////
-
 
             // GBL Track collections: GBLTracks <= (TrackDataRelations)=< TrackData
             //                                  -(GBLKinkDataRelations)-> GBLKinkData
@@ -747,6 +764,82 @@ long LcioReader::Run(int max_event) {
                     }
                 }
             }
+
+            ///////////////////////////////////////////////////////////////////////////////////////////////
+            ///
+            /// MCParticles - Monte Carlo specific information.
+            ///
+            ///////////////////////////////////////////////////////////////////////////////////////////////
+
+            if(write_mc_particles){
+                EVENT::LCCollection *mc_part_col = lcio_event->getCollection("MCParticle");
+                map<int, int> id_to_id;
+                for(int i_part=0; i_part < mc_part_col->getNumberOfElements(); ++i_part){
+                    auto mc_part = dynamic_cast<EVENT::MCParticle *>(mc_part_col->getElementAt(i_part));
+                    int this_id = mc_part->id();
+                    id_to_id[this_id] = i_part;
+                    mc_part_id.push_back(this_id);
+                    mc_part_pdg_id.push_back(mc_part->getPDG());
+                    mc_part_energy.push_back(mc_part->getEnergy());
+                    mc_part_mass.push_back(mc_part->getMass());
+                    mc_part_gen_status.push_back(mc_part->getGeneratorStatus());
+                    mc_part_time.push_back(mc_part->getTime());
+                    mc_part_charge.push_back(mc_part->getCharge());
+                    const double *part_vertex = mc_part->getVertex();
+                    mc_part_x.push_back(part_vertex[0]);
+                    mc_part_y.push_back(part_vertex[1]);
+                    mc_part_z.push_back(part_vertex[2]);
+                    const double *part_end = mc_part->getEndpoint();
+                    mc_part_end_x.push_back(part_end[0]);
+                    mc_part_end_y.push_back(part_end[1]);
+                    mc_part_end_z.push_back(part_end[2]);
+                    const double *part_mom = mc_part->getMomentum();
+                    mc_part_px.push_back(part_mom[0]);
+                    mc_part_px.push_back(part_mom[1]);
+                    mc_part_px.push_back(part_mom[2]);
+                }
+
+                // Now we loop again to resolve the parent and daughter ids correctly.
+                for(int i_part=0; i_part < mc_part_col->getNumberOfElements(); ++i_part){
+                    auto mc_part = dynamic_cast<EVENT::MCParticle *>(mc_part_col->getElementAt(i_part));
+                    EVENT::MCParticleVec parent_particles = mc_part->getParents();
+                    vector<int> parents;
+                    for(auto parent: parent_particles ){
+                        int parent_id = parent->id();
+                        auto idid = id_to_id.find(parent_id);
+                        if( idid != id_to_id.end()) {
+                            int parent_id_id = idid->second;
+                            parents.push_back(parent_id_id);
+                        }else{
+                            cout << "MCParticle: unidentified parent.\n";
+                            parents.push_back(-1);
+                        }
+                    }
+                    mc_part_parents.push_back(parents);
+                    EVENT::MCParticleVec daughter_particles = mc_part->getDaughters();
+                    vector<int> daughters;
+                    for(auto daughter: daughter_particles){
+                        int daughter_id = daughter->id();
+                        auto idid = id_to_id.find(daughter_id);
+                        if(idid != id_to_id.end()){
+                            int daughter_id_id = idid->second;
+                            daughters.push_back(daughter_id_id);
+                        }else{
+                            cout << "MCParticle: unidentified daughter.\n";
+                            daughters.push_back(-1);
+                        }
+                    }
+                    mc_part_daughters.push_back(daughters);
+                }
+            }
+
+
+            ///////////////////////////////////////////////////////////////////////////////////////////////
+            ///
+            /// TODO: ADD SVT Truth relation for MC data.
+            ///
+            ///////////////////////////////////////////////////////////////////////////////////////////////
+
 
             if(md_output_tree){
                 if( md_abort_tree_fill){

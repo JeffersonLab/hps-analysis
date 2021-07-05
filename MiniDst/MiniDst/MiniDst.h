@@ -367,6 +367,7 @@ public:
 
     // MCParticles
     vector<double> mc_part_energy;
+    vector<int>    mc_part_id;
     vector<int>    mc_part_pdg_id;
     vector<int>    mc_part_gen_status; /** Generator Status **/
     vector<double> mc_part_time;      /** The global creation time. */

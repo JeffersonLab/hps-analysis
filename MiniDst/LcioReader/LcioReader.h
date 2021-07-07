@@ -30,6 +30,7 @@
 
 #include "MiniDst.h"
 
+#define __LCIOReader__Version__ "1.0.3"
 using namespace std;
 
 // Collection in May 2021 versions of the 2019 data with both KF and GBL tracking.
@@ -105,6 +106,7 @@ public:
     };
     ~LcioReader() override = default;
 
+    static string _version_(){return(__LCIOReader__Version__);};
     void Clear() override;
     void Start() override;
     long Run(int max_event) override;

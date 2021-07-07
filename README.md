@@ -2,6 +2,11 @@
 
 A collection of tools for analysis of the HPS data sets, which do not already have a repository location elsewhere.
 
+This code creates a simple MiniDst for HPS data from LCIO files.
+Detailed instructions on this code are in the
+[Wiki for hps-analysis](https://github.com/JeffersonLab/hps-analysis/wiki)
+
+
 ## Tools with other repo locations:
 * [hps-java](https://github.com/JeffersonLab/hps-java)
     * The reconstruction code for HPS EVIO data to LCIO reconscructed files.
@@ -20,5 +25,5 @@ A collection of tools for analysis of the HPS data sets, which do not already ha
     
 ## Tools in this reo:
 * [MiniDst](https://github.com/JeffersonLab/hps-analysis/tree/master/MiniDst)
-    * Sub directory that contains code to create simple "flat" NTuple type ROOT files from LCIO or 2015/2016 DST files.
+    * Sub directory that contains the code to create simple "flat" NTuple type ROOT files from LCIO or 2015/2016 DST files.
  

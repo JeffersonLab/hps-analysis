@@ -1,6 +1,8 @@
 # MiniDst
 
 This code creates a simple MiniDst for HPS data from LCIO files.
+Detailed instructions on this code are in the 
+[Wiki for hps-analysis](https://github.com/JeffersonLab/hps-analysis/wiki)
 
 ## Mini-, Micro-, Nano-DSTs
 The idea is to create easy to use ROOT files that have a very simple structure. 

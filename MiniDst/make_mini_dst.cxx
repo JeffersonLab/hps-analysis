@@ -15,8 +15,10 @@ int main(int argc, char **argv){
     setlocale(LC_NUMERIC, "");
 
     // This is a nicer way to do options in C++. See cxxopts.hpp file.
-    string help_string = "Write a ROOT MiniDst for HPS data.\nVersion: 1.0.0, using MiniDst.h version "+MiniDst::_version_()+
-                         "\nCompiled with "+__VERSION__+"\n";
+    string help_string = string("Write a ROOT MiniDst for HPS data.\n") +
+            "Version: 1.0.2, using MiniDst.h version " + MiniDst::_version_() +
+            ", LcioReader version " + LcioReader::_version_() +
+            "\nCompiled with "+__VERSION__+"\n";
     cxxopts::Options options(argv[0], help_string);
     options
             .positional_help(" infile1 infile2 ...")

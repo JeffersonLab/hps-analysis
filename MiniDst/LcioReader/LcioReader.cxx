@@ -245,7 +245,7 @@ long LcioReader::Run(int max_event) {
                     }
                 } // for each trigger_bank
             } // is_2016_data
-            if (is_2019_data) {
+            if (is_2019_data && !is_MC_data) {
                 EVENT::LCCollection *tsbank_data
                         = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("TSBank"));
                 EVENT::LCGenericObject *lcio_ts_bank

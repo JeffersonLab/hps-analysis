@@ -795,8 +795,8 @@ long LcioReader::Run(int max_event) {
                     mc_part_end_z.push_back(part_end[2]);
                     const double *part_mom = mc_part->getMomentum();
                     mc_part_px.push_back(part_mom[0]);
-                    mc_part_px.push_back(part_mom[1]);
-                    mc_part_px.push_back(part_mom[2]);
+                    mc_part_py.push_back(part_mom[1]);
+                    mc_part_pz.push_back(part_mom[2]);
                 }
 
                 // Now we loop again to resolve the parent and daughter ids correctly.

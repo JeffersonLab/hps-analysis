@@ -6,12 +6,13 @@ def print_daughters(mdst, i_part, indent=0):
         i_part -- the index of the particle to print
         ident  -- the amount of indentation of the output.
     """
+
     print(" "*indent+f" {i_part:3d}  pdg: {mdst.mc_part_pdg_id[i_part]:4d}  E: {mdst.mc_part_energy[i_part]:9.6f} ")
     if len(mdst.mc_part_daughters[i_part]) > 0:
         print(" "*(indent+14) + "| ")
         for i in range(len(mdst.mc_part_daughters[i_part])):
             ii = mdst.mc_part_daughters[i_part][i]  # Get the daughter reference
-            print_daughters(ii, indent+11)            # Print by recursing
+            print_daughters(mdst, ii, indent+11)            # Print by recursing
 
 def print_mc_particle_tree(mdst):
     """Print the MCParticle tree.
@@ -20,7 +21,7 @@ def print_mc_particle_tree(mdst):
     """
     for i in range(len(mdst.mc_part_parents)):
         if len(mdst.mc_part_parents[i]) == 0:  # top level particle
-            print_daughters(i,0)
+            print_daughters(mdst, i, 0)
 
 
 def SetStyle():

@@ -1036,6 +1036,8 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
     }
 
     if(clusters.size() == 1) {
+        UTIL::BitField64 ecal_hit_field_decoder("system:6,layer:2,ix:-8,iy:-6");
+
         IMPL::ClusterImpl *clus = static_cast<IMPL::ClusterImpl *>(clusters[0]);
         auto i_clus_ptr = ecal_cluster_to_index_map.find(clus);
         if( i_clus_ptr == ecal_cluster_to_index_map.end()){
@@ -1047,11 +1049,33 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
         int iclus = i_clus_ptr->second;
         sub->clus.push_back(iclus);
         sub->clus_energy.push_back(clus->getEnergy());
-        sub->clus_time.push_back(ecal_cluster_time[iclus]);
-        sub->clus_pos_x.push_back(ecal_cluster_x[iclus]);
-        sub->clus_pos_y.push_back(ecal_cluster_y[iclus]);
-        sub->clus_ix.push_back(ecal_cluster_seed_ix[iclus]);
-        sub->clus_iy.push_back(ecal_cluster_seed_iy[iclus]);
+
+        const float *position = clus->getPosition();
+        sub->clus_pos_x.push_back(position[0]);
+        sub->clus_pos_y.push_back(position[1]);
+
+        // Link the hits to the cluster to find the seed. (hit with most energy.
+        double seed_energy{-99.};
+        int seed_ix{-99};
+        int seed_iy{-99};
+        double seed_time{-99};
+
+        EVENT::CalorimeterHitVec clus_hits = clus->getCalorimeterHits();
+        for (int j_hit = 0; j_hit < clus_hits.size(); ++j_hit) {
+            IMPL::CalorimeterHitImpl *hit = static_cast<IMPL::CalorimeterHitImpl *>(clus_hits[j_hit]);
+            if (hit->getEnergy() > seed_energy) {
+                seed_energy = hit->getEnergy();
+                seed_time = hit->getTime();
+                Long64_t value = Long64_t(hit->getCellID0() & 0xffffffff) |
+                        (Long64_t(hit->getCellID1()) << 32);
+                ecal_hit_field_decoder.setValue(value);
+                seed_ix = ecal_hit_field_decoder["ix"];
+                seed_iy = ecal_hit_field_decoder["iy"];
+            }
+        }
+        sub->clus_time.push_back(seed_time);
+        sub->clus_ix.push_back(seed_ix);
+        sub->clus_iy.push_back(seed_iy);
     }else{ // Clusterless track. Fill cluster stuff with -99.
         sub->clus.push_back(-99);
         sub->clus_energy.push_back(-99.);

@@ -16,7 +16,7 @@ int main(int argc, char **argv){
 
     // This is a nicer way to do options in C++. See cxxopts.hpp file.
     string help_string = string("Write a ROOT MiniDst for HPS data.\n") +
-            "Version: 1.0.2, using MiniDst.h version " + MiniDst::_version_() +
+            "Version: 1.0.4, using MiniDst.h version " + MiniDst::_version_() +
             ", LcioReader version " + LcioReader::_version_() +
             "\nCompiled with "+__VERSION__+"\n";
     cxxopts::Options options(argv[0], help_string);

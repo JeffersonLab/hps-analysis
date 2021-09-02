@@ -67,7 +67,7 @@ class MiniDst : public TObject {
 public:
     static string _version_(){return(__MiniDst__Version__);};
     MiniDst(): md_output_file_name("minidst.root"){};
-    explicit MiniDst(string_view output_file_name): md_output_file_name(output_file_name){};
+    explicit MiniDst(string output_file_name): md_output_file_name(output_file_name){};
     ~MiniDst() override = default;
     virtual void Clear();  /// Clear all the vectors and event storage.
     virtual void Start();
@@ -146,6 +146,8 @@ public:
     bool md_abort_tree_fill{false};
 
     /// Switches that allow turning output on/off.
+    bool use_hodo_hits{true};
+    bool use_hodo_clusters{true};
     bool use_ecal_cluster{true};
     bool use_ecal_hits{true};
     bool use_svt_raw_hits{false};
@@ -195,6 +197,21 @@ public:
     unsigned int ext_trigger{0};     // Ext trigger bits. For 2019 - un-prescaled bits, N/A for 2016
     double rf_time1{0};
     double rf_time2{0};
+
+    // Hodo Hits
+    vector<double> hodo_hit_energy;
+    vector<double> hodo_hit_time;
+    vector<int> hodo_hit_index_x;
+    vector<int> hodo_hit_index_y;
+    vector<int> hodo_hit_hole;
+    vector<int> hodo_hit_layer;
+
+    // Hodo Clusters
+    vector<double> hodo_cluster_energy;
+    vector<double> hodo_cluster_time;
+    vector<int>    hodo_cluster_ix;
+    vector<int>    hodo_cluster_iy;
+    vector<int>    hodo_cluster_layer;
 
     // Ecal Hits
     vector<double> ecal_hit_energy;

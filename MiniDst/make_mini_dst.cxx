@@ -27,11 +27,13 @@ int main(int argc, char **argv){
     options.add_options()
             ("d,debug", "Increase debug level")
             ("q,quiet", "Run quiet.")
-            ("a,all", "Store all known values in file, except the raw stuff. Equivalent to -c -e -s",
+            ("a,all", "Store all known values in file, except the raw stuff. Equivalent to -c -e -s -h",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("c,ecal_clusters", "Store Ecal Clusters",
+            ("c,ecal_clusters", "Store Ecal and Hodo Clusters",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("e,ecal_hits", "Store Ecal Hits",
+             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+            ("h,hodo_hits", "Store Hodo Hits",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("s,svt_hits", "Store SVT 3D and/or strip Hits",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
@@ -59,7 +61,7 @@ int main(int argc, char **argv){
              "is optional. ",
              cxxopts::value<std::vector<std::string>>())
             ("n,num_evt","Only process num_evt event", cxxopts::value<long>()->default_value("0"))
-            ("h,help", "Print help")
+            ("help", "Print help")
             ;
 
 
@@ -128,7 +130,9 @@ int main(int argc, char **argv){
         if(debug>0) cout << "Debug code = " << debug_code << endl;
         dst->SetDebugLevel(debug_code);
         dst->use_ecal_cluster = store_all || args["ecal_clusters"].as<bool>();
+        dst->use_hodo_clusters = store_all || args["ecal_clusters"].as<bool>();
         dst->use_ecal_hits = store_all || args["ecal_hits"].as<bool>();
+        dst->use_hodo_hits = store_all || args["hodo_hits"].as<bool>();
         dst->use_svt_hits = store_svt_hits || store_all;
         dst->use_svt_raw_hits = args["raw_svt_hits"].as<bool>();
         dst->use_kf_tracks = kf_tracks || all_tracks || store_all;

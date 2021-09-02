@@ -137,6 +137,7 @@ public:
     /// Set them up here so that they are available in different sections.
     /// Note: Each map must be cleared at the start of the event to avoid potential cross event contamination.
     /// Clearing is done in Clear().
+    // map<IMPL::CalorimeterHitImpl*, int> hodo_hit_to_index_map; // Map to link hodoscope hit to index.
     map<IMPL::CalorimeterHitImpl*, int> ecal_hit_to_index_map; // Map to link calorimeter hit to index.
     map<IMPL::ClusterImpl*, int> ecal_cluster_to_index_map; // Map to link calorimeter hit to index.
     map<IMPL::TrackerHitImpl*, int> svt_hit_to_index_map; // Map to link svt hit to index.

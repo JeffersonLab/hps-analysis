@@ -62,6 +62,19 @@ void MiniDst::DefineBranchMap() {
     branch_map_try_emplace("rf_time2", &rf_time2);
     branch_map_try_emplace("track_n_gbl", &track_n_gbl);
 
+    branch_map_try_emplace("hodo_hit_energy", &hodo_hit_energy, use_hodo_hits);
+    branch_map_try_emplace("hodo_hit_time", &hodo_hit_time, use_hodo_hits);
+    branch_map_try_emplace("hodo_hit_index_x", &hodo_hit_index_x, use_hodo_hits);
+    branch_map_try_emplace("hodo_hit_index_y", &hodo_hit_index_y, use_hodo_hits);
+    branch_map_try_emplace("hodo_hit_hole", &hodo_hit_hole, use_hodo_hits);
+    branch_map_try_emplace("hodo_hit_layer", &hodo_hit_layer, use_hodo_hits);
+
+    branch_map_try_emplace("hodo_cluster_energy", &hodo_cluster_energy, use_hodo_clusters);
+    branch_map_try_emplace("hodo_cluster_time", &hodo_cluster_time, use_hodo_clusters);
+    branch_map_try_emplace("hodo_cluster_ix", &hodo_cluster_ix, use_hodo_clusters);
+    branch_map_try_emplace("hodo_cluster_iy", &hodo_cluster_iy, use_hodo_clusters);
+    branch_map_try_emplace("hodo_cluster_layer", &hodo_cluster_layer, use_hodo_clusters);
+
     branch_map_try_emplace("ecal_hit_energy", &ecal_hit_energy, use_ecal_hits);
     branch_map_try_emplace("ecal_hit_time", &ecal_hit_time, use_ecal_hits);
     branch_map_try_emplace("ecal_hit_index_x", &ecal_hit_index_x, use_ecal_hits);

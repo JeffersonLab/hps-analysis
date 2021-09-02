@@ -20,6 +20,7 @@ void LcioReader::Clear(){
     MiniDst::Clear();
 
     // Clear all the maps
+    // hodo_hit_to_index_map.clear();
     ecal_hit_to_index_map.clear();
     ecal_cluster_to_index_map.clear();
     svt_hit_to_index_map.clear();
@@ -35,8 +36,9 @@ long LcioReader::Run(int max_event) {
 
     /// LCIO Decoders. We need these instantiated only once.
     ///
-    UTIL::BitField64 ecal_hit_field_decoder("system:6,layer:2,ix:-8,iy:-6");
-    UTIL::BitField64 raw_svt_hit_decoder("system:6,barrel:3,layer:4,module:12,sensor:1,side:32:-2,strip:12");
+    UTIL::BitField64 hodo_hit_field_decoder{"system:6,barrel:3,layer:4,ix:4,iy:-3,hole:-3"};
+    UTIL::BitField64 ecal_hit_field_decoder{"system:6,layer:2,ix:-8,iy:-6"};
+    UTIL::BitField64 raw_svt_hit_decoder{"system:6,barrel:3,layer:4,module:12,sensor:1,side:32:-2,strip:12"};
 
     vector<string> svt_hit_collections;
 
@@ -272,6 +274,54 @@ long LcioReader::Run(int max_event) {
 
 // Todo: Add the VTP Parsing when needed.
             } // End of 2019 specific header parsing.
+
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////
+            ///
+            /// Hodoscope
+            ///
+            ////////////////////////////////////////////////////////////////////////////////////////////////
+
+            /// Parse the "HodoCalHits"
+            if (use_hodo_hits){
+                EVENT::LCCollection *hodo_hits =
+                        static_cast<EVENT::LCCollection *>(lcio_event->getCollection("HodoCalHits"));
+                for(int ihit = 0; ihit < hodo_hits->getNumberOfElements(); ++ihit){
+                    IMPL::CalorimeterHitImpl *lcio_hit =
+                            static_cast<IMPL::CalorimeterHitImpl *>(hodo_hits->getElementAt(ihit));
+                    // hodo_hit_to_index_map[lcio_hit] = ihit;
+                    hodo_hit_energy.push_back(lcio_hit->getEnergy());
+                    hodo_hit_time.push_back(lcio_hit->getTime());
+
+                    Long64_t value = Long64_t(lcio_hit->getCellID0() & 0xffffffff) |
+                            (Long64_t(lcio_hit->getCellID1()) << 32);
+                    hodo_hit_field_decoder.setValue(value);
+
+                    hodo_hit_index_x.push_back(hodo_hit_field_decoder["ix"]);
+                    hodo_hit_index_y.push_back(hodo_hit_field_decoder["iy"]);
+                    hodo_hit_hole.push_back(hodo_hit_field_decoder["hole"]);
+                    hodo_hit_layer.push_back(hodo_hit_field_decoder["layer"]);
+                }
+            }
+
+            /// Parse the Hodo Genergic Object: HodoGenericClusters
+            if (use_hodo_clusters){
+                EVENT::LCCollection *generic =
+                        static_cast<EVENT::LCCollection *>(lcio_event->getCollection("HodoGenericClusters"));
+                auto gclus_ix = static_cast<IMPL::LCGenericObjectImpl *>(generic->getElementAt(0));
+                auto gclus_iy = static_cast<IMPL::LCGenericObjectImpl *>(generic->getElementAt(1));
+                auto gclus_layer = static_cast<IMPL::LCGenericObjectImpl *>(generic->getElementAt(2));
+                auto gclus_energy = static_cast<IMPL::LCGenericObjectImpl *>(generic->getElementAt(3));
+                auto gclus_time = static_cast<IMPL::LCGenericObjectImpl *>(generic->getElementAt(4));
+
+                for(int i=0; i< gclus_ix->getNInt(); ++i){  // Only one loop needed, since we know all have same size.
+                    hodo_cluster_ix.push_back(gclus_ix->getIntVal(i));
+                    hodo_cluster_iy.push_back(gclus_iy->getIntVal(i));
+                    hodo_cluster_layer.push_back(gclus_layer->getIntVal(i));
+                    hodo_cluster_energy.push_back(gclus_energy->getDoubleVal(i));
+                    hodo_cluster_time.push_back(gclus_time->getDoubleVal(i));
+                }
+            }
 
             ////////////////////////////////////////////////////////////////////////////////////////////////
             ///

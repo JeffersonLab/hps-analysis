@@ -9,7 +9,7 @@
 
 void LcioReader::Start(){
     if( md_Debug>0 ) {
-        printf("LCIO READER version 0.2\n");
+        printf("LCIO READER version " __LCIOReader__Version__ "\n");
     }
     MiniDst::Start();
 }
@@ -94,6 +94,7 @@ long LcioReader::Run(int max_event) {
                     is_MC_data = true;
                     if (md_Debug & kInfo) cout << "LCIO -> This is Monte Carlo data. \n";
                 }else{
+                    is_MC_data = false;
                     use_mc_particles = false;
                 }
 

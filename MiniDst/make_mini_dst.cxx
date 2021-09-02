@@ -116,7 +116,15 @@ int main(int argc, char **argv){
         }else if( infiles.size()>0 && infiles[0].find(".slcio") != string::npos ) {
             auto dstlcio = new LcioReader(infiles);
             dst = static_cast<MiniDst*>(dstlcio);
-            if(!no_mc_particles) dst->use_mc_particles = true;  // will be set to false if no MCParticle collection in LcioReader.
+
+            // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
+            dstlcio->lcio_reader->open(infiles[0]);
+            auto lcio_event = dstlcio->lcio_reader->readNextEvent();
+            const vector<string> *col_names = lcio_event->getCollectionNames();
+
+            if( std::find(col_names->begin(), col_names->end(), "MCParticle") != col_names->end()
+                and !no_mc_particles) dst->use_mc_particles = true;
+            dstlcio->lcio_reader->close();
         }
         int debug_code = 0;
         if( debug <= 0){

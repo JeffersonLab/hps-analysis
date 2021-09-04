@@ -16,7 +16,7 @@ int main(int argc, char **argv){
 
     // This is a nicer way to do options in C++. See cxxopts.hpp file.
     string help_string = string("Write a ROOT MiniDst for HPS data.\n") +
-            "Version: 1.0.4, using MiniDst.h version " + MiniDst::_version_() +
+            "Version: 1.0.5, using MiniDst.h version " + MiniDst::_version_() +
             ", LcioReader version " + LcioReader::_version_() +
             "\nCompiled with "+__VERSION__+"\n";
     cxxopts::Options options(argv[0], help_string);
@@ -29,15 +29,19 @@ int main(int argc, char **argv){
             ("q,quiet", "Run quiet.")
             ("a,all", "Store all known values in file, except the raw stuff. Equivalent to -c -e -s -h",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("c,ecal_clusters", "Store Ecal and Hodo Clusters",
+            ("c,all_clusters", "Store Ecal and Hodo Clusters",
+             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+            ("E,ecal_clusters", "Store Ecal Clusters",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("e,ecal_hits", "Store Ecal Hits",
+             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+            ("H,hodo_clusters", "Store Hodo Clusters",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("h,hodo_hits", "Store Hodo Hits",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("s,svt_hits", "Store SVT 3D and/or strip Hits",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("r,raw_svt_hits", "Store SVT RAW Hits",
+            ("r,raw_hits", "Store RAW Hits for SVT, ECal and Hodo",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("g,gbl_tracks", "Store GBL tracks",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
@@ -76,7 +80,6 @@ int main(int argc, char **argv){
         auto& infiles = args["inputfiles"].as<std::vector<std::string>>();
         auto& outfile = args["output"].as<std::string>();
         auto& store_all = args["all"].as<bool>();
-        auto& store_svt_hits = args["svt_hits"].as<bool>();
         auto& all_tracks = args["all_tracks"].as<bool>();
         auto& kf_tracks = args["kf_tracks"].as<bool>();
         auto& matched_tracks = args["matched_tracks"].as<bool>();
@@ -137,12 +140,14 @@ int main(int argc, char **argv){
         }
         if(debug>0) cout << "Debug code = " << debug_code << endl;
         dst->SetDebugLevel(debug_code);
-        dst->use_ecal_cluster = store_all || args["ecal_clusters"].as<bool>();
-        dst->use_hodo_clusters = store_all || args["ecal_clusters"].as<bool>();
+        dst->use_ecal_cluster = store_all || args["ecal_clusters"].as<bool>() || args["all_clusters"].as<bool>();
+        dst->use_hodo_clusters = store_all || args["hodo_clusters"].as<bool>() || args["all_clusters"].as<bool>();
         dst->use_ecal_hits = store_all || args["ecal_hits"].as<bool>();
         dst->use_hodo_hits = store_all || args["hodo_hits"].as<bool>();
-        dst->use_svt_hits = store_svt_hits || store_all;
-        dst->use_svt_raw_hits = args["raw_svt_hits"].as<bool>();
+        dst->use_svt_hits =  store_all || args["svt_hits"].as<bool>();
+        dst->use_svt_raw_hits = args["raw_hits"].as<bool>();
+        dst->use_ecal_raw_hits = args["raw_hits"].as<bool>();
+        dst->use_hodo_raw_hits = args["raw_hits"].as<bool>();
         dst->use_kf_tracks = kf_tracks || all_tracks || store_all;
         dst->use_gbl_tracks = all_tracks || store_all || args["gbl_tracks"].as<bool>();
         dst->use_gbl_kink_data = store_all || args["gbl_kinks"].as<bool>();

@@ -283,6 +283,24 @@ long LcioReader::Run(int max_event) {
             ///
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
+            if (use_hodo_raw_hits){
+                auto ecal_raw_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("HodoReadoutHits"));
+
+                for(int ihit = 0; ihit < ecal_raw_hits->getNumberOfElements(); ++ihit){
+                    auto raw_hit = static_cast<EVENT::TrackerRawData *>(ecal_raw_hits->getElementAt(ihit));
+
+                    Long64_t value = Long64_t(raw_hit->getCellID0() & 0xffffffff) |
+                            (Long64_t(raw_hit->getCellID1()) << 32);
+                    hodo_hit_field_decoder.setValue(value);
+                    hodo_raw_ix.push_back(hodo_hit_field_decoder["ix"]);
+                    hodo_raw_iy.push_back(hodo_hit_field_decoder["iy"]);
+                    hodo_raw_hole.push_back(hodo_hit_field_decoder["hole"]);
+                    hodo_raw_layer.push_back(hodo_hit_field_decoder["layer"]);
+                    vector<short> raw_hit_adc_short = raw_hit->getADCValues();
+                    hodo_raw_adc.push_back(raw_hit_adc_short);
+                }
+            }
+
             /// Parse the "HodoCalHits"
             if (use_hodo_hits){
                 EVENT::LCCollection *hodo_hits =
@@ -330,10 +348,25 @@ long LcioReader::Run(int max_event) {
             ///
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
+            if (use_ecal_raw_hits){
+                auto ecal_raw_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalReadoutHits"));
+
+                for(int ihit = 0; ihit < ecal_raw_hits->getNumberOfElements(); ++ihit){
+                    auto raw_hit = static_cast<EVENT::TrackerRawData *>(ecal_raw_hits->getElementAt(ihit));
+
+                    Long64_t value = Long64_t(raw_hit->getCellID0() & 0xffffffff) |
+                                     (Long64_t(raw_hit->getCellID1()) << 32);
+                    ecal_hit_field_decoder.setValue(value);
+                    ecal_raw_ix.push_back(ecal_hit_field_decoder["ix"]);
+                    ecal_raw_iy.push_back(ecal_hit_field_decoder["iy"]);
+                    vector<short> raw_hit_adc_short = raw_hit->getADCValues();
+                    ecal_raw_adc.push_back(raw_hit_adc_short);
+                }
+            }
+
             /// Parse the "EcalCalHits"
             if (use_ecal_hits) {
-                EVENT::LCCollection *ecal_hits =
-                        static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalCalHits"));
+                auto ecal_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalCalHits"));
 
                 for (int ihit = 0; ihit < ecal_hits->getNumberOfElements(); ++ihit) {
                     IMPL::CalorimeterHitImpl *lcio_hit
@@ -435,8 +468,7 @@ long LcioReader::Run(int max_event) {
                     raw_svt_hit_decoder.setValue(value);
 
                     EVENT::LCObjectVec raw_hit_fit_result_list = raw_hit_nav->getRelatedToObjects(raw_hit);
-                    vector<short> raw_hit_adc_short = raw_hit->getADCValues();
-                    vector<int> raw_hit_adc(raw_hit_adc_short.begin(),raw_hit_adc_short.end());
+                    vector<short> raw_hit_adc = raw_hit->getADCValues();
 
                     if(raw_hit_fit_result_list.size() < 1){
                         cout << "Error retrieving the fits for a raw hit.\n";

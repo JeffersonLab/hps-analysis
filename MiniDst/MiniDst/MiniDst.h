@@ -12,16 +12,16 @@
 #include "TTree.h"
 #include "TVector3.h"
 
-#define __MiniDst__Version__ "1.0.4"
+#define __MiniDst__Version__ "1.0.5"
 //
 // The following construction defines a "Variant", a type in C++17 and later that can contain different kinds of object.
 // In our case the variant contains each of the possible types that we have in the output tree.
 // Note that using a variant is not always straight forward, and often requires a "visitor". Sometimes the visitor is
 // simple, sometimes more complicated. See the "Clear()" function.
-// Note that each added type in the variant will need a corresponding type in the visitor used in Clear().
+// **Note** that each added type in the variant will need a corresponding type in the visitor used in Clear().
 //
 using Multi_Value = std::variant < int *, double *, unsigned int *, ULong64_t *, std::vector<double>* ,
-    std::vector<int>*, std::vector< std::vector<int> >*, std::vector< std::vector<double> >*>;
+std::vector<int>*, std::vector< std::vector<short> >*,  std::vector< std::vector<int> >*, std::vector< std::vector<double> >*>;
 //
 // Each variable that goes into the output is stored into the Multi_Branch object.
 // The Multi_Branch maps the name of the TTree branch to the variable in the code.
@@ -146,11 +146,14 @@ public:
     bool md_abort_tree_fill{false};
 
     /// Switches that allow turning output on/off.
+    bool use_hodo_raw_hits{false};
     bool use_hodo_hits{true};
     bool use_hodo_clusters{true};
+    bool use_ecal_raw_hits{false};
     bool use_ecal_cluster{true};
     bool use_ecal_hits{true};
     bool use_svt_raw_hits{false};
+
     bool use_svt_hits{true};
     bool use_kf_tracks{true};
     bool use_gbl_tracks{true};
@@ -198,6 +201,15 @@ public:
     double rf_time1{0};
     double rf_time2{0};
 
+    // Hodo RAW Hits
+    vector<int>    hodo_raw_ix;
+    vector<int>    hodo_raw_iy;
+    vector<int>    hodo_raw_hole;
+    vector<int>    hodo_raw_layer;
+    vector<vector<short> > hodo_raw_adc;
+
+
+
     // Hodo Hits
     vector<double> hodo_hit_energy;
     vector<double> hodo_hit_time;
@@ -212,6 +224,11 @@ public:
     vector<int>    hodo_cluster_ix;
     vector<int>    hodo_cluster_iy;
     vector<int>    hodo_cluster_layer;
+
+    // Ecal RAW Hits
+    vector<int>    ecal_raw_ix;
+    vector<int>    ecal_raw_iy;
+    vector<vector<short> > ecal_raw_adc;
 
     // Ecal Hits
     vector<double> ecal_hit_energy;
@@ -237,7 +254,7 @@ public:
     vector<int> svt_raw_hit_layer;
     vector<int> svt_raw_hit_module;
     vector<int> svt_raw_hit_strip;
-    vector<vector<int>> svt_raw_hit_adc;
+    vector<vector<short>> svt_raw_hit_adc;
     vector<int> svt_raw_hit_fit_no;
     vector<double> svt_raw_hit_t0;
     vector<double> svt_raw_hit_t0_err;

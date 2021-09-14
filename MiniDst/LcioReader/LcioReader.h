@@ -132,6 +132,7 @@ public:
     bool is_2016_data{false};  // True for 2015 and 2016 data: i.e. there is Trigger info in the TriggerBank
     bool is_2019_data{false};  // True for 2019 data: i.e. there is a TSBank and a VTPBank.
     bool is_MC_data{false};    // True is there is an MCParticles bank.
+    bool has_rf_hits{true};
 
     /// Maps to help navigate the event.
     /// Set them up here so that they are available in different sections.

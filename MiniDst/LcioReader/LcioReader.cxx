@@ -98,6 +98,15 @@ long LcioReader::Run(int max_event) {
                     use_mc_particles = false;
                 }
 
+                if(has_collection("RFHits")){
+                    has_rf_hits = true;
+                }else{
+                    has_rf_hits = false;
+                    if(!is_MC_data){
+                        cout << "WARNING: The LCIO file does not have RF Hits. Turning of RFHit reading.\n";
+                    }
+                }
+
                 if (is_2016_data && is_2019_data) cout << "WOA - a file that is both 2016 and 2019 data!!!\n";
                 data_type_is_known = true;
 
@@ -109,21 +118,20 @@ long LcioReader::Run(int max_event) {
                 /////////////////////////////////////////////////////////////////////////////////////////////////
 
                 if (use_ecal_hits && !has_collection("EcalCalHits")) {
-                    cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit writing. \n";
+                    cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit reading. \n";
                     use_ecal_hits = false;
                 }
 
                 if (use_ecal_cluster && !has_collection("EcalClustersCorr")) {
-                    cout
-                            << "WARNING: The LCIO file does not have EcalClustersCorr. Turning of ECal cluster writing. \n";
+                    cout << "WARNING: The LCIO file does not have EcalClustersCorr. Turning of ECal cluster reading. \n";
                     use_ecal_cluster = false;
                 }
 
                 if (use_svt_raw_hits && (!has_collection("SVTRawTrackerHits") ||
                                          !has_collection("SVTShapeFitParameters") ||
                                          !has_collection("SVTFittedRawTrackerHits"))) {
-                    cout
-                            << "WARNING: The LCIO file does not have SVTRawTrackerHits or SVTShapeFitParameters or SVTFittedRawTrackerHits.\n";
+                    cout << "WARNING: The LCIO file does not have SVTRawTrackerHits or " <<
+                            "SVTShapeFitParameters or SVTFittedRawTrackerHits.\n";
                     cout << "         Turning of SVT raw hit writing. \n";
                     use_svt_raw_hits = false;
                 }
@@ -186,7 +194,8 @@ long LcioReader::Run(int max_event) {
                          (svt_event_header_good << 4);
 
             // Get the LCIO GenericObject collection containing the RF times
-            if(!is_MC_data) {
+            if(!is_MC_data && has_rf_hits) {
+
                 EVENT::LCCollection *rf_hits
                         = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("RFHits"));
 

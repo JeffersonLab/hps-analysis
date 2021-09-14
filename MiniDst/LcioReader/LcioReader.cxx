@@ -157,7 +157,7 @@ long LcioReader::Run(int max_event) {
                     use_gbl_particles = false;
                 }
                 if (use_matched_tracks && !has_collection("MatchedTracks")) {
-                    cout << "TWARNING: he LCIO file does not have MatchedTracks. Turning of matched track writing. \n";
+                    cout << "WARNING: he LCIO file does not have MatchedTracks. Turning of matched track writing. \n";
                     use_matched_tracks = false;
                 }
                 for (auto type = particle_types_single.begin(); type< particle_types_single.end(); ++type) {
@@ -792,28 +792,30 @@ long LcioReader::Run(int max_event) {
                     }
                 } // End loop over tracks.
 
-                // Get the collection of LCRelations between seed tracks and a GBL tracks.
-                EVENT::LCCollection *seed_to_gbl_relations =
-                        static_cast<EVENT::LCCollection *>(lcio_event->getCollection("MatchedToGBLTrackRelations"));
+                if(use_gbl_tracks) {
+                    // Get the collection of LCRelations between seed tracks and a GBL tracks.
+                    EVENT::LCCollection *seed_to_gbl_relations =
+                            static_cast<EVENT::LCCollection *>(lcio_event->getCollection("MatchedToGBLTrackRelations"));
 
-                // Instantiate an LCRelation navigator which will allow faster access
-                // to the seed to GBL LCRelations
-                unique_ptr<UTIL::LCRelationNavigator> seed_to_gbl_relations_nav =
-                        make_unique<UTIL::LCRelationNavigator>(UTIL::LCRelationNavigator(seed_to_gbl_relations));
+                    // Instantiate an LCRelation navigator which will allow faster access
+                    // to the seed to GBL LCRelations
+                    unique_ptr<UTIL::LCRelationNavigator> seed_to_gbl_relations_nav =
+                            make_unique<UTIL::LCRelationNavigator>(UTIL::LCRelationNavigator(seed_to_gbl_relations));
 
-                for (auto const &[gbl_track, gbl_track_index] : gbl_track_to_index_map) {
-                    EVENT::LCObjectVec seed_to_gbl_list
-                            = seed_to_gbl_relations_nav->getRelatedFromObjects(gbl_track);
-                    if (seed_to_gbl_list.size() != 1) {
-                        cout << "Woops, I expected only one seed track for a gbl track.\n";
-                    } else {
-                        auto *seed_track = dynamic_cast<EVENT::Track *>(seed_to_gbl_list.at(0));
-                        int seed_index = matched_track_to_index_map[seed_track];
-                        track_ref[gbl_track_index] = seed_index;
-                        if (track_gbl_ref.size() > seed_index) {
-                            int debug_copy_seed_index = seed_index;
-                            int debug_copy_gbl_track_index = gbl_track_index;
-                            track_gbl_ref[seed_index] = gbl_track_index;
+                    for (auto const &[gbl_track, gbl_track_index]: gbl_track_to_index_map) {
+                        EVENT::LCObjectVec seed_to_gbl_list
+                                = seed_to_gbl_relations_nav->getRelatedFromObjects(gbl_track);
+                        if (seed_to_gbl_list.size() != 1) {
+                            cout << "Woops, I expected only one seed track for a gbl track.\n";
+                        } else {
+                            auto *seed_track = dynamic_cast<EVENT::Track *>(seed_to_gbl_list.at(0));
+                            int seed_index = matched_track_to_index_map[seed_track];
+                            track_ref[gbl_track_index] = seed_index;
+                            if (track_gbl_ref.size() > seed_index) {
+                                int debug_copy_seed_index = seed_index;
+                                int debug_copy_gbl_track_index = gbl_track_index;
+                                track_gbl_ref[seed_index] = gbl_track_index;
+                            }
                         }
                     }
                 }

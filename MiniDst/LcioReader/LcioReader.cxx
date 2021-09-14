@@ -172,6 +172,19 @@ long LcioReader::Run(int max_event) {
                         particle_types_single.erase(type--);
                     }
                 }
+                for (auto type = particle_types_double.begin(); type< particle_types_double.end(); ++type) {
+                    string collection_name = Type_to_Collection[*type];
+                    if(md_Debug>0){
+                        cout << "Checking for " << collection_name << " in lcio file.\n";
+                    }
+                    if(!has_collection(collection_name.c_str())){
+                        cout << "WARNING: The LCIO file does not have " << collection_name <<". Removing from list.\n";
+                        // See https://www.techiedelight.com/remove-elements-vector-inside-loop-cpp
+                        // We need to make sure the iterator is not invalidated by the erase.
+                        particle_types_double.erase(type--);
+                    }
+                }
+
             }
 
             event_number = lcio_event->getEventNumber();

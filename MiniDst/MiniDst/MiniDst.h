@@ -197,7 +197,7 @@ public:
     ULong64_t time_stamp{0};
     unsigned int svt_status{0};  // Only useful for some 2016 data.
     unsigned int trigger{0};     // Packed trigger bits. For 2019 - prescaled bits
-    unsigned int ext_trigger{0};     // Ext trigger bits. For 2019 - un-prescaled bits, N/A for 2016
+    unsigned int ext_trigger{0}; // Ext trigger bits. For 2019 - un-prescaled bits, N/A for 2016
     double rf_time1{0};
     double rf_time2{0};
 

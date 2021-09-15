@@ -70,6 +70,9 @@ long LcioReader::Run(int max_event) {
                 } else if (run_number <= 10750) { // 2019 physics run
                     is_2019_data = true;
                     if (md_Debug & kInfo) cout << "LCIO -> This is 2019 data. \n";
+                } else if (run_number > 10750) { // 2019 physics run
+                    is_2019_data = true;             // 2021 data behaves the same as 2019 data. (?)
+                    if (md_Debug & kInfo) cout << "LCIO -> This is 2021 data. \n";
                 }
 
                 col_names = lcio_event->getCollectionNames();
@@ -162,7 +165,7 @@ long LcioReader::Run(int max_event) {
                 }
                 for (auto type = particle_types_single.begin(); type< particle_types_single.end(); ++type) {
                     string collection_name = Type_to_Collection[*type];
-                    if(md_Debug>0){
+                    if(md_Debug & kDebug_L1){
                         cout << "Checking for " << collection_name << " in lcio file.\n";
                     }
                     if(!has_collection(collection_name.c_str())){
@@ -174,7 +177,7 @@ long LcioReader::Run(int max_event) {
                 }
                 for (auto type = particle_types_double.begin(); type< particle_types_double.end(); ++type) {
                     string collection_name = Type_to_Collection[*type];
-                    if(md_Debug>0){
+                    if(md_Debug & kDebug_L1){
                         cout << "Checking for " << collection_name << " in lcio file.\n";
                     }
                     if(!has_collection(collection_name.c_str())){
@@ -188,7 +191,7 @@ long LcioReader::Run(int max_event) {
             }
 
             event_number = lcio_event->getEventNumber();
-            if (md_Debug > 0) {
+            if (md_Debug & kDebug_Info) {
                 if ((++evt_count) % Counter_Freq == 0) {
                     printf("i: %'10lu   event: %'10d  run: %5d\n", evt_count, event_number, run_number);
                 }

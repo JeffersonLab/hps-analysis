@@ -164,10 +164,17 @@ public:
     bool use_gbl_particles{true};
 
     /// These determine what types of particles will be written out.
+    // No vertex
     vector<int> particle_types_single{FINAL_STATE_PARTICLE_KF, OTHER_ELECTRONS_KF,
-                                      FINAL_STATE_PARTICLE_GBL, OTHER_ELECTRONS_GBL}; // No vertex
-    vector<int> particle_types_double{TC_V0_CANDIDATE_KF, UC_VC_CANDIDATE_KF,
-                                      TC_V0_CANDIDATE_GBL, UC_VC_CANDIDATE_GBL}; // Yes vertex.
+                                      FINAL_STATE_PARTICLE_GBL, OTHER_ELECTRONS_GBL};
+
+    // Yes vertex.
+    vector<int> particle_types_double{UC_V0_CANDIDATE_KF, BSC_V0_CANDIDATE_KF, TC_V0_CANDIDATE_KF,
+                                      UC_VC_CANDIDATE_KF,
+                                      UC_MOLLER_CANDIDATE_KF, BSC_MOLLER_CANDIDATE_KF, TC_MOLLER_CANDIDATE_KF,
+                                      UC_V0_CANDIDATE_GBL, BSC_V0_CANDIDATE_GBL, TC_V0_CANDIDATE_GBL,
+                                      UC_VC_CANDIDATE_GBL,
+                                      UC_MOLLER_CANDIDATE_GBL, BSC_MOLLER_CANDIDATE_GBL, TC_MOLLER_CANDIDATE_GBL };
 
     /// Map that contains the name and address of each branch in the TTree.
     Multi_Branch branch_map;

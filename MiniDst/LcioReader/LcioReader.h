@@ -72,7 +72,7 @@ class LcioReader : public MiniDst {
     };
     const vector<string> Type_to_VertexCollection{
             "",  // FINAL_STATE_PARTICLE: 0
-            "UnconstrainedV0Vertexes_KF", // UC_V0_CANDIDATE: 1,
+            "UnconstrainedV0Vertices_KF", // UC_V0_CANDIDATE: 1,
             "BeamspotConstrainedV0Vertices_KF", // BSC_V0_CANDIDATE: 2,
             "TargetConstrainedV0Vertices_KF", // TC_V0_CANDIDATE: 3,
             "UnconstrainedMollerVertices_KF", // UC_MOLLER_CANDIDATE: 4,
@@ -81,7 +81,7 @@ class LcioReader : public MiniDst {
             "", // OTHER_ELECTRONS: 7,
             "UnconstrainedVcVertices_KF", // UC_VC_CANDIDATE: 8
             "",  // FINAL_STATE_PARTICLE: 0
-            "UnconstrainedV0Vertexes", // UC_V0_CANDIDATE_GBL: 1,
+            "UnconstrainedV0Vertices", // UC_V0_CANDIDATE_GBL: 1,
             "BeamspotConstrainedV0Vertices", // BSC_V0_CANDIDATE_GBL: 2,
             "TargetConstrainedV0Vertices", // TC_V0_CANDIDATE_GBL: 3,
             "UnconstrainedMollerVertices", // UC_MOLLER_CANDIDATE_GBL: 4,

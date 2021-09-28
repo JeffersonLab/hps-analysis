@@ -863,8 +863,8 @@ long LcioReader::Run(int max_event) {
                     for (int i_part = 0; i_part < particles->getNumberOfElements(); ++i_part) {
                         auto *lcio_part = dynamic_cast<EVENT::ReconstructedParticle *>(particles->getElementAt(i_part));
                         Fill_Single_Particle_From_LCIO(&part, lcio_part, type);
-                        part.type.push_back(type);
-                        any_particle_to_index_map[lcio_part] = i_part;
+                        any_particle_to_index_map[lcio_part] = i_part_all;
+                        i_part_all++;
                     }
                 }
 
@@ -875,7 +875,6 @@ long LcioReader::Run(int max_event) {
                     for (int i_vertex = 0; i_vertex < vertexes->getNumberOfElements(); ++i_vertex) {
                         auto *lcio_vertex = dynamic_cast<EVENT::Vertex *>(vertexes->getElementAt(i_vertex));
                         Fill_Vertex_From_LCIO(&v0, lcio_vertex, type);
-                        v0.type.push_back(type);
                     }
                 }
             }
@@ -975,6 +974,7 @@ void LcioReader::Fill_Vertex_From_LCIO(Vertex_Particle_t *vp, EVENT::Vertex *lci
     /// Fill a vertex from the LCIO EVENT::Vertex object.
     /// Note that the Parameters has a different (ad hoc) meaning for 2016 (older hps-java) and 2019 (later hps-java) LCIO files.
     const float *vertex_pos = lcio_vert->getPosition();
+    vp->type.push_back(type);
     vp->vertex_x.push_back(vertex_pos[0]);
     vp->vertex_y.push_back(vertex_pos[1]);
     vp->vertex_z.push_back(vertex_pos[2]);
@@ -1060,9 +1060,15 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
     auto i_daughter_ptr = any_particle_to_index_map.find(daughter);
     int i_part = -99;
     if(i_daughter_ptr == any_particle_to_index_map.end()) { // We did not find the daughter particle.
-        cout << "The daughter particle was not stored for this vertex?????\n";
-        cout << "We did not find the daughter particle of type " << type << " for a vertex in Run " <<
-        run_number << "::" << event_number << "\n";
+        if( md_Debug & kDebug_Info ) {
+            cout << "We did not find the daughter particle of type " << type << " for a vertex in Run " <<
+                 run_number << "::" << event_number << ". Adding it.\n";
+        }
+        // Add the particle to the particles list. We mark it by giving it the type of the vertex collection.
+        Fill_Single_Particle_From_LCIO(&part, daughter, type);
+        i_part = part.type.size();
+        any_particle_to_index_map[daughter] = i_part;
+
     }else{
         i_part = i_daughter_ptr->second;
     }
@@ -1205,6 +1211,7 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
 void LcioReader::Fill_Single_Particle_From_LCIO(Single_Particle_t *bp, EVENT::ReconstructedParticle *lcio_part,
                                                 int type) {
     Fill_Basic_Particle_From_LCIO(dynamic_cast<Basic_Particle_t *>(bp),lcio_part);
+    bp->type.push_back(type);
 
     const vector<EVENT::Track *> &tracks = lcio_part->getTracks();
 #ifdef DEBUG

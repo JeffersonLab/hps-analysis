@@ -116,23 +116,23 @@ public:
         OTHER_ELECTRONS      = 7,
         UC_VC_CANDIDATE      = 8,
         FINAL_STATE_PARTICLE_KF = 0,
-        UC_V0_CANDIDATE_KF      = 1,
-        BSC_V0_CANDIDATE_KF     = 2,
-        TC_V0_CANDIDATE_KF      = 3,
-        UC_MOLLER_CANDIDATE_KF  = 4,
-        BSC_MOLLER_CANDIDATE_KF = 5,
-        TC_MOLLER_CANDIDATE_KF  = 6,
+        UC_V0_VERTICES_KF      = 1,
+        BSC_V0_VERTICES_KF     = 2,
+        TC_V0_VERTICES_KF      = 3,
+        UC_MOLLER_VERTICES_KF  = 4,
+        BSC_MOLLER_VERTICES_KF = 5,
+        TC_MOLLER_VERTICES_KF  = 6,
         OTHER_ELECTRONS_KF      = 7,
-        UC_VC_CANDIDATE_KF      = 8,
+        UC_VC_VERTICES_KF      = 8,
         FINAL_STATE_PARTICLE_GBL = 0+9,
-        UC_V0_CANDIDATE_GBL      = 1+9,
-        BSC_V0_CANDIDATE_GBL     = 2+9,
-        TC_V0_CANDIDATE_GBL      = 3+9,
-        UC_MOLLER_CANDIDATE_GBL  = 4+9,
-        BSC_MOLLER_CANDIDATE_GBL = 5+9,
-        TC_MOLLER_CANDIDATE_GBL  = 6+9,
+        UC_V0_VERTICES_GBL      = 1 + 9,
+        BSC_V0_VERTICES_GBL     = 2 + 9,
+        TC_V0_VERTICES_GBL      = 3 + 9,
+        UC_MOLLER_VERTICES_GBL  = 4 + 9,
+        BSC_MOLLER_VERTICES_GBL = 5 + 9,
+        TC_MOLLER_VERTICES_GBL  = 6 + 9,
         OTHER_ELECTRONS_GBL      = 7+9,
-        UC_VC_CANDIDATE_GBL      = 8+9
+        UC_VC_VERTICES_GBL      = 8 + 9
     };
 
 public:
@@ -169,12 +169,12 @@ public:
                                       FINAL_STATE_PARTICLE_GBL, OTHER_ELECTRONS_GBL};
 
     // Yes vertex.
-    vector<int> particle_types_double{UC_V0_CANDIDATE_KF, BSC_V0_CANDIDATE_KF, TC_V0_CANDIDATE_KF,
-                                      UC_VC_CANDIDATE_KF,
-                                      UC_MOLLER_CANDIDATE_KF, BSC_MOLLER_CANDIDATE_KF, TC_MOLLER_CANDIDATE_KF,
-                                      UC_V0_CANDIDATE_GBL, BSC_V0_CANDIDATE_GBL, TC_V0_CANDIDATE_GBL,
-                                      UC_VC_CANDIDATE_GBL,
-                                      UC_MOLLER_CANDIDATE_GBL, BSC_MOLLER_CANDIDATE_GBL, TC_MOLLER_CANDIDATE_GBL };
+    vector<int> particle_types_double{UC_V0_VERTICES_KF, BSC_V0_VERTICES_KF, TC_V0_VERTICES_KF,
+                                      UC_VC_VERTICES_KF,
+                                      UC_MOLLER_VERTICES_KF, BSC_MOLLER_VERTICES_KF, TC_MOLLER_VERTICES_KF,
+                                      UC_V0_VERTICES_GBL, BSC_V0_VERTICES_GBL, TC_V0_VERTICES_GBL,
+                                      UC_VC_VERTICES_GBL,
+                                      UC_MOLLER_VERTICES_GBL, BSC_MOLLER_VERTICES_GBL, TC_MOLLER_VERTICES_GBL };
 
     /// Map that contains the name and address of each branch in the TTree.
     Multi_Branch branch_map;
@@ -214,8 +214,6 @@ public:
     vector<int>    hodo_raw_hole;
     vector<int>    hodo_raw_layer;
     vector<vector<short> > hodo_raw_adc;
-
-
 
     // Hodo Hits
     vector<double> hodo_hit_energy;
@@ -287,8 +285,6 @@ public:
     vector<vector<int>> svt_hit_layer;
     vector<vector<int>> svt_hit_module;
     vector<vector<int>> svt_hit_strip;
-
-
 
     // SVT Tracks
     int track_n_gbl{0}; /// Number of GBL tracks. The rest will be matched tracks or Kalman tracks.
@@ -366,11 +362,11 @@ public:
     struct Sub_Particle_t{
         /// The SubParticle structure is really just for convenience.
         /// All the information here could be found by looking up the particle,
-        /// and from that particle the cluster, and then retreive the information needed.
+        /// and from that particle the cluster, and then retrieve the information needed.
         /// But, I am lazy, and want easy access to these numbers without all the lookups.
         vector<int>    part;  /// index to particle
         vector<int>    track; /// index to track
-        vector<int>    track_nhit; // Number of hits on track.
+        vector<int>    track_nhit; /// Number of hits on track.
         vector<double> p;          /// Track momentum
         vector<double> chi2;      /// Track chi-squared.
         vector<double> good_pid;  /// goodness of pid from particle.
@@ -380,8 +376,8 @@ public:
         vector<int>    clus;       /// index to cluster
         vector<double> clus_energy; /// cluster energy
         vector<double> clus_time;  /// cluster time
-        vector<int>    clus_ix;   // Cluster seed ix.
-        vector<int>    clus_iy;   // Cluster seed iy.
+        vector<int>    clus_ix;   /// Cluster seed ix.
+        vector<int>    clus_iy;   /// Cluster seed iy.
         vector<double> clus_pos_x; /// Cluster x position.
         vector<double> clus_pos_y;
     };

@@ -59,16 +59,16 @@ class LcioReader : public MiniDst {
         "BeamspotConstrainedMollerCandidates_KF", // BSC_MOLLER_CANDIDATE: 5,
         "TargetConstrainedMollerCandidates_KF", // TC_MOLLER_CANDIDATE: 6,
         "OtherElectrons_KF", // OTHER_ELECTRONS: 7,
-        "UnconstrainedVcCandidates_KF", // UC_VC_CANDIDATE_GBL: 8
+        "UnconstrainedVcCandidates_KF", // UC_VC_VERTICES_GBL: 8
         "FinalStateParticles",  // FINAL_STATE_PARTICLE_GBL: 0+9
-        "UnconstrainedV0Candidates", // UC_V0_CANDIDATE_GBL: 1+9
-        "BeamspotConstrainedV0Candidates", // BSC_V0_CANDIDATE_GBL: 2+9
-        "TargetConstrainedV0Candidates", // TC_V0_CANDIDATE_GBL: 3+9,
-        "UnconstrainedMollerCandidates", // UC_MOLLER_CANDIDATE_GBL: 4+9,
-        "BeamspotConstrainedMollerCandidates", // BSC_MOLLER_CANDIDATE_GBL: 5+9,
-        "TargetConstrainedMollerCandidates", // TC_MOLLER_CANDIDATE_GBL: 6+9,
+        "UnconstrainedV0Candidates", // UC_V0_VERTICES_GBL: 1+9
+        "BeamspotConstrainedV0Candidates", // BSC_V0_VERTICES_GBL: 2+9
+        "TargetConstrainedV0Candidates", // TC_V0_VERTICES_GBL: 3+9,
+        "UnconstrainedMollerCandidates", // UC_MOLLER_VERTICES_GBL: 4+9,
+        "BeamspotConstrainedMollerCandidates", // BSC_MOLLER_VERTICES_GBL: 5+9,
+        "TargetConstrainedMollerCandidates", // TC_MOLLER_VERTICES_GBL: 6+9,
         "OtherElectrons", // OTHER_ELECTRONS_GBL: 7+9,
-        "UnconstrainedVcCandidates", // UC_VC_CANDIDATE_GBL: 8+9
+        "UnconstrainedVcCandidates", // UC_VC_VERTICES_GBL: 8+9
     };
     const vector<string> Type_to_VertexCollection{
             "",  // FINAL_STATE_PARTICLE: 0
@@ -81,14 +81,14 @@ class LcioReader : public MiniDst {
             "", // OTHER_ELECTRONS: 7,
             "UnconstrainedVcVertices_KF", // UC_VC_CANDIDATE: 8
             "",  // FINAL_STATE_PARTICLE: 0
-            "UnconstrainedV0Vertices", // UC_V0_CANDIDATE_GBL: 1,
-            "BeamspotConstrainedV0Vertices", // BSC_V0_CANDIDATE_GBL: 2,
-            "TargetConstrainedV0Vertices", // TC_V0_CANDIDATE_GBL: 3,
-            "UnconstrainedMollerVertices", // UC_MOLLER_CANDIDATE_GBL: 4,
-            "BeamspotConstrainedMollerVertices", // BSC_MOLLER_CANDIDATE_GBL: 5,
-            "TargetConstrainedMollerVertices", // TC_MOLLER_CANDIDATE_GBL: 6,
+            "UnconstrainedV0Vertices", // UC_V0_VERTICES_GBL: 1,
+            "BeamspotConstrainedV0Vertices", // BSC_V0_VERTICES_GBL: 2,
+            "TargetConstrainedV0Vertices", // TC_V0_VERTICES_GBL: 3,
+            "UnconstrainedMollerVertices", // UC_MOLLER_VERTICES_GBL: 4,
+            "BeamspotConstrainedMollerVertices", // BSC_MOLLER_VERTICES_GBL: 5,
+            "TargetConstrainedMollerVertices", // TC_MOLLER_VERTICES_GBL: 6,
             "", // OTHER_ELECTRONS_GBL: 7,
-            "UnconstrainedVcVertices", // UC_VC_CANDIDATE_GBL: 8
+            "UnconstrainedVcVertices", // UC_VC_VERTICES_GBL: 8
     };
 
 public:

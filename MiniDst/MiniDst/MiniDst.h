@@ -292,7 +292,7 @@ public:
     int track_n_matched{0};
     vector<int>  track_n_hits; /** The number of 3D hits associated with this track. */
     vector<int>  track_volume; /** The volume to which this track belongs to. */
-    vector<int>  track_type;   /** The track type. */
+    vector<int>  track_type;   /** The track type from LCIO. 0=matched, 1=KF, 32+=GBL */
     vector<double> track_d0;   /** The distance of closest approach to the reference point. */
     vector<double> track_phi0;     // The azimuthal angle of the momentum at the position of closest approach to the reference point.
     vector<double> track_omega; // The track curvature. The curvature is positive (negative) if the particle has a positive (negative) charge.

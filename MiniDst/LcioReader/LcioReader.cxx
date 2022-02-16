@@ -1222,11 +1222,13 @@ void LcioReader::Fill_Single_Particle_From_LCIO(Single_Particle_t *bp, EVENT::Re
     if( tracks.size() == 1) {
         EVENT::Track *track = tracks[0];
         auto i_stored_track_ptr = any_track_to_index_map.find(track);
+
         if( i_stored_track_ptr == any_track_to_index_map.end() ) {
             if(gDebug>2) cout << "Track was not found in the any_track_to_index_map. \n";
             bp->track.push_back(-99);
         }else {
             bp->track.push_back(i_stored_track_ptr->second);
+            track_particle[i_stored_track_ptr->second] = bp->track.size()-1;
         }
         bp->track_chi2.push_back(track->getChi2());
     }else{ // No track for this particle, then it is most likely a neutral.

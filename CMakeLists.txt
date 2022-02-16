@@ -6,4 +6,5 @@ project(hps-analysis)
 
 add_subdirectory(MiniDst)
 add_subdirectory(BumpHunt2016)
+add_subdirectory(Moller)
 add_subdirectory(EventMixer)

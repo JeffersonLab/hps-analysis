@@ -4,6 +4,7 @@
 
 #ifndef HPS_ANALYSIS_DST2016_H
 #define HPS_ANALYSIS_DST2016_H
+#include <cstdio>
 #include <iostream>
 #include <variant>
 #include "TObject.h"

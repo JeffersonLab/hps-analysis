@@ -16,7 +16,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Offer the user the choice of overriding the installation directories
-
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -42,9 +41,6 @@ set(CMAKE_INSTALL_DOCDIR           "${CMAKE_INSTALL_PREFIX}/doc" CACHE PATH "Ins
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-find_package(LCIO REQUIRED)
-include_directories( AFTER "${LCIO_INCLUDE_DIR}")
-message(STATUS "LCIO includes: ${LCIO_INCLUDE_DIR}")
 # You need to tell CMake where to find the ROOT installation.
 #   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
 # find ROOT installation
@@ -53,9 +49,21 @@ find_package(ROOT REQUIRED COMPONENTS Physics)
 # Rint Postscript Matrix Physics MathCore Thread MultiProc ROOTDataFrame PyROOT Geom Gui
 message(STATUS "ROOT found at: ${ROOT_DIR}")
 message(STATUS " ")
-
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})
+
+find_package(LCIO)
+if(LCIO_FOUND)
+    include_directories( AFTER "${LCIO_INCLUDE_DIR}")
+    message(STATUS "LCIO includes: ${LCIO_INCLUDE_DIR}")
+else()
+    message(STATUS "=================================================================")
+    message(STATUS "LCIO subsystem was not found, so you will not be able to create  ")
+    message(STATUS "root files from slcio file. To build LCIO go to MiniDST/lcio and ")
+    message(STATUS "run: mkdir build; cd build; ")
+    message(STATUS "cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} .. ")
+    message(STATUS "=================================================================")
+endif(LCIO_FOUND)
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -85,17 +93,17 @@ endif(APPLE)
 add_subdirectory(BaseAna)
 add_subdirectory(MiniDst)
 add_subdirectory(Dst2016)
-add_subdirectory(LcioReader)
+if(LCIO_FOUND)
+    add_subdirectory(LcioReader)
+    add_executable(make_mini_dst make_mini_dst.cxx)
+    target_link_libraries(make_mini_dst MiniDst Dst2016 LcioReader ${ROOT_LIBRARIES})
+    install(TARGETS make_mini_dst)
+    add_executable(lcio_test_reader lcio_test_reader.cpp)
+    target_link_libraries(lcio_test_reader ${LCIO_LIBRARIES})
+    install(TARGETS lcio_test_reader)
+endif(LCIO_FOUND)
 
 # link_directories(${CMAKE_INSTALL_PREFIX}/lib)
-
-add_executable(make_mini_dst make_mini_dst.cxx)
-target_link_libraries(make_mini_dst MiniDst Dst2016 LcioReader ${ROOT_LIBRARIES})
-install(TARGETS make_mini_dst)
-
-add_executable(lcio_test_reader lcio_test_reader.cpp)
-target_link_libraries(lcio_test_reader ${LCIO_LIBRARIES})
-install(TARGETS lcio_test_reader)
 
 #
 # Somehow on Linux the stdc++ does not (always) get properly picked up.

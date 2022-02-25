@@ -10,6 +10,4 @@ IF(CMAKE_SYSTEM_NAME STREQUAL Linux)
    target_link_libraries(run_bumphunt -lstdc++ )   
 endif(CMAKE_SYSTEM_NAME STREQUAL Linux)
 
-
-
 install(TARGETS run_bumphunt)

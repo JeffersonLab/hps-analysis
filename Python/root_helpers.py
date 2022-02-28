@@ -25,6 +25,33 @@ def print_mc_particle_tree(mdst):
             print_daughters(mdst, i, 0)
 
 
+def get_vertex_dictionary():
+    """Return a dictionary that translates the Vertex numbers to the
+    ParticleType Enum name"""
+
+    out = {
+        0: "FINAL_STATE_PARTICLE_KF",
+        1: "UC_V0_VERTICES_KF",
+        2: "BSC_V0_VERTICES_KF",
+        3: "TC_V0_VERTICES_KF",
+        4: "UC_MOLLER_VERTICES_KF",
+        5: "BSC_MOLLER_VERTICES_KF",
+        6: "TC_MOLLER_VERTICES_KF",
+        7: "OTHER_ELECTRONS_KF",
+        8: "UC_VC_VERTICES_KF",
+        0 + 9: "FINAL_STATE_PARTICLE_GBL",
+        1 + 9: "UC_V0_VERTICES_GBL",
+        2 + 9: "BSC_V0_VERTICES_GBL",
+        3 + 9: "TC_V0_VERTICES_GBL",
+        4 + 9: "UC_MOLLER_VERTICES_GBL",
+        5 + 9: "BSC_MOLLER_VERTICES_GBL",
+        6 + 9: "TC_MOLLER_VERTICES_GBL",
+        7 + 9: "OTHER_ELECTRONS_GBL",
+        8 + 9: "UC_VC_VERTICES_GBL",
+    }
+    return out
+
+
 def SetStyle(choice=0):
     if "R" not in globals():
         import ROOT as R

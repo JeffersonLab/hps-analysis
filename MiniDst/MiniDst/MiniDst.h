@@ -11,6 +11,9 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TVector3.h"
+#include "ROOT/RDataFrame.hxx"
+#include "ROOT/RVec.hxx"
+#include "ROOT/RDF/InterfaceUtils.hxx"
 
 #define __MiniDst__Version__ "1.0.6"
 //

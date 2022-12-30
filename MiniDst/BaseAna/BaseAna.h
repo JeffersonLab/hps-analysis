@@ -5,8 +5,8 @@
  * This class helps with the reading of HPS DSTs by providing a convenient way to access the
  * data from either a TTree, a TChain or when using PROOF (Parallel ROOT).
  *
- * For basic usage, consult the GitHub pages.
- *
+ * This class is only included in the "hps-analysis" package to be able to read and convert the old
+ * 2016 style DSTs into the flat TTree that minidst uses. It is not used for anything else.
  */
 // TODO:
 //       * Create copy constuctor?

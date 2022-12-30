@@ -1,7 +1,14 @@
 //
 // Created by Maurik Holtrop on 7/24/20.
 //
-
+// This file is the header for the miniDST class.
+// The miniDST class contains all the information to make the ROOT TTree objects for analyzing HPS data.
+// These trees would normally be filled from the LCIO data files that are produced in the data cooking.
+//
+// Note that this class is needed to write the TTrees, but it is not needed at all to use the resulting
+// ROOT files. This header file does contain useful information for understanding the contents of the trees,
+// and some of the definitions that can be useful in your analysis.
+//
 #ifndef MINIDST_MINIDST_H
 #define MINIDST_MINIDST_H
 #include <iostream>

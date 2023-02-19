@@ -4,7 +4,7 @@ project(BaseAna2)
 
 ROOT_GENERATE_DICTIONARY(BaseAnaDict BaseAna.h MODULE ${PROJECT_NAME} LINKDEF BaseAna_LinkDef.h )
 
-add_library(${PROJECT_NAME} STATIC BaseAna.cpp BaseAnaDict.cxx
+add_library(${PROJECT_NAME} SHARED BaseAna.cpp BaseAnaDict.cxx
         HpsEvent.cxx EcalCluster.cxx SvtTrack.cxx GblTrack.cxx
         SvtHit.cxx HpsParticle.cxx EcalHit.cxx MCParticle.cxx HpsMCParticle.cxx )
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -8,3 +8,5 @@ add_subdirectory(MiniDst)
 add_subdirectory(BumpHunt2016)
 add_subdirectory(Moller)
 add_subdirectory(EventMixer)
+add_subdirectory(Particles)
+

@@ -429,6 +429,7 @@ public:
     vector<double> mc_part_pz;
     vector<double> mc_part_mass;
     vector<double> mc_part_charge;
+    vector<int>    mc_part_simstatus; /** result of the GetSimulatorStatus(), bit wise status word. **/
     vector< vector<int> > mc_part_daughters;
     vector< vector<int> > mc_part_parents;
 };

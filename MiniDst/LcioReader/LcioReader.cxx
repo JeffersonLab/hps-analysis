@@ -899,6 +899,7 @@ long LcioReader::Run(int max_event) {
                     mc_part_gen_status.push_back(mc_part->getGeneratorStatus());
                     mc_part_time.push_back(mc_part->getTime());
                     mc_part_charge.push_back(mc_part->getCharge());
+                    mc_part_simstatus.push_back(mc_part->getSimulatorStatus());
                     const double *part_vertex = mc_part->getVertex();
                     mc_part_x.push_back(part_vertex[0]);
                     mc_part_y.push_back(part_vertex[1]);

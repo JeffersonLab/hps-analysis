@@ -249,6 +249,7 @@ void MiniDst::DefineBranchMap() {
     branch_map_try_emplace("mc_part_pz", &mc_part_pz, use_mc_particles);
     branch_map_try_emplace("mc_part_mass", &mc_part_mass, use_mc_particles);
     branch_map_try_emplace("mc_part_charge", &mc_part_charge, use_mc_particles);
+    branch_map_try_emplace("mc_part_simstatus", &mc_part_simstatus, use_mc_particles);
     branch_map_try_emplace("mc_part_daughters", &mc_part_daughters, use_mc_particles);
     branch_map_try_emplace("mc_part_parents", &mc_part_parents, use_mc_particles);
 

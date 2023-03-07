@@ -130,7 +130,13 @@ long LcioReader::Run(int max_event) {
                     use_ecal_cluster = false;
                 }
 
-                if (use_svt_raw_hits && (!has_collection("SVTRawTrackerHits") ||
+               if (use_ecal_cluster_uncor && !has_collection("EcalClusters")) {
+                  cout << "WARNING: The LCIO file does not have EcalClusters. Turning of ECal cluster reading. \n";
+                   use_ecal_cluster_uncor = false;
+               }
+
+
+               if (use_svt_raw_hits && (!has_collection("SVTRawTrackerHits") ||
                                          !has_collection("SVTShapeFitParameters") ||
                                          !has_collection("SVTFittedRawTrackerHits"))) {
                     cout << "WARNING: The LCIO file does not have SVTRawTrackerHits or " <<
@@ -473,6 +479,59 @@ long LcioReader::Run(int max_event) {
                     ecal_cluster_seed_iy.push_back(ecal_hit_field_decoder["iy"]);
                 }
             }
+
+            /// Parse "EcalClusters" -- uncorrected Ecal clusters.
+            if (use_ecal_cluster_uncor) {
+                // Run this also if we only store particles, since the particles need some of this info.
+                EVENT::LCCollection *clusters =
+                      static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalClusters"));
+                for (int i_clus = 0; i_clus < clusters->getNumberOfElements(); ++i_clus) {
+                    auto lcio_clus = dynamic_cast<IMPL::ClusterImpl *>(clusters->getElementAt(i_clus));
+                    ecal_cluster_uncor_to_index_map[lcio_clus] = i_clus;
+                    ecal_cluster_uncor_energy.push_back(lcio_clus->getEnergy());
+                    const float *position = lcio_clus->getPosition();
+                    ecal_cluster_uncor_x.push_back(position[0]);
+                    ecal_cluster_uncor_y.push_back(position[1]);
+                    ecal_cluster_uncor_z.push_back(position[2]);
+
+                    // Link the hits to the cluster.
+                    EVENT::CalorimeterHitVec clus_hits = lcio_clus->getCalorimeterHits();
+
+                    ecal_cluster_uncor_nhits.push_back(clus_hits.size());
+
+                    double seed_energy{-99.};
+                    double seed_time{-99};
+                    int seed_index{-99};
+                    Long64_t seed_cellid0{-99};
+                    int seed_ix{-99};
+                    int seed_iy{-99};
+                    vector<int> clus_hit_indexes;
+                    for (int j_hit = 0; j_hit < clus_hits.size(); ++j_hit) {
+                        IMPL::CalorimeterHitImpl *hit = static_cast<IMPL::CalorimeterHitImpl *>(clus_hits[j_hit]);
+                        if (hit->getEnergy() > seed_energy) {
+                            seed_energy = hit->getEnergy();
+                            seed_time = hit->getTime();
+                            if (use_ecal_hits) {
+                                seed_index = ecal_hit_to_index_map[hit];
+                            }
+                            seed_cellid0 = Long64_t(hit->getCellID0() & 0xffffffff) |
+                                           (Long64_t(hit->getCellID1()) << 32);
+
+                        }
+                        int hit_index = -99;
+                        if (use_ecal_hits)hit_index = ecal_hit_to_index_map[hit];
+                        clus_hit_indexes.push_back(hit_index);
+                    }
+                    ecal_cluster_uncor_time.push_back(seed_time);        // The cluster time = seed hit time.
+                    ecal_cluster_uncor_hits.push_back(clus_hit_indexes);
+                    ecal_cluster_uncor_seed_index.push_back(seed_index);
+                    ecal_cluster_uncor_seed_energy.push_back(seed_energy);
+                    ecal_hit_field_decoder.setValue(seed_cellid0);
+                    ecal_cluster_uncor_seed_ix.push_back(ecal_hit_field_decoder["ix"]);
+                    ecal_cluster_uncor_seed_iy.push_back(ecal_hit_field_decoder["iy"]);
+                }
+            }
+
             ////////////////////////////////////////////////////////////////////////////////////////////////
             ///
             /// SVT

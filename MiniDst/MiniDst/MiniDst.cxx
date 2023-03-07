@@ -102,6 +102,19 @@ void MiniDst::DefineBranchMap() {
     branch_map_try_emplace("ecal_cluster_hits", &ecal_cluster_hits, use_ecal_cluster);
     branch_map_try_emplace("ecal_cluster_nhits", &ecal_cluster_nhits, use_ecal_cluster);
 
+    branch_map_try_emplace("ecal_cluster_uncor_energy", &ecal_cluster_uncor_energy, use_ecal_cluster_uncor);
+    branch_map_try_emplace("ecal_cluster_uncor_time", &ecal_cluster_uncor_time, use_ecal_cluster_uncor);
+    branch_map_try_emplace("ecal_cluster_uncor_x", &ecal_cluster_uncor_x, use_ecal_cluster_uncor);
+    branch_map_try_emplace("ecal_cluster_uncor_y", &ecal_cluster_uncor_y, use_ecal_cluster_uncor);
+    branch_map_try_emplace("ecal_cluster_uncor_z", &ecal_cluster_uncor_z, use_ecal_cluster_uncor);
+    branch_map_try_emplace("ecal_cluster_uncor_seed_index", &ecal_cluster_uncor_seed_index, use_ecal_cluster_uncor);
+    branch_map_try_emplace("ecal_cluster_uncor_seed_ix", &ecal_cluster_uncor_seed_ix, use_ecal_cluster_uncor);
+    branch_map_try_emplace("ecal_cluster_uncor_seed_iy", &ecal_cluster_uncor_seed_iy, use_ecal_cluster_uncor);
+    branch_map_try_emplace("ecal_cluster_uncor_seed_energy", &ecal_cluster_uncor_seed_energy, use_ecal_cluster_uncor);
+    branch_map_try_emplace("ecal_cluster_uncor_hits", &ecal_cluster_uncor_hits, use_ecal_cluster_uncor);
+    branch_map_try_emplace("ecal_cluster_uncor_nhits", &ecal_cluster_uncor_nhits, use_ecal_cluster_uncor);
+
+
     branch_map_try_emplace("svt_raw_hit_layer", &svt_raw_hit_layer, use_svt_raw_hits);
     branch_map_try_emplace("svt_raw_hit_module", &svt_raw_hit_module, use_svt_raw_hits);
     branch_map_try_emplace("svt_raw_hit_strip", &svt_raw_hit_strip, use_svt_raw_hits);

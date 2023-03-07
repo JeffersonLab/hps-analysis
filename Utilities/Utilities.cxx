@@ -2,6 +2,6 @@
 // Created by Maurik Holtrop on 12/31/22.
 //
 
-#include "Particles.h"
+#include "Utilities.h"
 
-ClassImp(Particles)
+ClassImp(Utilities)

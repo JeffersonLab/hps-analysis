@@ -141,6 +141,7 @@ public:
     // map<IMPL::CalorimeterHitImpl*, int> hodo_hit_to_index_map; // Map to link hodoscope hit to index.
     map<IMPL::CalorimeterHitImpl*, int> ecal_hit_to_index_map; // Map to link calorimeter hit to index.
     map<IMPL::ClusterImpl*, int> ecal_cluster_to_index_map; // Map to link calorimeter hit to index.
+    map<IMPL::ClusterImpl*, int> ecal_cluster_uncor_to_index_map; // Map to link uncor calorimeter hit to index.
     map<IMPL::TrackerHitImpl*, int> svt_hit_to_index_map; // Map to link svt hit to index.
     map<EVENT::TrackerRawData *, pair<int,int>> svt_raw_hit_to_index_map; // Map of raw hit to indexes of stored raw hit and fits.
     map<EVENT::Track*, int> kf_track_to_index_map;           // Map to link GBL only track to index.

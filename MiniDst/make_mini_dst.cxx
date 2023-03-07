@@ -4,6 +4,7 @@
 
 #include "cxxopts.hpp"
 #include "TChain.h"
+#include "MiniDst.h"
 #include "Dst2016.h"
 #include "LcioReader.h"
 #include <locale.h>
@@ -27,11 +28,13 @@ int main(int argc, char **argv){
     options.add_options()
             ("d,debug", "Increase debug level")
             ("q,quiet", "Run quiet.")
-            ("a,all", "Store all known values in file, except the raw stuff. Equivalent to -c -e -s -h",
+            ("a,all", "Store all known values in file, except the raw stuff or uncorrected. Equivalent to -c -e -s -h",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("c,all_clusters", "Store Ecal and Hodo Clusters",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("E,ecal_clusters", "Store Ecal Clusters",
+             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+            ("U,ecal_clusters_uncor", "Store UNCORRECTED Ecal Clusters",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("e,ecal_hits", "Store Ecal Hits",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
@@ -141,6 +144,7 @@ int main(int argc, char **argv){
         if(debug>0) cout << "Debug code = " << debug_code << endl;
         dst->SetDebugLevel(debug_code);
         dst->use_ecal_cluster = store_all || args["ecal_clusters"].as<bool>() || args["all_clusters"].as<bool>();
+        dst->use_ecal_cluster_uncor = args["ecal_clusters_uncor"].as<bool>();
         dst->use_hodo_clusters = store_all || args["hodo_clusters"].as<bool>() || args["all_clusters"].as<bool>();
         dst->use_ecal_hits = store_all || args["ecal_hits"].as<bool>();
         dst->use_hodo_hits = store_all || args["hodo_hits"].as<bool>();

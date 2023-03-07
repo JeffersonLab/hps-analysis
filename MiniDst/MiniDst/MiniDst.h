@@ -161,6 +161,7 @@ public:
     bool use_hodo_clusters{true};
     bool use_ecal_raw_hits{false};
     bool use_ecal_cluster{true};
+    bool use_ecal_cluster_uncor{false};
     bool use_ecal_hits{true};
     bool use_svt_raw_hits{false};
 
@@ -264,7 +265,22 @@ public:
     vector< vector<int> > ecal_cluster_hits;
     vector<int> ecal_cluster_nhits; // Not strictly needed, but handy. (could use ecal_cluster_hits[i].size())
 
-    // RAW SVT Hits  == Not available in the 2016 DST, but could be useful for some LCIO based studies.
+   // Ecal Clusters Ucor:
+   vector<double> ecal_cluster_uncor_energy;
+   vector<double> ecal_cluster_uncor_time;    // Cluster time = seed hit time.
+   vector<double> ecal_cluster_uncor_x;
+   vector<double> ecal_cluster_uncor_y;
+   vector<double> ecal_cluster_uncor_z;
+   vector<int> ecal_cluster_uncor_seed_index;
+   vector<int> ecal_cluster_uncor_seed_ix;
+   vector<int> ecal_cluster_uncor_seed_iy;
+   vector<double> ecal_cluster_uncor_seed_energy;
+   vector< vector<int> > ecal_cluster_uncor_hits;
+   vector<int> ecal_cluster_uncor_nhits; // Not strictly needed, but handy. (could use ecal_cluster_uncor_hits[i].size())
+
+
+
+   // RAW SVT Hits  == Not available in the 2016 DST, but could be useful for some LCIO based studies.
     //
     vector<int> svt_raw_hit_layer;
     vector<int> svt_raw_hit_module;

@@ -171,6 +171,7 @@ public:
     bool use_matched_tracks{true};
     bool use_gbl_kink_data{true};
     bool use_mc_particles{false};
+    bool use_extra_mc{false};
     bool use_kf_particles{true};
     bool use_gbl_particles{true};
 
@@ -448,6 +449,8 @@ public:
     vector<int>    mc_part_simstatus; /** result of the GetSimulatorStatus(), bit wise status word. **/
     vector< vector<int> > mc_part_daughters;
     vector< vector<int> > mc_part_parents;
+
+
 };
 
 #endif //MINIDST_MINIDST_H

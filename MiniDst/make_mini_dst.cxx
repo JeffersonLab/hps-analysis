@@ -62,6 +62,8 @@ int main(int argc, char **argv){
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("M,no_mc_particles", "DO NOT Store MCParticles, even if they are in the input",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+            ("x,extra_mc_info", "Store extra MC output (scoring planes)",
+             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("o,output", "Output file", cxxopts::value<std::string>()->default_value("mini_dst.root"))
             ("i,inputfiles",
              "List of input files which will be concatenated into a single output mini dst file. The -i "
@@ -156,6 +158,7 @@ int main(int argc, char **argv){
         dst->use_gbl_tracks = all_tracks || store_all || args["gbl_tracks"].as<bool>();
         dst->use_gbl_kink_data = store_all || args["gbl_kinks"].as<bool>();
         dst->use_matched_tracks = matched_tracks || all_tracks || store_all;
+        dst->use_extra_mc = args["extra_mc_info"].as<bool>();
         dst->use_kf_particles = !args["no_kf_particles"].as<bool>();
         dst->use_gbl_particles = !args["no_gbl_particles"].as<bool>();
         dst->SetOutputFileName(outfile);

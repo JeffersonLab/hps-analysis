@@ -266,6 +266,18 @@ void MiniDst::DefineBranchMap() {
     branch_map_try_emplace("mc_part_daughters", &mc_part_daughters, use_mc_particles);
     branch_map_try_emplace("mc_part_parents", &mc_part_parents, use_mc_particles);
 
+    branch_map_try_emplace("mc_score_type", &mc_score_type, use_mc_scoring | use_all );
+    branch_map_try_emplace("mc_score_x", &mc_score_x, use_mc_scoring | use_all );
+    branch_map_try_emplace("mc_score_y", &mc_score_y, use_mc_scoring | use_all );
+    branch_map_try_emplace("mc_score_z", &mc_score_z, use_mc_scoring | use_all );
+    branch_map_try_emplace("mc_score_px", &mc_score_px, use_mc_scoring | use_all );
+    branch_map_try_emplace("mc_score_py", &mc_score_py, use_mc_scoring | use_all );
+    branch_map_try_emplace("mc_score_pz", &mc_score_pz, use_mc_scoring | use_all );
+    branch_map_try_emplace("mc_score_time", &mc_score_time, use_mc_scoring | use_all );
+    branch_map_try_emplace("mc_score_pdg", &mc_score_pdg, use_mc_scoring | use_all );
+
+
+
 }
 
 void MiniDst::SetBranchMap() {

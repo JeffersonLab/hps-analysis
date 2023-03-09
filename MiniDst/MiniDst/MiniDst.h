@@ -450,6 +450,16 @@ public:
     vector< vector<int> > mc_part_daughters;
     vector< vector<int> > mc_part_parents;
 
+   // Data from the scoring planes which are in SimTrackerHit collection type.
+   vector<int>  mc_score_type;   // Which scoring plane.
+   vector<double> mc_score_x;    // The x position.
+   vector<double> mc_score_y;    // The y position.
+   vector<double> mc_score_z;    // The z position.
+   vector<double> mc_score_px;   // Momentum x
+   vector<double> mc_score_py;   // Momentum y
+   vector<double> mc_score_pz;   // Momentum z
+   vector<double> mc_score_time; // Time of crossing
+   vector<int> mc_score_pdg;     // PDG id of particle.
 
 };
 

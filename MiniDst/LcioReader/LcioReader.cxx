@@ -96,9 +96,13 @@ long LcioReader::Run(int max_event) {
                 if (has_collection("MCParticle")) {
                     is_MC_data = true;
                     if (md_Debug & kInfo) cout << "LCIO -> This is Monte Carlo data. \n";
+                    if( has_collection("TrackerHits")){
+
+                    }
                 }else{
                     is_MC_data = false;
                     use_mc_particles = false;
+                    use_mc_scoring = false;
                 }
 
                 if(has_collection("RFHits")){
@@ -944,15 +948,15 @@ long LcioReader::Run(int max_event) {
             ///
             ///////////////////////////////////////////////////////////////////////////////////////////////
 
-            if(use_mc_particles){
+            if(use_mc_particles) {
                 EVENT::LCCollection *mc_part_col = lcio_event->getCollection("MCParticle");
                 map<int, int> id_to_id;
-                for(int i_part=0; i_part < mc_part_col->getNumberOfElements(); ++i_part){
+                for (int i_part = 0; i_part < mc_part_col->getNumberOfElements(); ++i_part) {
                     auto mc_part = dynamic_cast<EVENT::MCParticle *>(mc_part_col->getElementAt(i_part));
                     int this_id = mc_part->id();
                     id_to_id[this_id] = i_part;
                     mc_part_id.push_back(this_id);
-                    mc_part_pdg_id.push_back(mc_part->getPDG());
+                    mc_part_pdg.push_back(mc_part->getPDG());
                     mc_part_energy.push_back(mc_part->getEnergy());
                     mc_part_mass.push_back(mc_part->getMass());
                     mc_part_gen_status.push_back(mc_part->getGeneratorStatus());
@@ -974,17 +978,17 @@ long LcioReader::Run(int max_event) {
                 }
 
                 // Now we loop again to resolve the parent and daughter ids correctly.
-                for(int i_part=0; i_part < mc_part_col->getNumberOfElements(); ++i_part){
+                for (int i_part = 0; i_part < mc_part_col->getNumberOfElements(); ++i_part) {
                     auto mc_part = dynamic_cast<EVENT::MCParticle *>(mc_part_col->getElementAt(i_part));
                     EVENT::MCParticleVec parent_particles = mc_part->getParents();
                     vector<int> parents;
-                    for(auto parent: parent_particles ){
+                    for (auto parent: parent_particles) {
                         int parent_id = parent->id();
                         auto idid = id_to_id.find(parent_id);
-                        if( idid != id_to_id.end()) {
+                        if (idid != id_to_id.end()) {
                             int parent_id_id = idid->second;
                             parents.push_back(parent_id_id);
-                        }else{
+                        } else {
                             cout << "MCParticle: unidentified parent.\n";
                             parents.push_back(-1);
                         }
@@ -992,21 +996,51 @@ long LcioReader::Run(int max_event) {
                     mc_part_parents.push_back(parents);
                     EVENT::MCParticleVec daughter_particles = mc_part->getDaughters();
                     vector<int> daughters;
-                    for(auto daughter: daughter_particles){
+                    for (auto daughter: daughter_particles) {
                         int daughter_id = daughter->id();
                         auto idid = id_to_id.find(daughter_id);
-                        if(idid != id_to_id.end()){
+                        if (idid != id_to_id.end()) {
                             int daughter_id_id = idid->second;
                             daughters.push_back(daughter_id_id);
-                        }else{
+                        } else {
                             cout << "MCParticle: unidentified daughter.\n";
                             daughters.push_back(-1);
                         }
                     }
                     mc_part_daughters.push_back(daughters);
                 }
-            }
 
+                ////////////////////////////////////////////////////////////////////////////////////////////////
+                /// MC Scoring planes.
+                ////////////////////////////////////////////////////////////////////////////////////////////////
+                if (use_mc_scoring) {
+                    for (int type = 0; type < scoring_planes.size(); ++type) {
+                        EVENT::LCCollection *mc_simtrackerhit_col = lcio_event->getCollection(
+                              scoring_planes[type].c_str());
+                        for (int i = 0; i < mc_simtrackerhit_col->getNumberOfElements(); ++i) {
+                            auto mc_score = dynamic_cast<EVENT::SimTrackerHit *>(mc_simtrackerhit_col->getElementAt(i));
+                            mc_score_type.push_back(type);
+                            auto mc_particle = mc_score->getMCParticle();
+                            int mc_part_id = mc_particle->id();
+                            auto idid = id_to_id.find(mc_part_id);
+                            if (idid != id_to_id.end()) {
+                                mc_score_part_idx.push_back(idid->second);
+                            }else{
+                                mc_score_part_idx.push_back(-1);
+                            }
+                            const float *score_part_mom = mc_score->getMomentum();
+                            mc_score_px.push_back(score_part_mom[0]);
+                            mc_score_py.push_back(score_part_mom[1]);
+                            mc_score_pz.push_back(score_part_mom[2]);
+                            const double *score_hit_pos = mc_score->getPosition();
+                            mc_score_x.push_back(score_hit_pos[0]);
+                            mc_score_y.push_back(score_hit_pos[1]);
+                            mc_score_z.push_back(score_hit_pos[2]);
+                            mc_score_type.push_back(mc_score->getTime());
+                        }
+                    }
+                }
+            }
 
             ///////////////////////////////////////////////////////////////////////////////////////////////
             ///

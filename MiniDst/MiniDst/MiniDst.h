@@ -81,7 +81,7 @@ public:
     ~MiniDst() override = default;
     virtual void Clear();  /// Clear all the vectors and event storage.
     virtual void Start();
-    virtual void DefineBranchMap(); /// Setup the branch_map and branch_map_active
+    virtual void DefineBranchMap(bool use_all=false); /// Setup the branch_map and branch_map_active
     virtual void SetBranchMap();    /// Use the branch_map to set the branches in the TTree that are active.
     virtual void SetBranchAddressesOnTree(TTree *); /// Connect the variables/vectors to the TTree for *reading* the tree.
     virtual long Run(int nevt);
@@ -171,7 +171,7 @@ public:
     bool use_matched_tracks{true};
     bool use_gbl_kink_data{true};
     bool use_mc_particles{false};
-    bool use_extra_mc{false};
+    bool use_mc_scoring{false};
     bool use_kf_particles{true};
     bool use_gbl_particles{true};
 
@@ -432,7 +432,7 @@ public:
     // MCParticles
     vector<double> mc_part_energy;
     vector<int>    mc_part_id;
-    vector<int>    mc_part_pdg_id;
+    vector<int>    mc_part_pdg;
     vector<int>    mc_part_gen_status; /** Generator Status **/
     vector<double> mc_part_time;      /** The global creation time. */
     vector<double> mc_part_x;      /** The X vertex. */
@@ -452,6 +452,7 @@ public:
 
    // Data from the scoring planes which are in SimTrackerHit collection type.
    vector<int>  mc_score_type;   // Which scoring plane.
+   vector<int>  mc_score_part_idx; // Index to the MCParticle that made the hit.
    vector<double> mc_score_x;    // The x position.
    vector<double> mc_score_y;    // The y position.
    vector<double> mc_score_z;    // The z position.

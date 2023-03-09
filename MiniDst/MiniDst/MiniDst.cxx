@@ -34,8 +34,9 @@ void MiniDst::SetBranchActive(std::string name, bool active) {
     }
 }
 
-void MiniDst::DefineBranchMap() {
-    /// Setup the branch_map and branch_map_active
+void MiniDst::DefineBranchMap(bool use_all) {
+    /// Setup the branch_map and branch_map_active.
+    /// Default is use_all = false. Set this to true to place everything on the branch.
 
     // Notes on branch_map:
     //    You do not HAVE to create the handles to the vectors in "this":
@@ -62,90 +63,90 @@ void MiniDst::DefineBranchMap() {
     branch_map_try_emplace("rf_time2", &rf_time2);
     branch_map_try_emplace("track_n_gbl", &track_n_gbl);
 
-    branch_map_try_emplace("hodo_raw_ix", &hodo_raw_ix, use_hodo_raw_hits);
-    branch_map_try_emplace("hodo_raw_iy", &hodo_raw_iy, use_hodo_raw_hits);
-    branch_map_try_emplace("hodo_raw_hole", &hodo_raw_hole, use_hodo_raw_hits);
-    branch_map_try_emplace("hodo_raw_layer", &hodo_raw_layer, use_hodo_raw_hits);
-    branch_map_try_emplace("hodo_raw_adc", &hodo_raw_adc, use_hodo_raw_hits);
+    branch_map_try_emplace("hodo_raw_ix", &hodo_raw_ix, use_hodo_raw_hits | use_all );
+    branch_map_try_emplace("hodo_raw_iy", &hodo_raw_iy, use_hodo_raw_hits | use_all );
+    branch_map_try_emplace("hodo_raw_hole", &hodo_raw_hole, use_hodo_raw_hits | use_all );
+    branch_map_try_emplace("hodo_raw_layer", &hodo_raw_layer, use_hodo_raw_hits | use_all );
+    branch_map_try_emplace("hodo_raw_adc", &hodo_raw_adc, use_hodo_raw_hits | use_all );
 
-    branch_map_try_emplace("hodo_hit_energy", &hodo_hit_energy, use_hodo_hits);
-    branch_map_try_emplace("hodo_hit_time", &hodo_hit_time, use_hodo_hits);
-    branch_map_try_emplace("hodo_hit_index_x", &hodo_hit_index_x, use_hodo_hits);
-    branch_map_try_emplace("hodo_hit_index_y", &hodo_hit_index_y, use_hodo_hits);
-    branch_map_try_emplace("hodo_hit_hole", &hodo_hit_hole, use_hodo_hits);
-    branch_map_try_emplace("hodo_hit_layer", &hodo_hit_layer, use_hodo_hits);
+    branch_map_try_emplace("hodo_hit_energy", &hodo_hit_energy, use_hodo_hits | use_all );
+    branch_map_try_emplace("hodo_hit_time", &hodo_hit_time, use_hodo_hits | use_all );
+    branch_map_try_emplace("hodo_hit_index_x", &hodo_hit_index_x, use_hodo_hits | use_all );
+    branch_map_try_emplace("hodo_hit_index_y", &hodo_hit_index_y, use_hodo_hits | use_all );
+    branch_map_try_emplace("hodo_hit_hole", &hodo_hit_hole, use_hodo_hits | use_all );
+    branch_map_try_emplace("hodo_hit_layer", &hodo_hit_layer, use_hodo_hits | use_all );
 
-    branch_map_try_emplace("hodo_cluster_energy", &hodo_cluster_energy, use_hodo_clusters);
-    branch_map_try_emplace("hodo_cluster_time", &hodo_cluster_time, use_hodo_clusters);
-    branch_map_try_emplace("hodo_cluster_ix", &hodo_cluster_ix, use_hodo_clusters);
-    branch_map_try_emplace("hodo_cluster_iy", &hodo_cluster_iy, use_hodo_clusters);
-    branch_map_try_emplace("hodo_cluster_layer", &hodo_cluster_layer, use_hodo_clusters);
+    branch_map_try_emplace("hodo_cluster_energy", &hodo_cluster_energy, use_hodo_clusters | use_all );
+    branch_map_try_emplace("hodo_cluster_time", &hodo_cluster_time, use_hodo_clusters | use_all );
+    branch_map_try_emplace("hodo_cluster_ix", &hodo_cluster_ix, use_hodo_clusters | use_all );
+    branch_map_try_emplace("hodo_cluster_iy", &hodo_cluster_iy, use_hodo_clusters | use_all );
+    branch_map_try_emplace("hodo_cluster_layer", &hodo_cluster_layer, use_hodo_clusters | use_all );
 
-    branch_map_try_emplace("ecal_raw_ix", &ecal_raw_ix, use_ecal_raw_hits);
-    branch_map_try_emplace("ecal_raw_iy", &ecal_raw_iy, use_ecal_raw_hits);
-    branch_map_try_emplace("ecal_raw_adc", &ecal_raw_adc, use_ecal_raw_hits);
+    branch_map_try_emplace("ecal_raw_ix", &ecal_raw_ix, use_ecal_raw_hits | use_all );
+    branch_map_try_emplace("ecal_raw_iy", &ecal_raw_iy, use_ecal_raw_hits | use_all );
+    branch_map_try_emplace("ecal_raw_adc", &ecal_raw_adc, use_ecal_raw_hits | use_all );
 
-    branch_map_try_emplace("ecal_hit_energy", &ecal_hit_energy, use_ecal_hits);
-    branch_map_try_emplace("ecal_hit_time", &ecal_hit_time, use_ecal_hits);
-    branch_map_try_emplace("ecal_hit_index_x", &ecal_hit_index_x, use_ecal_hits);
-    branch_map_try_emplace("ecal_hit_index_y", &ecal_hit_index_y, use_ecal_hits);
+    branch_map_try_emplace("ecal_hit_energy", &ecal_hit_energy, use_ecal_hits | use_all );
+    branch_map_try_emplace("ecal_hit_time", &ecal_hit_time, use_ecal_hits | use_all );
+    branch_map_try_emplace("ecal_hit_index_x", &ecal_hit_index_x, use_ecal_hits | use_all );
+    branch_map_try_emplace("ecal_hit_index_y", &ecal_hit_index_y, use_ecal_hits | use_all );
 
-    branch_map_try_emplace("ecal_cluster_energy", &ecal_cluster_energy, use_ecal_cluster);
-    branch_map_try_emplace("ecal_cluster_time", &ecal_cluster_time, use_ecal_cluster);
-    branch_map_try_emplace("ecal_cluster_x", &ecal_cluster_x, use_ecal_cluster);
-    branch_map_try_emplace("ecal_cluster_y", &ecal_cluster_y, use_ecal_cluster);
-    branch_map_try_emplace("ecal_cluster_z", &ecal_cluster_z, use_ecal_cluster);
-    branch_map_try_emplace("ecal_cluster_seed_index", &ecal_cluster_seed_index, use_ecal_cluster);
-    branch_map_try_emplace("ecal_cluster_seed_ix", &ecal_cluster_seed_ix, use_ecal_cluster);
-    branch_map_try_emplace("ecal_cluster_seed_iy", &ecal_cluster_seed_iy, use_ecal_cluster);
-    branch_map_try_emplace("ecal_cluster_seed_energy", &ecal_cluster_seed_energy, use_ecal_cluster);
-    branch_map_try_emplace("ecal_cluster_hits", &ecal_cluster_hits, use_ecal_cluster);
-    branch_map_try_emplace("ecal_cluster_nhits", &ecal_cluster_nhits, use_ecal_cluster);
+    branch_map_try_emplace("ecal_cluster_energy", &ecal_cluster_energy, use_ecal_cluster | use_all );
+    branch_map_try_emplace("ecal_cluster_time", &ecal_cluster_time, use_ecal_cluster | use_all );
+    branch_map_try_emplace("ecal_cluster_x", &ecal_cluster_x, use_ecal_cluster | use_all );
+    branch_map_try_emplace("ecal_cluster_y", &ecal_cluster_y, use_ecal_cluster | use_all );
+    branch_map_try_emplace("ecal_cluster_z", &ecal_cluster_z, use_ecal_cluster | use_all );
+    branch_map_try_emplace("ecal_cluster_seed_index", &ecal_cluster_seed_index, use_ecal_cluster | use_all );
+    branch_map_try_emplace("ecal_cluster_seed_ix", &ecal_cluster_seed_ix, use_ecal_cluster | use_all );
+    branch_map_try_emplace("ecal_cluster_seed_iy", &ecal_cluster_seed_iy, use_ecal_cluster | use_all );
+    branch_map_try_emplace("ecal_cluster_seed_energy", &ecal_cluster_seed_energy, use_ecal_cluster | use_all );
+    branch_map_try_emplace("ecal_cluster_hits", &ecal_cluster_hits, use_ecal_cluster | use_all );
+    branch_map_try_emplace("ecal_cluster_nhits", &ecal_cluster_nhits, use_ecal_cluster | use_all );
 
-    branch_map_try_emplace("ecal_cluster_uncor_energy", &ecal_cluster_uncor_energy, use_ecal_cluster_uncor);
-    branch_map_try_emplace("ecal_cluster_uncor_time", &ecal_cluster_uncor_time, use_ecal_cluster_uncor);
-    branch_map_try_emplace("ecal_cluster_uncor_x", &ecal_cluster_uncor_x, use_ecal_cluster_uncor);
-    branch_map_try_emplace("ecal_cluster_uncor_y", &ecal_cluster_uncor_y, use_ecal_cluster_uncor);
-    branch_map_try_emplace("ecal_cluster_uncor_z", &ecal_cluster_uncor_z, use_ecal_cluster_uncor);
-    branch_map_try_emplace("ecal_cluster_uncor_seed_index", &ecal_cluster_uncor_seed_index, use_ecal_cluster_uncor);
-    branch_map_try_emplace("ecal_cluster_uncor_seed_ix", &ecal_cluster_uncor_seed_ix, use_ecal_cluster_uncor);
-    branch_map_try_emplace("ecal_cluster_uncor_seed_iy", &ecal_cluster_uncor_seed_iy, use_ecal_cluster_uncor);
-    branch_map_try_emplace("ecal_cluster_uncor_seed_energy", &ecal_cluster_uncor_seed_energy, use_ecal_cluster_uncor);
-    branch_map_try_emplace("ecal_cluster_uncor_hits", &ecal_cluster_uncor_hits, use_ecal_cluster_uncor);
-    branch_map_try_emplace("ecal_cluster_uncor_nhits", &ecal_cluster_uncor_nhits, use_ecal_cluster_uncor);
-
-
-    branch_map_try_emplace("svt_raw_hit_layer", &svt_raw_hit_layer, use_svt_raw_hits);
-    branch_map_try_emplace("svt_raw_hit_module", &svt_raw_hit_module, use_svt_raw_hits);
-    branch_map_try_emplace("svt_raw_hit_strip", &svt_raw_hit_strip, use_svt_raw_hits);
-    branch_map_try_emplace("svt_raw_hit_adc", &svt_raw_hit_adc, use_svt_raw_hits);
-    branch_map_try_emplace("svt_raw_hit_t0", &svt_raw_hit_t0, use_svt_raw_hits);
-    branch_map_try_emplace("svt_raw_hit_t0_err", &svt_raw_hit_t0_err, use_svt_raw_hits);
-    branch_map_try_emplace("svt_raw_hit_amp", &svt_raw_hit_amp, use_svt_raw_hits);
-    branch_map_try_emplace("svt_raw_hit_amp_err", &svt_raw_hit_amp_err, use_svt_raw_hits);
-    branch_map_try_emplace("svt_raw_hit_chi2", &svt_raw_hit_chi2, use_svt_raw_hits);
-    branch_map_try_emplace("svt_raw_hit_fit_no", &svt_raw_hit_fit_no, use_svt_raw_hits);
-
-    branch_map_try_emplace("svt_hit_type", &svt_hit_type, use_svt_hits);
-    branch_map_try_emplace("svt_hit_x", &svt_hit_x, use_svt_hits);
-    branch_map_try_emplace("svt_hit_y", &svt_hit_y, use_svt_hits);
-    branch_map_try_emplace("svt_hit_z", &svt_hit_z, use_svt_hits);
-    branch_map_try_emplace("svt_hit_cxx", &svt_hit_cxx, use_svt_hits);
-    branch_map_try_emplace("svt_hit_cxy", &svt_hit_cxy, use_svt_hits);
-    branch_map_try_emplace("svt_hit_cxz", &svt_hit_cxz, use_svt_hits);
-    branch_map_try_emplace("svt_hit_cyy", &svt_hit_cyy, use_svt_hits);
-    branch_map_try_emplace("svt_hit_cyz", &svt_hit_cyz, use_svt_hits);
-    branch_map_try_emplace("svt_hit_czz", &svt_hit_czz, use_svt_hits);
-    branch_map_try_emplace("svt_hit_time", &svt_hit_time, use_svt_hits);
-    branch_map_try_emplace("svt_hit_edep", &svt_hit_edep, use_svt_hits);
-    branch_map_try_emplace("svt_hit_raw_index", &svt_hit_raw_index, use_svt_hits);
-    branch_map_try_emplace("svt_hit_raw_other", &svt_hit_raw_other, use_svt_hits);
-    branch_map_try_emplace("svt_hit_layer", &svt_hit_layer, use_svt_hits);
-    branch_map_try_emplace("svt_hit_module", &svt_hit_module, use_svt_hits);
-    branch_map_try_emplace("svt_hit_strip", &svt_hit_strip, use_svt_hits);
+    branch_map_try_emplace("ecal_cluster_uncor_energy", &ecal_cluster_uncor_energy, use_ecal_cluster_uncor | use_all );
+    branch_map_try_emplace("ecal_cluster_uncor_time", &ecal_cluster_uncor_time, use_ecal_cluster_uncor | use_all );
+    branch_map_try_emplace("ecal_cluster_uncor_x", &ecal_cluster_uncor_x, use_ecal_cluster_uncor | use_all );
+    branch_map_try_emplace("ecal_cluster_uncor_y", &ecal_cluster_uncor_y, use_ecal_cluster_uncor | use_all );
+    branch_map_try_emplace("ecal_cluster_uncor_z", &ecal_cluster_uncor_z, use_ecal_cluster_uncor | use_all );
+    branch_map_try_emplace("ecal_cluster_uncor_seed_index", &ecal_cluster_uncor_seed_index, use_ecal_cluster_uncor | use_all );
+    branch_map_try_emplace("ecal_cluster_uncor_seed_ix", &ecal_cluster_uncor_seed_ix, use_ecal_cluster_uncor | use_all );
+    branch_map_try_emplace("ecal_cluster_uncor_seed_iy", &ecal_cluster_uncor_seed_iy, use_ecal_cluster_uncor | use_all );
+    branch_map_try_emplace("ecal_cluster_uncor_seed_energy", &ecal_cluster_uncor_seed_energy, use_ecal_cluster_uncor | use_all );
+    branch_map_try_emplace("ecal_cluster_uncor_hits", &ecal_cluster_uncor_hits, use_ecal_cluster_uncor | use_all );
+    branch_map_try_emplace("ecal_cluster_uncor_nhits", &ecal_cluster_uncor_nhits, use_ecal_cluster_uncor | use_all );
 
 
-    bool write_any_tracks = use_kf_tracks || use_gbl_tracks || use_matched_tracks;
+    branch_map_try_emplace("svt_raw_hit_layer", &svt_raw_hit_layer, use_svt_raw_hits | use_all );
+    branch_map_try_emplace("svt_raw_hit_module", &svt_raw_hit_module, use_svt_raw_hits | use_all );
+    branch_map_try_emplace("svt_raw_hit_strip", &svt_raw_hit_strip, use_svt_raw_hits | use_all );
+    branch_map_try_emplace("svt_raw_hit_adc", &svt_raw_hit_adc, use_svt_raw_hits | use_all );
+    branch_map_try_emplace("svt_raw_hit_t0", &svt_raw_hit_t0, use_svt_raw_hits | use_all );
+    branch_map_try_emplace("svt_raw_hit_t0_err", &svt_raw_hit_t0_err, use_svt_raw_hits | use_all );
+    branch_map_try_emplace("svt_raw_hit_amp", &svt_raw_hit_amp, use_svt_raw_hits | use_all );
+    branch_map_try_emplace("svt_raw_hit_amp_err", &svt_raw_hit_amp_err, use_svt_raw_hits | use_all );
+    branch_map_try_emplace("svt_raw_hit_chi2", &svt_raw_hit_chi2, use_svt_raw_hits | use_all );
+    branch_map_try_emplace("svt_raw_hit_fit_no", &svt_raw_hit_fit_no, use_svt_raw_hits | use_all );
+
+    branch_map_try_emplace("svt_hit_type", &svt_hit_type, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_x", &svt_hit_x, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_y", &svt_hit_y, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_z", &svt_hit_z, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_cxx", &svt_hit_cxx, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_cxy", &svt_hit_cxy, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_cxz", &svt_hit_cxz, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_cyy", &svt_hit_cyy, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_cyz", &svt_hit_cyz, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_czz", &svt_hit_czz, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_time", &svt_hit_time, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_edep", &svt_hit_edep, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_raw_index", &svt_hit_raw_index, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_raw_other", &svt_hit_raw_other, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_layer", &svt_hit_layer, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_module", &svt_hit_module, use_svt_hits | use_all );
+    branch_map_try_emplace("svt_hit_strip", &svt_hit_strip, use_svt_hits | use_all );
+
+
+    bool write_any_tracks = use_kf_tracks || use_gbl_tracks || use_matched_tracks || use_all;
     branch_map_try_emplace("track_n_kf", &track_n_kf, write_any_tracks);
     branch_map_try_emplace("track_n_gbl", &track_n_gbl, write_any_tracks);
     branch_map_try_emplace("track_n_matched", &track_n_matched, write_any_tracks);
@@ -246,27 +247,28 @@ void MiniDst::DefineBranchMap() {
 
 
     // MCParticles
-    branch_map_try_emplace("mc_part_energy", &mc_part_energy, use_mc_particles);
-    branch_map_try_emplace("mc_part_pdg_id", &mc_part_pdg_id, use_mc_particles);
-    branch_map_try_emplace("mc_part_pdg_id", &mc_part_id, use_mc_particles);
-    branch_map_try_emplace("mc_part_gen_status", &mc_part_gen_status, use_mc_particles); /** Generator Status **/
-    branch_map_try_emplace("mc_part_time", &mc_part_time, use_mc_particles);      /** The global creation time. */
-    branch_map_try_emplace("mc_part_x", &mc_part_x, use_mc_particles);      /** The X vertex. */
-    branch_map_try_emplace("mc_part_y", &mc_part_y, use_mc_particles);      /** The Y vertex. */
-    branch_map_try_emplace("mc_part_z", &mc_part_z, use_mc_particles);      /** The Z vertex. */
-    branch_map_try_emplace("mc_part_end_x", &mc_part_end_x, use_mc_particles);  /** The X end point. */
-    branch_map_try_emplace("mc_part_end_y", &mc_part_end_y, use_mc_particles);  /** The Y end point. */
-    branch_map_try_emplace("mc_part_end_z", &mc_part_end_z, use_mc_particles);  /** The Z end point. */
-    branch_map_try_emplace("mc_part_px", &mc_part_px, use_mc_particles);
-    branch_map_try_emplace("mc_part_py", &mc_part_py, use_mc_particles);
-    branch_map_try_emplace("mc_part_pz", &mc_part_pz, use_mc_particles);
-    branch_map_try_emplace("mc_part_mass", &mc_part_mass, use_mc_particles);
-    branch_map_try_emplace("mc_part_charge", &mc_part_charge, use_mc_particles);
-    branch_map_try_emplace("mc_part_simstatus", &mc_part_simstatus, use_mc_particles);
-    branch_map_try_emplace("mc_part_daughters", &mc_part_daughters, use_mc_particles);
-    branch_map_try_emplace("mc_part_parents", &mc_part_parents, use_mc_particles);
+    branch_map_try_emplace("mc_part_energy", &mc_part_energy, use_mc_particles | use_all );
+    branch_map_try_emplace("mc_part_pdg_id", &mc_part_pdg, use_mc_particles | use_all );
+    branch_map_try_emplace("mc_part_id", &mc_part_id, use_mc_particles | use_all );
+    branch_map_try_emplace("mc_part_gen_status", &mc_part_gen_status, use_mc_particles | use_all ); /** Generator Status **/
+    branch_map_try_emplace("mc_part_time", &mc_part_time, use_mc_particles | use_all );      /** The global creation time. */
+    branch_map_try_emplace("mc_part_x", &mc_part_x, use_mc_particles | use_all );      /** The X vertex. */
+    branch_map_try_emplace("mc_part_y", &mc_part_y, use_mc_particles | use_all );      /** The Y vertex. */
+    branch_map_try_emplace("mc_part_z", &mc_part_z, use_mc_particles | use_all );      /** The Z vertex. */
+    branch_map_try_emplace("mc_part_end_x", &mc_part_end_x, use_mc_particles | use_all );  /** The X end point. */
+    branch_map_try_emplace("mc_part_end_y", &mc_part_end_y, use_mc_particles | use_all );  /** The Y end point. */
+    branch_map_try_emplace("mc_part_end_z", &mc_part_end_z, use_mc_particles | use_all );  /** The Z end point. */
+    branch_map_try_emplace("mc_part_px", &mc_part_px, use_mc_particles | use_all );
+    branch_map_try_emplace("mc_part_py", &mc_part_py, use_mc_particles | use_all );
+    branch_map_try_emplace("mc_part_pz", &mc_part_pz, use_mc_particles | use_all );
+    branch_map_try_emplace("mc_part_mass", &mc_part_mass, use_mc_particles | use_all );
+    branch_map_try_emplace("mc_part_charge", &mc_part_charge, use_mc_particles | use_all );
+    branch_map_try_emplace("mc_part_simstatus", &mc_part_simstatus, use_mc_particles | use_all );
+    branch_map_try_emplace("mc_part_daughters", &mc_part_daughters, use_mc_particles | use_all );
+    branch_map_try_emplace("mc_part_parents", &mc_part_parents, use_mc_particles | use_all );
 
     branch_map_try_emplace("mc_score_type", &mc_score_type, use_mc_scoring | use_all );
+    branch_map_try_emplace("mc_score_part_idx", &mc_score_part_idx, use_mc_scoring | use_all );
     branch_map_try_emplace("mc_score_x", &mc_score_x, use_mc_scoring | use_all );
     branch_map_try_emplace("mc_score_y", &mc_score_y, use_mc_scoring | use_all );
     branch_map_try_emplace("mc_score_z", &mc_score_z, use_mc_scoring | use_all );

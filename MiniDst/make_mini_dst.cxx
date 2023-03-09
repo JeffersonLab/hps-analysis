@@ -133,6 +133,9 @@ int main(int argc, char **argv){
             if( std::find(col_names->begin(), col_names->end(), "MCParticle") != col_names->end()
                 and !no_mc_particles) dst->use_mc_particles = true;
             dstlcio->lcio_reader->close();
+        }else{
+            cout << "We need either an SLCIO file, or a DST2016 root file for input. \n Abort. \n";
+            exit(1);
         }
         int debug_code = 0;
         if( debug <= 0){

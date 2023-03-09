@@ -7,6 +7,23 @@
 ///
 #include "LcioReader.h"
 
+LcioReader::LcioReader(const string &input_file) {
+    if(!input_file.empty()) input_files.push_back(input_file);
+};
+LcioReader::LcioReader(const vector<string> &infile_list) {
+    for(auto f : infile_list){
+        input_files.push_back(f);
+    }
+
+#ifdef DEBUG
+    {
+        for(auto file: input_files){
+            std::cout << "File: " << file << std::endl;
+        }
+    }
+#endif
+};
+
 void LcioReader::Start(){
     if( md_Debug>0 ) {
         printf("LCIO READER version " __LCIOReader__Version__ "\n");
@@ -42,7 +59,7 @@ long LcioReader::Run(int max_event) {
 
     vector<string> svt_hit_collections;
 
-    for (const string &file: input_file_list) {
+    for (const string &file: input_files) {
         data_type_is_known = false;
         is_2016_data = false;
         is_2019_data = false;
@@ -96,8 +113,12 @@ long LcioReader::Run(int max_event) {
                 if (has_collection("MCParticle")) {
                     is_MC_data = true;
                     if (md_Debug & kInfo) cout << "LCIO -> This is Monte Carlo data. \n";
-                    if( has_collection("TrackerHits")){
-
+                    // Check the scoring planes.
+                    for(int i=0; i< scoring_planes.size(); ++i){
+                        if( !has_collection(scoring_planes[i].c_str())){
+                            scoring_planes_active[i] = false;
+                            if(md_Debug & kInfo) cout << "Scoring plane " << scoring_planes[i] << " not found. Turned off.\n";
+                        }
                     }
                 }else{
                     is_MC_data = false;
@@ -324,7 +345,7 @@ long LcioReader::Run(int max_event) {
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
             if (use_hodo_raw_hits){
-                auto ecal_raw_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("HodoReadoutHits"));
+                auto ecal_raw_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("HodoscopeReadoutHits"));
 
                 for(int ihit = 0; ihit < ecal_raw_hits->getNumberOfElements(); ++ihit){
                     auto raw_hit = static_cast<EVENT::TrackerRawData *>(ecal_raw_hits->getElementAt(ihit));
@@ -1015,28 +1036,31 @@ long LcioReader::Run(int max_event) {
                 ////////////////////////////////////////////////////////////////////////////////////////////////
                 if (use_mc_scoring) {
                     for (int type = 0; type < scoring_planes.size(); ++type) {
-                        EVENT::LCCollection *mc_simtrackerhit_col = lcio_event->getCollection(
-                              scoring_planes[type].c_str());
-                        for (int i = 0; i < mc_simtrackerhit_col->getNumberOfElements(); ++i) {
-                            auto mc_score = dynamic_cast<EVENT::SimTrackerHit *>(mc_simtrackerhit_col->getElementAt(i));
-                            mc_score_type.push_back(type);
-                            auto mc_particle = mc_score->getMCParticle();
-                            int mc_part_id = mc_particle->id();
-                            auto idid = id_to_id.find(mc_part_id);
-                            if (idid != id_to_id.end()) {
-                                mc_score_part_idx.push_back(idid->second);
-                            }else{
-                                mc_score_part_idx.push_back(-1);
+                        if(scoring_planes_active[type]) {
+                            EVENT::LCCollection *mc_simtrackerhit_col = lcio_event->getCollection(
+                                  scoring_planes[type].c_str());
+                            for (int i = 0; i < mc_simtrackerhit_col->getNumberOfElements(); ++i) {
+                                auto mc_score = dynamic_cast<EVENT::SimTrackerHit *>(mc_simtrackerhit_col->getElementAt(
+                                      i));
+                                mc_score_type.push_back(type);
+                                auto mc_particle = mc_score->getMCParticle();
+                                int mc_part_id = mc_particle->id();
+                                auto idid = id_to_id.find(mc_part_id);
+                                if (idid != id_to_id.end()) {
+                                    mc_score_part_idx.push_back(idid->second);
+                                } else {
+                                    mc_score_part_idx.push_back(-1);
+                                }
+                                const float *score_part_mom = mc_score->getMomentum();
+                                mc_score_px.push_back(score_part_mom[0]);
+                                mc_score_py.push_back(score_part_mom[1]);
+                                mc_score_pz.push_back(score_part_mom[2]);
+                                const double *score_hit_pos = mc_score->getPosition();
+                                mc_score_x.push_back(score_hit_pos[0]);
+                                mc_score_y.push_back(score_hit_pos[1]);
+                                mc_score_z.push_back(score_hit_pos[2]);
+                                mc_score_type.push_back(mc_score->getTime());
                             }
-                            const float *score_part_mom = mc_score->getMomentum();
-                            mc_score_px.push_back(score_part_mom[0]);
-                            mc_score_py.push_back(score_part_mom[1]);
-                            mc_score_pz.push_back(score_part_mom[2]);
-                            const double *score_hit_pos = mc_score->getPosition();
-                            mc_score_x.push_back(score_hit_pos[0]);
-                            mc_score_y.push_back(score_hit_pos[1]);
-                            mc_score_z.push_back(score_hit_pos[2]);
-                            mc_score_type.push_back(mc_score->getTime());
                         }
                     }
                 }

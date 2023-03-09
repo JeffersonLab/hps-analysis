@@ -95,6 +95,13 @@ public:
     virtual std::vector<std::string> GetActiveBranchNames();     /// Return a list of all the ACTIVE branch names as a vector.
     virtual void SetBranchActive(std::string, bool active=true); /// Manipulate whether a branch is active or not.
 
+    void Add_Scoring_Plane(const string name){
+        scoring_planes.push_back(name);
+    }
+    void Remove_Scoring_Plane(const string name) {
+        auto itr = std::find(scoring_planes.begin(), scoring_planes.end(), name);
+        if (itr != scoring_planes.end()) scoring_planes.erase(itr);
+    }
 
     template<typename T> inline void FULL_CLEAR(T& xxx){
         for(auto p: xxx){ delete p; }
@@ -451,6 +458,9 @@ public:
     vector< vector<int> > mc_part_parents;
 
    // Data from the scoring planes which are in SimTrackerHit collection type.
+   // Store the LCIO collection names for the scoring planes to examine.
+   vector<string> scoring_planes{"TrackerHits", "TrackerHitsECal", "HodoscopeHits"};
+   vector<bool> scoring_planes_active{true, true, true};
    vector<int>  mc_score_type;   // Which scoring plane.
    vector<int>  mc_score_part_idx; // Index to the MCParticle that made the hit.
    vector<double> mc_score_x;    // The x position.

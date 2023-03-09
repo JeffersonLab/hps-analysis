@@ -93,18 +93,8 @@ class LcioReader : public MiniDst {
     };
 
 public:
-    explicit LcioReader(const string &input_file=""){
-        if(!input_file.empty()) input_file_list.push_back(input_file);
-    };
-    explicit LcioReader(const vector<string> &infile_list): input_file_list(infile_list){
-#ifdef DEBUG
-        {
-            for(auto file: infile_list){
-                std::cout << "File: " << file << std::endl;
-            }
-        }
-#endif
-    };
+    explicit LcioReader(const string &input_file="");
+    explicit LcioReader(const vector<string> &infile_list);
     ~LcioReader() override = default;
 
     static string _version_(){return(__LCIOReader__Version__);};
@@ -122,22 +112,13 @@ public:
     bool has_collection(const char *name){
         return(std::find(col_names->begin(), col_names->end(), name) != col_names->end());}
 
-    void Add_Scoring_Plane(const string name){
-        scoring_planes.push_back(name);
-    }
-    void Remove_Scoring_Plane(const string name){
-        auto itr = std::find(scoring_planes.begin(), scoring_planes.end(), name);
-        if( itr != scoring_planes.end()) scoring_planes.erase(itr);
-    }
-
 public:
     IO::LCReader* lcio_reader{IOIMPL::LCFactory::getInstance()->createLCReader()};
     EVENT::LCEvent* lcio_event{nullptr};
-    vector<string> input_file_list{};
+    vector<string> input_files{};
 
     unsigned long evt_count{0}; // Event sequence number.
     const vector<string> *col_names{nullptr}; // Store the LCIO collection names from the first event.
-    vector<string> scoring_planes{"TrackerHits", "TrackerHitsEcal", "HodoscopeHits"};   // Store the LCIO collection names for the scoring planes to examine.
     bool data_type_is_known{false};  // The LCIO data is different between 2015/2016 and 2019. This is true when that is known.
     bool is_2016_data{false};  // True for 2015 and 2016 data: i.e. there is Trigger info in the TriggerBank
     bool is_2019_data{false};  // True for 2019 data: i.e. there is a TSBank and a VTPBank.

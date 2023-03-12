@@ -1062,6 +1062,7 @@ long LcioReader::Run(int max_event) {
                                 mc_score_y.push_back(score_hit_pos[1]);
                                 mc_score_z.push_back(score_hit_pos[2]);
                                 mc_score_time.push_back(mc_score->getTime());
+                                mc_score_pdg.push_back(mc_score->getMCParticle()->getPDG());
                             }
                         }
                     }

@@ -474,7 +474,7 @@ public:
    vector<double> mc_score_py;   // Momentum y
    vector<double> mc_score_pz;   // Momentum z
    vector<double> mc_score_time; // Time of crossing
-   vector<int> mc_score_pdg;     // PDG id of particle.
+   vector<int>    mc_score_pdg;     // PDG id of particle.
 
 };
 

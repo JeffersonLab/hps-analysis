@@ -4,7 +4,7 @@ project(MiniDst)
 ROOT_GENERATE_DICTIONARY(MiniDstDict MiniDst.h MODULE ${PROJECT_NAME} LINKDEF MiniDstLinkDef.h )
 
 add_library(${PROJECT_NAME} SHARED MiniDst.cxx MiniDstDict.cxx)
-target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
+target_include_directories(${PROJECT_NAME} BEFORE PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${ROOT_LIBRARIES})
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "MiniDst.h")
 # Selective linking:

@@ -645,7 +645,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             MCParticle *mc_part = GetMCParticle(i);
             mc_part_energy.push_back(mc_part->energy_);
             mc_part_pdg.push_back(mc_part->pdg_id_);
-            mc_part_gen_status.push_back(mc_part->gen_status_);
+            mc_part_sim_status.push_back(mc_part->gen_status_);
             mc_part_time.push_back(mc_part->time_);
             mc_part_x.push_back(mc_part->x_);
             mc_part_y.push_back(mc_part->y_);

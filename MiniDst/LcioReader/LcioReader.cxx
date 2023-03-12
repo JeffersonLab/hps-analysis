@@ -980,7 +980,8 @@ long LcioReader::Run(int max_event) {
                     mc_part_pdg.push_back(mc_part->getPDG());
                     mc_part_energy.push_back(mc_part->getEnergy());
                     mc_part_mass.push_back(mc_part->getMass());
-                    mc_part_gen_status.push_back(mc_part->getGeneratorStatus());
+                    int simulation_status = mc_part->getGeneratorStatus() & mc_part->getSimulatorStatus();
+                    mc_part_sim_status.push_back(simulation_status);
                     mc_part_time.push_back(mc_part->getTime());
                     mc_part_charge.push_back(mc_part->getCharge());
                     mc_part_simstatus.push_back(mc_part->getSimulatorStatus());
@@ -992,6 +993,7 @@ long LcioReader::Run(int max_event) {
                     mc_part_end_x.push_back(part_end[0]);
                     mc_part_end_y.push_back(part_end[1]);
                     mc_part_end_z.push_back(part_end[2]);
+                    const double *part_end_mom = mc_part->getMomentumAtEndpoint();
                     const double *part_mom = mc_part->getMomentum();
                     mc_part_px.push_back(part_mom[0]);
                     mc_part_py.push_back(part_mom[1]);

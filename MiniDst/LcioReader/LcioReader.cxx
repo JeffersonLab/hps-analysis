@@ -160,6 +160,15 @@ long LcioReader::Run(int max_event) {
                    use_ecal_cluster_uncor = false;
                }
 
+               if (use_hodo_hits && !has_collection("HodoCalHits")) {
+                  cout << "WARNING: The LCIO file does not have HodoCalHits. Turning of Hodoscope hit reading. \n";
+                  use_hodo_hits = false;
+               }
+
+               if (use_hodo_clusters && !has_collection("HodoGenericClusters")) {
+                  cout << "WARNING: The LCIO file does not have HodoGenericClusters. Turning of Hodoscope cluster reading. \n";
+                  use_hodo_clusters = false;
+               }
 
                if (use_svt_raw_hits && (!has_collection("SVTRawTrackerHits") ||
                                          !has_collection("SVTShapeFitParameters") ||
@@ -980,11 +989,10 @@ long LcioReader::Run(int max_event) {
                     mc_part_pdg.push_back(mc_part->getPDG());
                     mc_part_energy.push_back(mc_part->getEnergy());
                     mc_part_mass.push_back(mc_part->getMass());
-                    int simulation_status = mc_part->getGeneratorStatus() & mc_part->getSimulatorStatus();
+                    int simulation_status = mc_part->getGeneratorStatus() | mc_part->getSimulatorStatus();
                     mc_part_sim_status.push_back(simulation_status);
                     mc_part_time.push_back(mc_part->getTime());
                     mc_part_charge.push_back(mc_part->getCharge());
-                    mc_part_simstatus.push_back(mc_part->getSimulatorStatus());
                     const double *part_vertex = mc_part->getVertex();
                     mc_part_x.push_back(part_vertex[0]);
                     mc_part_y.push_back(part_vertex[1]);

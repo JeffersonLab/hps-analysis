@@ -250,7 +250,7 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("mc_part_energy", &mc_part_energy, use_mc_particles | use_all );
    branch_map_try_emplace("mc_part_pdg", &mc_part_pdg, use_mc_particles | use_all );
    branch_map_try_emplace("mc_part_id", &mc_part_id, use_mc_particles | use_all );
-   branch_map_try_emplace("mc_part_gen_status", &mc_part_sim_status, use_mc_particles | use_all ); /** Generator Status **/
+   branch_map_try_emplace("mc_part_sim_status", &mc_part_sim_status, use_mc_particles | use_all ); /** Generator Status **/
    branch_map_try_emplace("mc_part_time", &mc_part_time, use_mc_particles | use_all );      /** The global creation time. */
    branch_map_try_emplace("mc_part_x", &mc_part_x, use_mc_particles | use_all );      /** The X vertex. */
    branch_map_try_emplace("mc_part_y", &mc_part_y, use_mc_particles | use_all );      /** The Y vertex. */
@@ -267,7 +267,6 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("mc_part_pz", &mc_part_pz, use_mc_particles | use_all );
    branch_map_try_emplace("mc_part_mass", &mc_part_mass, use_mc_particles | use_all );
    branch_map_try_emplace("mc_part_charge", &mc_part_charge, use_mc_particles | use_all );
-   branch_map_try_emplace("mc_part_simstatus", &mc_part_simstatus, use_mc_particles | use_all );
    branch_map_try_emplace("mc_part_daughters", &mc_part_daughters, use_mc_particles | use_all );
    branch_map_try_emplace("mc_part_parents", &mc_part_parents, use_mc_particles | use_all );
 

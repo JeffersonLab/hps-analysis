@@ -259,6 +259,10 @@ public:
    vector<double> ecal_hit_time;
    vector<int>    ecal_hit_index_x;
    vector<int>    ecal_hit_index_y;
+   // It *should* be possible to derive these from ix and iy, but that would be detector dependent.
+   vector<double> ecal_hit_x;
+   vector<double> ecal_hit_y;
+   vector<double> ecal_hit_z;
 
    // Ecal Clusters:
    vector<double> ecal_cluster_energy;
@@ -445,16 +449,15 @@ public:
    vector<double> mc_part_x;      /** The X vertex. */
    vector<double> mc_part_y;      /** The Y vertex. */
    vector<double> mc_part_z;      /** The Z vertex. */
-   vector<double> mc_part_end_x;  /** The X end point. */
-   vector<double> mc_part_end_y;  /** The Y end point. */
-   vector<double> mc_part_end_z;  /** The Z end point. */
-   vector<double> mc_part_end_px;  /** The X end point. */
-   vector<double> mc_part_end_py;  /** The Y end point. */
-   vector<double> mc_part_end_pz;  /** The Z end point. */
-
    vector<double> mc_part_px;
    vector<double> mc_part_py;
    vector<double> mc_part_pz;
+   vector<double> mc_part_end_x;  /** The X end point. */
+   vector<double> mc_part_end_y;  /** The Y end point. */
+   vector<double> mc_part_end_z;  /** The Z end point. */
+//   vector<double> mc_part_end_px;  /** The X end point. */
+//   vector<double> mc_part_end_py;  /** The Y end point. */
+//   vector<double> mc_part_end_pz;  /** The Z end point. */
    vector<double> mc_part_mass;
    vector<double> mc_part_charge;
    vector< vector<int> > mc_part_daughters;

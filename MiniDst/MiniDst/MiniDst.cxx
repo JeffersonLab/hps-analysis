@@ -90,6 +90,9 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("ecal_hit_time", &ecal_hit_time, use_ecal_hits | use_all );
    branch_map_try_emplace("ecal_hit_index_x", &ecal_hit_index_x, use_ecal_hits | use_all );
    branch_map_try_emplace("ecal_hit_index_y", &ecal_hit_index_y, use_ecal_hits | use_all );
+   branch_map_try_emplace("ecal_hit_x", &ecal_hit_x, use_ecal_hits | use_all );
+   branch_map_try_emplace("ecal_hit_y", &ecal_hit_y, use_ecal_hits | use_all );
+   branch_map_try_emplace("ecal_hit_y", &ecal_hit_z, use_ecal_hits | use_all );
 
    branch_map_try_emplace("ecal_cluster_energy", &ecal_cluster_energy, use_ecal_cluster | use_all );
    branch_map_try_emplace("ecal_cluster_time", &ecal_cluster_time, use_ecal_cluster | use_all );
@@ -255,16 +258,16 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("mc_part_x", &mc_part_x, use_mc_particles | use_all );      /** The X vertex. */
    branch_map_try_emplace("mc_part_y", &mc_part_y, use_mc_particles | use_all );      /** The Y vertex. */
    branch_map_try_emplace("mc_part_z", &mc_part_z, use_mc_particles | use_all );      /** The Z vertex. */
-   branch_map_try_emplace("mc_part_end_x", &mc_part_end_x, use_mc_particles | use_all );  /** The X end point. */
-   branch_map_try_emplace("mc_part_end_y", &mc_part_end_y, use_mc_particles | use_all );  /** The Y end point. */
-   branch_map_try_emplace("mc_part_end_z", &mc_part_end_z, use_mc_particles | use_all );  /** The Z end point. */
-   branch_map_try_emplace("mc_part_end_px", &mc_part_end_px, use_mc_particles | use_all );  /** The X end point. */
-   branch_map_try_emplace("mc_part_end_py", &mc_part_end_py, use_mc_particles | use_all );  /** The Y end point. */
-   branch_map_try_emplace("mc_part_end_pz", &mc_part_end_pz, use_mc_particles | use_all );  /** The Z end point. */
-
    branch_map_try_emplace("mc_part_px", &mc_part_px, use_mc_particles | use_all );
    branch_map_try_emplace("mc_part_py", &mc_part_py, use_mc_particles | use_all );
    branch_map_try_emplace("mc_part_pz", &mc_part_pz, use_mc_particles | use_all );
+   branch_map_try_emplace("mc_part_end_x", &mc_part_end_x, use_mc_particles | use_all );  /** The X end point. */
+   branch_map_try_emplace("mc_part_end_y", &mc_part_end_y, use_mc_particles | use_all );  /** The Y end point. */
+   branch_map_try_emplace("mc_part_end_z", &mc_part_end_z, use_mc_particles | use_all );  /** The Z end point. */
+//   branch_map_try_emplace("mc_part_end_px", &mc_part_end_px, use_mc_particles | use_all );  /** The X end point. */
+//   branch_map_try_emplace("mc_part_end_py", &mc_part_end_py, use_mc_particles | use_all );  /** The Y end point. */
+//   branch_map_try_emplace("mc_part_end_pz", &mc_part_end_pz, use_mc_particles | use_all );  /** The Z end point. */
+
    branch_map_try_emplace("mc_part_mass", &mc_part_mass, use_mc_particles | use_all );
    branch_map_try_emplace("mc_part_charge", &mc_part_charge, use_mc_particles | use_all );
    branch_map_try_emplace("mc_part_daughters", &mc_part_daughters, use_mc_particles | use_all );

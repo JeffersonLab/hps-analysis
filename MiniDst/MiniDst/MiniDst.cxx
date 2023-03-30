@@ -92,7 +92,7 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("ecal_hit_index_y", &ecal_hit_index_y, use_ecal_hits | use_all );
    branch_map_try_emplace("ecal_hit_x", &ecal_hit_x, use_ecal_hits | use_all );
    branch_map_try_emplace("ecal_hit_y", &ecal_hit_y, use_ecal_hits | use_all );
-   branch_map_try_emplace("ecal_hit_y", &ecal_hit_z, use_ecal_hits | use_all );
+   branch_map_try_emplace("ecal_hit_z", &ecal_hit_z, use_ecal_hits | use_all );
 
    branch_map_try_emplace("ecal_cluster_energy", &ecal_cluster_energy, use_ecal_cluster | use_all );
    branch_map_try_emplace("ecal_cluster_time", &ecal_cluster_time, use_ecal_cluster | use_all );

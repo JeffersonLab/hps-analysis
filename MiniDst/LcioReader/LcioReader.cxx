@@ -39,6 +39,7 @@ void LcioReader::Clear(){
    // Clear all the maps
    // hodo_hit_to_index_map.clear();
    ecal_hit_to_index_map.clear();
+   ecal_id0_to_hit_index.clear();
    ecal_cluster_to_index_map.clear();
    svt_hit_to_index_map.clear();
    svt_raw_hit_to_index_map.clear();
@@ -417,6 +418,20 @@ long LcioReader::Run(int max_event) {
          /// Ecal
          ///
          ////////////////////////////////////////////////////////////////////////////////////////////////
+         ///
+         /// Ecal Hits are stored in: EcalHits, EcalCalHits, EcalUncalHits, EcalReadoutHits
+         /// In each case, a corresponding hit will have an identical cellid0 and cellid1.
+         /// The "EcalTruthRelations" connects the EcalReadoutHits to the EcalHits.
+         ///
+         /// EcalReadoutHits contain the raw ADC information from data, for MC this is derived from the EcalHits
+         /// EcalHits        contain the MC true energy and position, with a list of PDG particle ids and energies.
+         /// EcalUncalHits   contain the calculated uncalibrated hits from EcalReadoutHits.
+         /// EcalCalHits     conatian the calculated calibrated hits from EcalUncalHits.
+         ///
+         /// The order of the hits appears is not consisted throughout but the cellids track, so truth relations seem
+         /// to be not needed and instead a lookup can be used.
+         ///
+         ////////////////////////////////////////////////////////////////////////////////////////////////
 
          if (use_ecal_raw_hits){
             auto ecal_raw_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalReadoutHits"));
@@ -438,11 +453,20 @@ long LcioReader::Run(int max_event) {
          if (use_ecal_hits) {
             auto ecal_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalCalHits"));
 
+//            EVENT::LCCollection *ecal_thruth_relation{NULL};
+//            unique_ptr<UTIL::LCRelationNavigator> ecal_truth_nav;
+//            if(use_mc_particles){  // Monte Carlo data has truth information.
+//               ecal_thruth_relation = lcio_event->getCollection("EcalTruthRelations");
+//               ecal_truth_nav = make_unique<UTIL::LCRelationNavigator>(ecal_thruth_relation);
+//            }
+//
             for (int ihit = 0; ihit < ecal_hits->getNumberOfElements(); ++ihit) {
                IMPL::CalorimeterHitImpl *lcio_hit
                      = static_cast<IMPL::CalorimeterHitImpl *>(ecal_hits->getElementAt(ihit));
 
                ecal_hit_to_index_map[lcio_hit] = ihit;
+               int id0 = lcio_hit->getCellID0();
+               ecal_id0_to_hit_index[id0] = ihit;
                // Gets the CellID which identifies the crystal.
                // int id0 = lcio_hit->getCellID0();
                // 0.1 ns resolution is sufficient to distinguish any 2 hits on the same crystal.
@@ -1082,6 +1106,117 @@ long LcioReader::Run(int max_event) {
                         mc_score_pdg.push_back(mc_score->getMCParticle()->getPDG());
                      }
                   }
+               }
+            }
+            ///////////////////////////////////////////////////////////////////////////////////////////////
+            ///
+            /// ADD ECal Truth for MC data.
+            ///
+            ///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+            if(use_ecal_hits) { // Add the "truth" information to hits.
+               auto ecal_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalCalHits"));
+               auto ecal_truth = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalHits"));
+
+               for(int i_truth = 0; i_truth < ecal_truth->getNumberOfElements(); ++i_truth){
+                  IMPL::SimCalorimeterHitImpl *lcio_ecal_truth  =
+                        static_cast<IMPL::SimCalorimeterHitImpl *>(ecal_truth->getElementAt(i_truth));
+
+                  int hit_idx = ecal_id0_to_hit_index[lcio_ecal_truth->getCellID0()];
+                  IMPL::CalorimeterHitImpl *lcio_hit
+                        = static_cast<IMPL::CalorimeterHitImpl *>(ecal_hits->getElementAt(hit_idx));
+                  if( lcio_hit->getCellID0() != lcio_ecal_truth->getCellID0() ) {
+                     int id_hit = lcio_hit->getCellID0();
+                     int id_truth = lcio_ecal_truth->getCellID0();
+                     printf("======+++== The TRUTH did not match the ECAL HIT for idx = %2d,%2d %08d != %08d \n",
+                            i_truth, hit_idx, id_hit, id_truth);
+                     continue;
+                  }
+                  // We get the list of MC particles related to this hit. Can be more than one.
+                  int nmcc = lcio_ecal_truth->getNMCContributions();
+                  vector<int> mc_part_index_list;
+                  vector<int> mc_part_pdg_list;
+                  vector<double> mc_part_ec_list;
+                  int ultimate_parent_idx = -1;
+                  int ultimate_parent_pdg = -9999;
+                  double ultimate_parent_energy_contribution = -1.;
+                  map<int, double> map_id_to_ec_sum;
+
+                  for(int i_mcp=0; i_mcp<nmcc; ++i_mcp){
+                     // int truth_pdg = lcio_ecal_truth->getPDGCont(i_mcp);     // This is useless, always = 0.
+                     double truth_e = lcio_ecal_truth->getEnergyCont(i_mcp); //
+                     mc_part_ec_list.push_back(truth_e);
+                     auto mc_particle = lcio_ecal_truth->getParticleCont(i_mcp);
+                     int mc_part_id = mc_particle->id();
+                     auto idid = id_to_id.find(mc_part_id);
+                     if (idid != id_to_id.end()) {
+                        mc_part_index_list.push_back(idid->second);
+                        mc_part_pdg_list.push_back(mc_part_pdg[idid->second]);
+                     } else {
+                        mc_part_index_list.push_back(-1);
+                        mc_part_pdg_list.push_back(-9999);  // invalid PDG.
+                     }
+
+                     // We now want to find the ultimate parent MC particle.
+                     // Under normal conditions, if there are multiple hits in this crystal, the ultimate parent
+                     // will be the same particle. If this is not the case, we take the hit that contributed most
+                     // energy in the crystal, and take the parent of that.
+                     auto parent_particle = mc_particle;
+                     int n_parents = parent_particle->getParents().size();
+                     while( n_parents > 0){
+                        //parent_particle = mc_particle->getParents()[0];  // In our case, only one parent per MCParticle.
+                        auto parents = parent_particle->getParents();
+                        parent_particle = parents[0];
+                        n_parents = parent_particle->getParents().size();
+                        if(n_parents > 1){
+                           printf("More than one parent particle????? \n");
+                        }
+                     }
+                     idid = id_to_id.find(parent_particle->id());
+                     auto idec = map_id_to_ec_sum.find(idid->second);
+                     if (idec != map_id_to_ec_sum.end()){ // Already had one, so add it.
+                        map_id_to_ec_sum[idid->second] += truth_e;
+                     }else{ // Not found, add it.
+                        map_id_to_ec_sum[idid->second] = truth_e;
+                     }
+                  }
+
+                  // Determine the ultimate parent by choosing that one that contributed most to the hit.
+                  // Usually this is trivial.
+                  // Find the highest contribution, then use the info relating to that one.
+                  double max_energy = 0;
+                  for(auto &itt: map_id_to_ec_sum){
+                     if(max_energy < itt.second){
+                        max_energy = itt.second;
+                        ultimate_parent_idx = itt.first;
+                        ultimate_parent_pdg = mc_part_pdg[ultimate_parent_idx];
+                     }
+                  }
+
+                  ecal_hit_mc_contrib_id.push_back(mc_part_index_list);
+                  ecal_hit_mc_contrib_pdg.push_back(mc_part_pdg_list);
+                  ecal_hit_mc_contrib_ec.push_back(mc_part_ec_list);
+                  ecal_hit_mc_parent_id.push_back(ultimate_parent_idx);
+                  ecal_hit_mc_parent_pdg.push_back(ultimate_parent_pdg);
+               }
+            }
+
+            if(use_ecal_cluster){
+               // Sort through the cluster hits to determin the best guess parentage of the cluster.
+               for(int ic=0; ic< ecal_cluster_hits.size(); ++ic){
+                  double n_tot=0.;
+                  map<int,double> pdg_count;  // Assumes auto initialization to zero of new elements
+                  for(int ih=0; ih< ecal_cluster_hits[ic].size(); ++ih){
+                     int type = ecal_hit_mc_parent_pdg[ecal_cluster_hits[ic][ih]];
+                     double weight = ecal_hit_energy[ecal_cluster_hits[ic][ih]];
+                     pdg_count[type] += weight;
+                     n_tot += weight;
+                  }
+                  // Find the maximum item in the pdg_count map.
+                  auto mymax = std::max_element(pdg_count.begin(), pdg_count.end(), [] (const std::pair<int,double>& a, const std::pair<int,double>& b)->bool{ return a.second < b.second; } );
+                  ecal_cluster_mc_pdg.push_back(mymax->first);
+                  ecal_cluster_mc_pdg_purity.push_back( mymax->second/n_tot);
                }
             }
          }

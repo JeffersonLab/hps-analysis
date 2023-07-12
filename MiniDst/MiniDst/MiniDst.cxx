@@ -94,6 +94,12 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("ecal_hit_y", &ecal_hit_y, use_ecal_hits | use_all );
    branch_map_try_emplace("ecal_hit_z", &ecal_hit_z, use_ecal_hits | use_all );
 
+   branch_map_try_emplace("ecal_hit_mc_contrib_id", &ecal_hit_mc_contrib_id, (use_ecal_hits & use_mc_particles) | use_all);
+   branch_map_try_emplace("ecal_hit_mc_contrib_pdg",  &ecal_hit_mc_contrib_pdg, (use_ecal_hits & use_mc_particles) | use_all);
+   branch_map_try_emplace("ecal_hit_mc_contrib_ec", &ecal_hit_mc_contrib_ec, (use_ecal_hits & use_mc_particles) | use_all);
+   branch_map_try_emplace("ecal_hit_mc_parent_id",  &ecal_hit_mc_parent_id, (use_ecal_hits & use_mc_particles) | use_all);
+   branch_map_try_emplace("ecal_hit_mc_parent_pdg", &ecal_hit_mc_parent_pdg, (use_ecal_hits & use_mc_particles) | use_all);
+
    branch_map_try_emplace("ecal_cluster_energy", &ecal_cluster_energy, use_ecal_cluster | use_all );
    branch_map_try_emplace("ecal_cluster_time", &ecal_cluster_time, use_ecal_cluster | use_all );
    branch_map_try_emplace("ecal_cluster_x", &ecal_cluster_x, use_ecal_cluster | use_all );
@@ -105,6 +111,8 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("ecal_cluster_seed_energy", &ecal_cluster_seed_energy, use_ecal_cluster | use_all );
    branch_map_try_emplace("ecal_cluster_hits", &ecal_cluster_hits, use_ecal_cluster | use_all );
    branch_map_try_emplace("ecal_cluster_nhits", &ecal_cluster_nhits, use_ecal_cluster | use_all );
+   branch_map_try_emplace("ecal_cluster_mc_pdg", &ecal_cluster_mc_pdg, (use_ecal_cluster & use_mc_particles) | use_all);
+   branch_map_try_emplace("ecal_cluster_mc_pdg_purity", &ecal_cluster_mc_pdg_purity, (use_ecal_cluster & use_mc_particles) | use_all);
 
    branch_map_try_emplace("ecal_cluster_uncor_energy", &ecal_cluster_uncor_energy, use_ecal_cluster_uncor | use_all );
    branch_map_try_emplace("ecal_cluster_uncor_time", &ecal_cluster_uncor_time, use_ecal_cluster_uncor | use_all );

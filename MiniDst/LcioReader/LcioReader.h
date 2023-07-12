@@ -24,6 +24,7 @@
 #include <EVENT/ReconstructedParticle.h>
 #include <UTIL/LCRelationNavigator.h>
 #include <IMPL/CalorimeterHitImpl.h>
+#include <IMPL/SimCalorimeterHitImpl.h>
 #include <IMPL/ClusterImpl.h>
 #include <IMPL/TrackerHitImpl.h>
 #include <IMPL/LCGenericObjectImpl.h>
@@ -31,7 +32,7 @@
 
 #include "MiniDst.h"
 
-#define __LCIOReader__Version__ "1.0.9"
+#define __LCIOReader__Version__ "1.1.0"
 using namespace std;
 
 // Collection in May 2021 versions of the 2019 data with both KF and GBL tracking.
@@ -131,6 +132,7 @@ public:
     /// Clearing is done in Clear().
     // map<IMPL::CalorimeterHitImpl*, int> hodo_hit_to_index_map; // Map to link hodoscope hit to index.
     map<IMPL::CalorimeterHitImpl*, int> ecal_hit_to_index_map; // Map to link calorimeter hit to index.
+    map<int, int> ecal_id0_to_hit_index;                      // Map the hit cellid0 to the index
     map<IMPL::ClusterImpl*, int> ecal_cluster_to_index_map; // Map to link calorimeter hit to index.
     map<IMPL::ClusterImpl*, int> ecal_cluster_uncor_to_index_map; // Map to link uncor calorimeter hit to index.
     map<IMPL::TrackerHitImpl*, int> svt_hit_to_index_map; // Map to link svt hit to index.
@@ -140,6 +142,7 @@ public:
     map<EVENT::Track*, int> matched_track_to_index_map;       // Map to link Matched only track to index.
     map<EVENT::Track*, int> any_track_to_index_map;           // Map to link any track to index.
     map<EVENT::ReconstructedParticle*, int> any_particle_to_index_map; // Map to link any particle to the particle index.
+
 
 };
 

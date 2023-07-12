@@ -22,7 +22,7 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"
 
-#define __MiniDst__Version__ "1.0.9"
+#define __MiniDst__Version__ "1.1.0"
 //
 // The following construction defines a "Variant", a type in C++17 and later that can contain different kinds of object.
 // In our case the variant contains each of the possible types that we have in the output tree.
@@ -263,6 +263,12 @@ public:
    vector<double> ecal_hit_x;
    vector<double> ecal_hit_y;
    vector<double> ecal_hit_z;
+   // For MC events, we want to store the truth with the hits.
+   vector<vector<int>> ecal_hit_mc_contrib_id;   // For each hit contributor, the MCParticle indexes.
+   vector<vector<int>> ecal_hit_mc_contrib_pdg;  // For each hit contributor, the MCParticle pdg nums.
+   vector<vector<double>> ecal_hit_mc_contrib_ec; // Energy contributed to hit by this particle;
+   vector<int> ecal_hit_mc_parent_id;          // For the ultimate parent, the MCParticle index.
+   vector<int> ecal_hit_mc_parent_pdg;         // For the ultimate parent, the MCParticle pdg.
 
    // Ecal Clusters:
    vector<double> ecal_cluster_energy;
@@ -276,6 +282,8 @@ public:
    vector<double> ecal_cluster_seed_energy;
    vector< vector<int> > ecal_cluster_hits;
    vector<int> ecal_cluster_nhits; // Not strictly needed, but handy. (could use ecal_cluster_hits[i].size())
+   vector<int> ecal_cluster_mc_pdg;
+   vector<double> ecal_cluster_mc_pdg_purity;
 
    // Ecal Clusters Ucor:
    vector<double> ecal_cluster_uncor_energy;

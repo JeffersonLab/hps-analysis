@@ -282,6 +282,7 @@ public:
    vector<double> ecal_cluster_seed_energy;
    vector< vector<int> > ecal_cluster_hits;
    vector<int> ecal_cluster_nhits; // Not strictly needed, but handy. (could use ecal_cluster_hits[i].size())
+   vector<int> ecal_cluster_mc_id;
    vector<int> ecal_cluster_mc_pdg;
    vector<double> ecal_cluster_mc_pdg_purity;
 

@@ -111,6 +111,7 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("ecal_cluster_seed_energy", &ecal_cluster_seed_energy, use_ecal_cluster | use_all );
    branch_map_try_emplace("ecal_cluster_hits", &ecal_cluster_hits, use_ecal_cluster | use_all );
    branch_map_try_emplace("ecal_cluster_nhits", &ecal_cluster_nhits, use_ecal_cluster | use_all );
+   branch_map_try_emplace("ecal_cluster_mc_id", &ecal_cluster_mc_id, (use_ecal_cluster & use_mc_particles) | use_all);
    branch_map_try_emplace("ecal_cluster_mc_pdg", &ecal_cluster_mc_pdg, (use_ecal_cluster & use_mc_particles) | use_all);
    branch_map_try_emplace("ecal_cluster_mc_pdg_purity", &ecal_cluster_mc_pdg_purity, (use_ecal_cluster & use_mc_particles) | use_all);
 

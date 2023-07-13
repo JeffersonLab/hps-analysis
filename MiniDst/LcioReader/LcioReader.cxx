@@ -1208,14 +1208,16 @@ long LcioReader::Run(int max_event) {
                   double n_tot=0.;
                   map<int,double> pdg_count;  // Assumes auto initialization to zero of new elements
                   for(int ih=0; ih< ecal_cluster_hits[ic].size(); ++ih){
-                     int type = ecal_hit_mc_parent_pdg[ecal_cluster_hits[ic][ih]];
+                     int p_id = ecal_hit_mc_parent_id[ecal_cluster_hits[ic][ih]];
                      double weight = ecal_hit_energy[ecal_cluster_hits[ic][ih]];
-                     pdg_count[type] += weight;
+                     pdg_count[p_id] += weight;
                      n_tot += weight;
                   }
                   // Find the maximum item in the pdg_count map.
                   auto mymax = std::max_element(pdg_count.begin(), pdg_count.end(), [] (const std::pair<int,double>& a, const std::pair<int,double>& b)->bool{ return a.second < b.second; } );
-                  ecal_cluster_mc_pdg.push_back(mymax->first);
+                  int parent_id = mymax->first;
+                  ecal_cluster_mc_id.push_back(parent_id);
+                  ecal_cluster_mc_pdg.push_back(mc_part_pdg[parent_id]);
                   ecal_cluster_mc_pdg_purity.push_back( mymax->second/n_tot);
                }
             }

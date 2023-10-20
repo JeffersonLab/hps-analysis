@@ -24,7 +24,7 @@
 # @author Jan Engels, Desy
 ##############################################################################
 
-SET( LCIO_ROOT "/data/HPS/lcio" )
+SET( LCIO_ROOT "/home/holtrop/hps-analysis/MiniDst/lcio" )
 SET( LCIO_VERSION "2.7.5" )
 
 

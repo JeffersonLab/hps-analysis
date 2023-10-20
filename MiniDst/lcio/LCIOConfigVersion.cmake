@@ -3,7 +3,7 @@
 #
 # @author Jan Engels, Desy IT
 ##############################################################################
-SET( LCIO_ROOT "/data/HPS/lcio" )
+SET( LCIO_ROOT "/home/holtrop/hps-analysis/MiniDst/lcio" )
 
 
 SET( ${PACKAGE_FIND_NAME}_VERSION_MAJOR 2 )

@@ -92,7 +92,9 @@ endif(APPLE)
 
 add_subdirectory(BaseAna)
 add_subdirectory(MiniDst)
+add_subdirectory(Hbooker)
 add_subdirectory(Dst2016)
+
 if(LCIO_FOUND)
     add_subdirectory(LcioReader)
     add_executable(make_mini_dst make_mini_dst.cxx)

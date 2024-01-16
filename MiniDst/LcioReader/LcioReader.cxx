@@ -68,8 +68,10 @@ long LcioReader::Run(int max_event) {
 
       while ((lcio_event = lcio_reader->readNextEvent())) {
 
-         Clear();  // Clear all the vectors that contain data, so we can push_back on them again.
+         /// Todo: Break this long part up into sub methods.
+         /// Todo: Create a Process() method that processes one event using above methods.
 
+         Clear();  // Clear all the vectors that contain data, so we can push_back on them again.
 
          /////////////////////////////////////////////////////////////////////////////////////////////
          ///

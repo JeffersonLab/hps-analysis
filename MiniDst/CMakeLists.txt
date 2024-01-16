@@ -65,6 +65,20 @@ else()
     message(STATUS "=================================================================")
 endif(LCIO_FOUND)
 
+find_package(CERNLIB)
+if(CERNLIB_FOUND)
+    include_directories( AFTER "${CERNLIB_INCLUDE_DIR}")
+    message(STATUS "CERNLIB found: ${CERNLIB_INCLUDE_DIR} ${CERNLIB_LIBRARIES}")
+else()
+    message(STATUS "==================================================================")
+    message(STATUS "CERNLIB subsystem was not found, so you will not be able to create")
+    message(STATUS "HBOOK output file. Sorry.")
+    message(STATUS "To fix this set the variable CERN to you installation of cernlib. ")
+    message(STATUS " - - - ")
+    message(STATUS "=================================================================")
+endif(CERNLIB_FOUND)
+
+
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 if(APPLE)

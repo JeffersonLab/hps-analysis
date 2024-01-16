@@ -398,6 +398,13 @@ long MiniDst::Run(int nevt){
    return(0);
 }
 
+void MiniDst::Process() {
+   /// Process a single event.
+   /// Intended to be overridden by sub-classes that have an event loop.
+
+   // For vanilla MiniDst there is nothing to process.
+}
+
 void MiniDst::End(){
    md_output_file->Write();
    md_output_file->Close();

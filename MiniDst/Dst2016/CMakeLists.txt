@@ -1,8 +1,8 @@
 # Create the Dst2016 library
-cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.5.0 FATAL_ERROR)
 project(Dst2016)
 
-link_directories("/data/HPS/lib")
+# link_directories("/data/HPS/lib")
 
 # The ROOT_GENERATE_DICTIONARY does not seem to respect the included target_link_libraries target.
 # We thus need to get the include directories from the target by hand and add them to the include path.

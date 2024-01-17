@@ -13,9 +13,8 @@
 #include "MiniDst.h"
 
 #include <stdlib.h>
-#ifdef __CINT__
-#define g77Fortran
-#endif
+
+#define g77Fortran 1
 
 #include "cfortran/cfortran.h"
 #include "cfortran/packlib.h"

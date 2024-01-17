@@ -23,6 +23,8 @@ project(Hbooker)
 get_property(MiniDstLib_Include TARGET MiniDst PROPERTY INCLUDE_DIRECTORIES)
 include_directories(BEFORE ${MiniDstLib_Include})
 
+
+
 # No need for the dictionary if we are not making a library.
 #
 # ROOT_GENERATE_DICTIONARY(HbookerDict Hbooker.h MODULE ${PROJECT_NAME} LINKDEF HbookerLinkDef.h )
@@ -30,7 +32,7 @@ include_directories(BEFORE ${MiniDstLib_Include})
 #
 add_executable(make_hbook_dst make_hbook_dst.cxx Hbooker.cxx)
 target_include_directories(make_hbook_dst BEFORE PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
-target_link_libraries(make_hbook_dst PUBLIC MiniDst ${ROOT_LIBRARIES} ${CERNLIB_LIBRARIES})
+target_link_libraries(make_hbook_dst PUBLIC MiniDst LcioReader ${ROOT_LIBRARIES} ${CERNLIB_LIBRARIES})
 if(APPLE)
 target_link_options(make_hbook_dst PUBLIC "-Wl,-no_compact_unwind")
 endif()

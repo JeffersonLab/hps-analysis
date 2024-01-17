@@ -5,6 +5,8 @@
 #include "../cxxopts.hpp"
 #include "TChain.h"
 #include "MiniDst.h"
+#include "LcioReader.h"
+
 #include <locale.h>
 
 using namespace std;
@@ -132,17 +134,17 @@ int main(int argc, char **argv){
 //                dst->use_mc_particles = true;
 //            }
         }else if( infiles.size()>0 && infiles[0].find(".slcio") != string::npos ) {
-//            auto dstlcio = new LcioReader(infiles);
-//            dst = static_cast<MiniDst*>(dstlcio);
+           auto dstlcio = new LcioReader(infiles);
+            dst = static_cast<MiniDst*>(dstlcio);
 //
-//            // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
-//            dstlcio->lcio_reader->open(infiles[0]);
-//            auto lcio_event = dstlcio->lcio_reader->readNextEvent();
-//            const vector<string> *col_names = lcio_event->getCollectionNames();
+            // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
+            dstlcio->lcio_reader->open(infiles[0]);
+            auto lcio_event = dstlcio->lcio_reader->readNextEvent();
+            const vector<string> *col_names = lcio_event->getCollectionNames();
 //
-//            if( std::find(col_names->begin(), col_names->end(), "MCParticle") != col_names->end()
-//                and !no_mc_particles) dst->use_mc_particles = true;
-//            dstlcio->lcio_reader->close();
+            if( std::find(col_names->begin(), col_names->end(), "MCParticle") != col_names->end()
+                and !no_mc_particles) dst->use_mc_particles = true;
+            dstlcio->lcio_reader->close();
         }else{
             cout << "We need either an SLCIO file, or a MiniDST root file for input. \n Abort. \n";
             exit(1);

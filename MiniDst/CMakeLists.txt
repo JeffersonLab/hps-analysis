@@ -106,7 +106,6 @@ endif(APPLE)
 
 add_subdirectory(BaseAna)
 add_subdirectory(MiniDst)
-add_subdirectory(Hbooker)
 add_subdirectory(Dst2016)
 
 if(LCIO_FOUND)
@@ -117,7 +116,13 @@ if(LCIO_FOUND)
     add_executable(lcio_test_reader lcio_test_reader.cpp)
     target_link_libraries(lcio_test_reader ${LCIO_LIBRARIES})
     install(TARGETS lcio_test_reader)
+
+    if(CERNLIB_FOUND)
+        add_subdirectory(Hbooker)
+    endif(CERNLIB_FOUND)
+
 endif(LCIO_FOUND)
+
 
 # link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 

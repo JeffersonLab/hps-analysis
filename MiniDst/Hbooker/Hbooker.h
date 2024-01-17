@@ -20,6 +20,7 @@
 #include "cfortran/packlib.h"
 
 #define __Hbooker__Version__ "1.0.0"
+
 using namespace std;
 
 #define PAWC_SIZE 500000
@@ -36,22 +37,26 @@ typedef struct {
 } DATAC_DEF;
 #define DATAC COMMON_BLOCK(DATAC,datac)
 
+class Hbooker {
 
-class Hbooker : public MiniDst{
-
+   MiniDst *mdst;
+   TChain *tree;
    string hb_output_file_name;
+   int hb_Debug = MiniDst::kDebug_Info & MiniDst::kDebug_L1;
    int hbook_id=10;
-   int record_size=8191;
+   int record_size=1024;
    int istat;
 
 public:
    static string _version_() { return (__Hbooker__Version__); };
    Hbooker();
-   explicit Hbooker(string fileout);
-   void Start() override;
-   void Process() override;
-   void End() override;
-   void Clear() override;
+   explicit Hbooker(MiniDst *mini_dst, TChain *in_tree, string fileout);
+   void SetMiniDst(MiniDst *mini_dst){mdst = mini_dst; }
+   void SetOutputFileName(string outfile){hb_output_file_name = outfile;}
+   void Start();
+   void Run(long numevt);
+   void Process();
+   void End();
 };
 
 #endif

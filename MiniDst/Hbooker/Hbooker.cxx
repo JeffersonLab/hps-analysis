@@ -32,11 +32,11 @@ void Hbooker::Start() {
    HBNT(hbook_id,(char *)"NT",(char *)"");
 
    // Add the items to the NTuple.
-   HBNAME(hbook_id,(char *)"DAT",run_number,(char *)"RNUM:I*4");
-   HBNAME(hbook_id,(char *)"DAT",event_number,(char *)"EVTNUM:I*4");
-   HBNAME(hbook_id,(char *)"DAT",trigger,(char *)"TRIG:I*4");
-   HBNAME(hbook_id,(char *)"DAT",rf_time1,(char *)"RF1:R*8");
-   HBNAME(hbook_id,(char *)"DAT",rf_time2,(char *)"RF2:R*8");
+   HBNAME(hbook_id,(char *)"DAT",DATAC.run_number,(char *)"RNUM:I*4");
+   HBNAME(hbook_id,(char *)"DAT",DATAC.event_number,(char *)"EVTNUM:I*4");
+   HBNAME(hbook_id,(char *)"DAT",DATAC.trigger,(char *)"TRIG:I*4");
+   HBNAME(hbook_id,(char *)"DAT",DATAC.rf_time1,(char *)"RF1:R*8");
+   HBNAME(hbook_id,(char *)"DAT",DATAC.rf_time2,(char *)"RF2:R*8");
 
 };
 
@@ -62,6 +62,12 @@ void Hbooker::End() {
 
 void Hbooker::Process() {
    // Process one event.
+   // Unfortunately, we need to **copy** all the data into the common block.
+   DATAC.run_number = run_number;
+   DATAC.event_number = event_number;
+   DATAC.trigger = trigger;
+   DATAC.rf_time1 = rf_time1;
+   DATAC.rf_time2 = rf_time2;
    HFNT(hbook_id);
 }
 

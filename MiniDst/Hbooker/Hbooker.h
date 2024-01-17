@@ -29,7 +29,11 @@ typedef struct { float PAW[PAWC_SIZE]; } PAWC_DEF;
 #define PAWC COMMON_BLOCK(PAWC,pawc)
 
 typedef struct {
-
+   int run_number;
+   int event_number;
+   int trigger;
+   double rf_time1;
+   double rf_time2;
 } DATAC_DEF;
 #define DATAC COMMON_BLOCK(DATAC,datac)
 

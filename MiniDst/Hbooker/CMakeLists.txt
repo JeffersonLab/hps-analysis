@@ -15,7 +15,7 @@ if(NOT APPLE)
     target_link_options(${PROJECT_NAME} PUBLIC "-Wl,-whole-archive")
 endif()
 target_compile_options(${PROJECT_NAME} PUBLIC "-Dg77Fortran" )
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "HBooker.h")
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "Hbooker.h")
 # Selective linking:
 #target_link_libraries(Dst2016 PUBLIC BaseAna ROOT::Core ROOT::Hist ROOT::Tree ROOT::Physics )
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCDIR} )

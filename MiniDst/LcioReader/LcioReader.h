@@ -101,6 +101,8 @@ public:
     static string _version_(){return(__LCIOReader__Version__);};
     void Clear() override;
     void Start() override;
+    void SetupLcioDataType();
+    void Process() override;
     long Run(int max_event) override;
     void End() override;
 
@@ -120,6 +122,7 @@ public:
 
     unsigned long evt_count{0}; // Event sequence number.
     const vector<string> *col_names{nullptr}; // Store the LCIO collection names from the first event.
+    vector<string> svt_hit_collections;
     bool data_type_is_known{false};  // The LCIO data is different between 2015/2016 and 2019. This is true when that is known.
     bool is_2016_data{false};  // True for 2015 and 2016 data: i.e. there is Trigger info in the TriggerBank
     bool is_2019_data{false};  // True for 2019 data: i.e. there is a TSBank and a VTPBank.
@@ -143,6 +146,12 @@ public:
     map<EVENT::Track*, int> any_track_to_index_map;           // Map to link any track to index.
     map<EVENT::ReconstructedParticle*, int> any_particle_to_index_map; // Map to link any particle to the particle index.
 
+private:
+   /// LCIO Decoders. We need these instantiated only once.
+   ///
+   UTIL::BitField64 hodo_hit_field_decoder{"system:6,barrel:3,layer:4,ix:4,iy:-3,hole:-3"};
+   UTIL::BitField64 ecal_hit_field_decoder{"system:6,layer:2,ix:-8,iy:-6"};
+   UTIL::BitField64 raw_svt_hit_decoder{"system:6,barrel:3,layer:4,module:12,sensor:1,side:32:-2,strip:12"};
 
 };
 

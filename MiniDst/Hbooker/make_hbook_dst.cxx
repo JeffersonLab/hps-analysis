@@ -17,8 +17,14 @@ using namespace std;
 
 COMMON_BLOCK_DEF(PAWC_DEF,PAWC);
 PAWC_DEF PAWC;
-COMMON_BLOCK_DEF(DATAC_DEF,DATAC);
-DATAC_DEF DATAC;
+COMMON_BLOCK_DEF(EVNT_DEF, EVNT);
+EVNT_DEF EVNT;
+COMMON_BLOCK_DEF(HODO_DEF,hodo);
+HODO_DEF HODO;
+COMMON_BLOCK_DEF(ECAL_DEF, ECAL);
+ECAL_DEF ECAL;
+COMMON_BLOCK_DEF(PART_DEF, PART);
+PART_DEF PART;
 
 
 int main(int argc, char **argv){
@@ -118,10 +124,13 @@ int main(int argc, char **argv){
 
         MiniDst *dst{nullptr};
         TChain *chain{nullptr};
-        bool is_dst_type = false;
+        bool is_root_dst_type = false;
         if( infiles.size()>0 && infiles[0].find(".root") != string::npos ) {
-            // The first file in the list has .root extension.
-            is_dst_type = true;
+           // The first file in the list has .root extension.
+           is_root_dst_type = true;
+        }
+
+        if(is_root_dst_type){
             chain = new TChain("MiniDST");
             for (auto &v : infiles) {
                 chain->Add(v.c_str());
@@ -135,6 +144,7 @@ int main(int argc, char **argv){
 //            }
         }else if( infiles.size()>0 && infiles[0].find(".slcio") != string::npos ) {
            auto dstlcio = new LcioReader(infiles);
+           dstlcio->DefineBranchMap();
             dst = static_cast<MiniDst*>(dstlcio);
 //
             // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
@@ -207,10 +217,47 @@ int main(int argc, char **argv){
         cout << "Extra debug code compiled.\n";
         dst->Counter_Freq =10000;
 #endif
-       auto hb = new Hbooker(dst, chain, outfile);
-       hb->Start();
-       hb->Run(num_evt);
-       hb->End();
+        if(is_root_dst_type) {
+           auto hb = new Hbooker(dst, chain, outfile);
+           hb->Start();
+           hb->Run(num_evt);
+           hb->End();
+        }else {
+           auto ldst = static_cast<LcioReader *>(dst);
+           auto hb = new Hbooker();
+           hb->SetOutputFileName(outfile);
+           hb->SetMiniDst(ldst);
+           hb->Start();
+
+           bool data_type_is_known{false};
+           for (const string &file: ldst->input_files) {
+
+              ldst->is_2016_data = false;
+              ldst->is_2019_data = false;
+              ldst->data_type_is_known = false;
+
+              ldst->lcio_reader->open(file);
+
+              while ((ldst->lcio_event = ldst->lcio_reader->readNextEvent())) {
+
+                 if (!ldst->data_type_is_known) ldst->SetupLcioDataType();
+
+                 if (ldst->md_Debug & ldst->kDebug_Info) {
+                    if ((++ldst->evt_count) % ldst->Counter_Freq == 0) {
+                       printf("i: %'10lu   event: %'10d  run: %5d\n", ldst->evt_count, ldst->event_number,
+                              ldst->run_number);
+                    }
+                 }
+                 if (num_evt > 0 && ldst->evt_count > num_evt) break;  // End the loop, we are done.
+
+                 ldst->Process();  // fills the mdst structures.
+                 hb->Process();    // Copies the data into FORTRAN commons and writes event to NTuple.
+              } // End event loop.
+
+              ldst->lcio_reader->close();
+              hb->End();
+           }
+        }
     }catch(const cxxopts::OptionException& e){
         std::cout << "Error: " << e.what() << std::endl;
         std::cout << options.help() << std::endl;

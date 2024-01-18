@@ -38,7 +38,7 @@ target_link_options(make_hbook_dst PUBLIC "-Wl,-no_compact_unwind")
 endif()
 target_compile_options(make_hbook_dst PUBLIC "-Dg77Fortran" )
 target_compile_options(make_hbook_dst PUBLIC "-no-pie")
-
+INSTALL(TARGETS make_hbook_dst )
 # No need for a public header.
 # set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "Hbooker.h")
 # install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCDIR} )

@@ -83,7 +83,7 @@ void Hbooker::Start() {
       HBNAME(hbook_id,(char *)"VERT",VERT.n_vertexes,(char *)"V_I[0," QQ(MAX_VERTEXES) "]:I*4");
       HBNAME(hbook_id,(char *)"VERT",VERT.vertex_x,(char *)"V_X(V_I):R*4");
       HBNAME(hbook_id,(char *)"VERT",VERT.vertex_y,(char *)"V_Y(V_I):R*4");
-      HBNAME(hbook_id,(char *)"VERT",VERT.vertex_z,(char *)"V_XZ(V_I):R*4");
+      HBNAME(hbook_id,(char *)"VERT",VERT.vertex_z,(char *)"V_Z(V_I):R*4");
       HBNAME(hbook_id,(char *)"VERT",VERT.vertex_chi2,(char *)"V_CHI(V_I):R*4");
       HBNAME(hbook_id,(char *)"VERT",VERT.ele_index,(char *)"V_ELEI(V_I):I*4");
       HBNAME(hbook_id,(char *)"VERT",VERT.pos_index,(char *)"V_POSI(V_I):I*4");

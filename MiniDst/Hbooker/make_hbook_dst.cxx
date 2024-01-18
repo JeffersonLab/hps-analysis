@@ -15,16 +15,13 @@ using namespace std;
 
 #include "Hbooker.h"
 
-COMMON_BLOCK_DEF(PAWC_DEF,PAWC);
+
 PAWC_DEF PAWC;
-COMMON_BLOCK_DEF(EVNT_DEF, EVNT);
 EVNT_DEF EVNT;
-COMMON_BLOCK_DEF(HODO_DEF,hodo);
 HODO_DEF HODO;
-COMMON_BLOCK_DEF(ECAL_DEF, ECAL);
 ECAL_DEF ECAL;
-COMMON_BLOCK_DEF(PART_DEF, PART);
 PART_DEF PART;
+VERT_DEF VERT;
 
 
 int main(int argc, char **argv){
@@ -50,36 +47,36 @@ int main(int argc, char **argv){
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("E,ecal_clusters", "Store Ecal Clusters",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("U,ecal_clusters_uncor", "Store UNCORRECTED Ecal Clusters",
-             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("e,ecal_hits", "Store Ecal Hits",
-             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+ //           ("U,ecal_clusters_uncor", "Store UNCORRECTED Ecal Clusters",
+ //            cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+ //           ("e,ecal_hits", "Store Ecal Hits",
+ //            cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("H,hodo_clusters", "Store Hodo Clusters",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("h,hodo_hits", "Store Hodo Hits",
-             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("s,svt_hits", "Store SVT 3D and/or strip Hits",
-             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("r,raw_hits", "Store RAW Hits for SVT, ECal and Hodo",
-             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("g,gbl_tracks", "Store GBL tracks",
-             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("G,gbl_kinks", "Store GBL track kink data",
-             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("k,kf_tracks", "Store KF tracks",
-             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("t,matched_tracks", "Store Matched tracks",
-             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("T,all_tracks", "Store all tracks (set gbl, kf and matched track to true).",
-             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+ //           ("h,hodo_hits", "Store Hodo Hits",
+ //            cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+ //           ("s,svt_hits", "Store SVT 3D and/or strip Hits",
+ //            cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+ //           ("r,raw_hits", "Store RAW Hits for SVT, ECal and Hodo",
+ //            cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+ //           ("g,gbl_tracks", "Store GBL tracks",
+ //            cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+ //           ("G,gbl_kinks", "Store GBL track kink data",
+ //            cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+ //           ("k,kf_tracks", "Store KF tracks",
+ //            cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+ //           ("t,matched_tracks", "Store Matched tracks",
+ //            cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+ //           ("T,all_tracks", "Store all tracks (set gbl, kf and matched track to true).",
+ //            cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("no_kf_particles","Do NOT store the KF particles or vertexes.",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("no_gbl_particles","Do NOT store the GBL particles or vertexes.",
              cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("M,no_mc_particles", "DO NOT Store MCParticles, even if they are in the input",
-             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-            ("x,use_mc_scoring", "Store extra MC output from scoring planes.",
-             cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+ //           ("M,no_mc_particles", "DO NOT Store MCParticles, even if they are in the input",
+ //            cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+ //           ("x,use_mc_scoring", "Store extra MC output from scoring planes.",
+ //            cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
             ("o,output", "Output file", cxxopts::value<std::string>()->default_value("hps_ntuple.hbook"))
             ("i,inputfiles",
              "List of input files which will be concatenated into a single output mini dst file. The -i "
@@ -101,10 +98,10 @@ int main(int argc, char **argv){
         auto& infiles = args["inputfiles"].as<std::vector<std::string>>();
         auto& outfile = args["output"].as<std::string>();
         auto& store_all = args["all"].as<bool>();
-        auto& all_tracks = args["all_tracks"].as<bool>();
-        auto& kf_tracks = args["kf_tracks"].as<bool>();
-        auto& matched_tracks = args["matched_tracks"].as<bool>();
-        auto& no_mc_particles = args["no_mc_particles"].as<bool>();
+        auto all_tracks = false; // args["all_tracks"].as<bool>();
+        auto kf_tracks = false;  // args["kf_tracks"].as<bool>();
+        auto matched_tracks = false; // args["matched_tracks"].as<bool>();
+        auto no_mc_particles = false; // args["no_mc_particles"].as<bool>();
         auto& num_evt = args["num_evt"].as<long>();
         int debug = 0;
         if(args.count("quiet") == 0 ){
@@ -171,19 +168,19 @@ int main(int argc, char **argv){
         if(debug>0) cout << "Debug code = " << debug_code << endl;
         dst->SetDebugLevel(debug_code);
         dst->use_ecal_cluster = store_all || args["ecal_clusters"].as<bool>() || args["all_clusters"].as<bool>();
-        dst->use_ecal_cluster_uncor = args["ecal_clusters_uncor"].as<bool>();
+        dst->use_ecal_cluster_uncor = false; // dst->use_ecal_cluster_uncor = args["ecal_clusters_uncor"].as<bool>();
         dst->use_hodo_clusters = store_all || args["hodo_clusters"].as<bool>() || args["all_clusters"].as<bool>();
-        dst->use_ecal_hits = store_all || args["ecal_hits"].as<bool>();
-        dst->use_hodo_hits = store_all || args["hodo_hits"].as<bool>();
-        dst->use_svt_hits =  store_all || args["svt_hits"].as<bool>();
-        dst->use_svt_raw_hits = args["raw_hits"].as<bool>();
-        dst->use_ecal_raw_hits = args["raw_hits"].as<bool>();
-        dst->use_hodo_raw_hits = args["raw_hits"].as<bool>();
-        dst->use_kf_tracks = kf_tracks || all_tracks || store_all;
-        dst->use_gbl_tracks = all_tracks || store_all || args["gbl_tracks"].as<bool>();
-        dst->use_gbl_kink_data = store_all || args["gbl_kinks"].as<bool>();
-        dst->use_matched_tracks = matched_tracks || all_tracks || store_all;
-        dst->use_mc_scoring = args["use_mc_scoring"].as<bool>();
+        dst->use_ecal_hits = false; // store_all || args["ecal_hits"].as<bool>();
+        dst->use_hodo_hits =false; // store_all || args["hodo_hits"].as<bool>();
+        dst->use_svt_hits = false; // store_all || args["svt_hits"].as<bool>();
+        dst->use_svt_raw_hits = false; // args["raw_hits"].as<bool>();
+        dst->use_ecal_raw_hits = false; // args["raw_hits"].as<bool>();
+        dst->use_hodo_raw_hits = false; // args["raw_hits"].as<bool>();
+        dst->use_kf_tracks = false; // kf_tracks || all_tracks || store_all;
+        dst->use_gbl_tracks = false; // all_tracks || store_all || args["gbl_tracks"].as<bool>();
+        dst->use_gbl_kink_data = false; // store_all || args["gbl_kinks"].as<bool>();
+        dst->use_matched_tracks = false; // matched_tracks || all_tracks || store_all;
+        dst->use_mc_scoring = false; // args["use_mc_scoring"].as<bool>();
         dst->use_kf_particles = !args["no_kf_particles"].as<bool>();
         dst->use_gbl_particles = !args["no_gbl_particles"].as<bool>();
 

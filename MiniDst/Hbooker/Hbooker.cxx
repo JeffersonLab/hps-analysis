@@ -3,16 +3,12 @@
 //
 #include "Hbooker.h"
 
-COMMON_BLOCK_DEF(PAWC_DEF,PAWC);
 extern PAWC_DEF PAWC;
-COMMON_BLOCK_DEF(EVNT_DEF, EVNT);
 extern EVNT_DEF EVNT;
-COMMON_BLOCK_DEF(HODO_DEF, HODO);
 extern HODO_DEF HODO;
-COMMON_BLOCK_DEF(ECAL_DEF, ECAL);
 extern ECAL_DEF ECAL;
-COMMON_BLOCK_DEF(PART_DEF, PART);
 extern PART_DEF PART;
+extern VERT_DEF VERT;
 
 Hbooker::Hbooker(): Hbooker(nullptr, nullptr, "minidst-ntuple.hbook"){
 };
@@ -81,6 +77,16 @@ void Hbooker::Start() {
       HBNAME(hbook_id,(char *)"PART",PART.ecal_index,(char *)"P_EI(P_I):I*4");
       HBNAME(hbook_id,(char *)"PART",PART.track_index,(char *)"P_TI(P_I):I*4");
       HBNAME(hbook_id,(char *)"PART",PART.track_chi2,(char *)"P_TCHI(P_I):R*4");
+   }
+
+   if(mdst->use_kf_particles || mdst->use_gbl_particles){
+      HBNAME(hbook_id,(char *)"VERT",VERT.n_vertexes,(char *)"V_I[0," QQ(MAX_VERTEXES) "]:I*4");
+      HBNAME(hbook_id,(char *)"VERT",VERT.vertex_x,(char *)"V_X(V_I):R*4");
+      HBNAME(hbook_id,(char *)"VERT",VERT.vertex_y,(char *)"V_Y(V_I):R*4");
+      HBNAME(hbook_id,(char *)"VERT",VERT.vertex_z,(char *)"V_XZ(V_I):R*4");
+      HBNAME(hbook_id,(char *)"VERT",VERT.vertex_chi2,(char *)"V_CHI(V_I):R*4");
+      HBNAME(hbook_id,(char *)"VERT",VERT.ele_index,(char *)"V_ELEI(V_I):I*4");
+      HBNAME(hbook_id,(char *)"VERT",VERT.pos_index,(char *)"V_POSI(V_I):I*4");
    }
 
 };
@@ -178,6 +184,19 @@ void Hbooker::Process() {
       }
    }
 
+   if(mdst->use_kf_particles || mdst->use_gbl_particles){
+      int max = mdst->v0.vertex_x.size();
+      if(max>=MAX_VERTEXES) max = MAX_VERTEXES-1;
+      VERT.n_vertexes = max+1;
+      for(int i=0; i<max; ++i) {
+         VERT.vertex_x[i] = (float)mdst->v0.vertex_x[i];
+         VERT.vertex_y[i] = (float)mdst->v0.vertex_y[i];
+         VERT.vertex_z[i] = (float)mdst->v0.vertex_z[i];
+         VERT.vertex_chi2[i] = (float)mdst->v0.vertex_chi2[i];
+         VERT.ele_index[i] = mdst->v0.em.part[i];
+         VERT.pos_index[i] = mdst->v0.ep.part[i];
+      }
+   }
    HFNT(hbook_id);
 }
 

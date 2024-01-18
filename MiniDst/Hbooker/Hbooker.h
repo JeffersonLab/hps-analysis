@@ -31,6 +31,7 @@ using namespace std;
 
 typedef struct { float PAW[PAWC_SIZE]; } PAWC_DEF;
 #define PAWC COMMON_BLOCK(PAWC,pawc)
+COMMON_BLOCK_DEF(PAWC_DEF,PAWC);
 
 typedef struct {
    int run_number;
@@ -40,6 +41,7 @@ typedef struct {
    double rf_time2;
 } EVNT_DEF;
 #define EVNT COMMON_BLOCK(EVNT,evnt)
+COMMON_BLOCK_DEF(EVNT_DEF, EVNT);
 
 #define MAX_HODO_CLUSTER 5
 typedef struct{
@@ -51,6 +53,7 @@ typedef struct{
    int hodo_cluster_layer[MAX_HODO_CLUSTER];
 } HODO_DEF;
 #define HODO COMMON_BLOCK(HODO,hodo)
+COMMON_BLOCK_DEF(HODO_DEF,hodo);
 
 #define MAX_ECAL_CLUSTER 10
 typedef struct{
@@ -67,6 +70,7 @@ typedef struct{
    int ecal_cluster_nhits[MAX_ECAL_CLUSTER];
 }ECAL_DEF;
 #define ECAL COMMON_BLOCK(ECAL,ecal)
+COMMON_BLOCK_DEF(ECAL_DEF, ECAL);
 
 #define MAX_PARTICLES 10
 typedef struct{
@@ -80,12 +84,29 @@ typedef struct{
    float px[MAX_PARTICLES];
    float py[MAX_PARTICLES];
    float pz[MAX_PARTICLES];
+   float p[MAX_PARTICLES];
    int ecal_index[MAX_PARTICLES];
    int track_index[MAX_PARTICLES];
    float track_chi2[MAX_PARTICLES];
+   int track_nhit[MAX_PARTICLES];
+   float pos_ecal_x[MAX_PARTICLES];
+   float pos_ecal_y[MAX_PARTICLES];
 }PART_DEF;
 #define PART COMMON_BLOCK(PART,part)
+COMMON_BLOCK_DEF(PART_DEF, PART);
 
+#define MAX_VERTEXES 10
+typedef struct{
+   int n_vertexes;
+   float vertex_x[MAX_VERTEXES];
+   float vertex_y[MAX_VERTEXES];
+   double vertex_z[MAX_VERTEXES];
+   double vertex_chi2[MAX_VERTEXES];
+   int ele_index[MAX_VERTEXES];
+   int pos_index[MAX_VERTEXES];
+}VERT_DEF;
+#define VERT COMMON_BLOCK(VERT,vert)
+COMMON_BLOCK_DEF(VERT_DEF, VERT);
 
 class Hbooker {
 

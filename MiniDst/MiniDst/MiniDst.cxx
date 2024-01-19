@@ -372,6 +372,7 @@ void MiniDst::Clear(){
    // Clear the event storage vectors.
    // We use the map to Clear all the vectors. Note that this means you *must* have each vector in the branch_map,
    // otherwise you will create an ever growing vector.
+
    for( auto const& [nam, bran] : branch_map ){
       // std::visit([](auto &&arg){arg->clear();},bran);  Using simple lambda if the variant only contains vectors.
       //
@@ -396,6 +397,13 @@ void MiniDst::Clear(){
 long MiniDst::Run(int nevt){
    std::cout << "MiniDst::Run() called. =====================<<<<<<<<<<<<<======\n";
    return(0);
+}
+
+void MiniDst::Process() {
+   /// Process a single event.
+   /// Intended to be overridden by sub-classes that have an event loop.
+
+   // For vanilla MiniDst there is nothing to process.
 }
 
 void MiniDst::End(){

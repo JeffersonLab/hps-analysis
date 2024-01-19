@@ -65,6 +65,20 @@ else()
     message(STATUS "=================================================================")
 endif(LCIO_FOUND)
 
+find_package(CERNLIB)
+if(CERNLIB_FOUND)
+    include_directories( AFTER "${CERNLIB_INCLUDE_DIR}")
+    message(STATUS "CERNLIB found: ${CERNLIB_INCLUDE_DIR} ${CERNLIB_LIBRARIES}")
+else()
+    message(STATUS "==================================================================")
+    message(STATUS "CERNLIB subsystem was not found, so you will not be able to create")
+    message(STATUS "HBOOK output file. Sorry.")
+    message(STATUS "To fix this set the variable CERN to you installation of cernlib. ")
+    message(STATUS " - - - ")
+    message(STATUS "=================================================================")
+endif(CERNLIB_FOUND)
+
+
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 if(APPLE)
@@ -93,6 +107,7 @@ endif(APPLE)
 add_subdirectory(BaseAna)
 add_subdirectory(MiniDst)
 add_subdirectory(Dst2016)
+
 if(LCIO_FOUND)
     add_subdirectory(LcioReader)
     add_executable(make_mini_dst make_mini_dst.cxx)
@@ -101,7 +116,13 @@ if(LCIO_FOUND)
     add_executable(lcio_test_reader lcio_test_reader.cpp)
     target_link_libraries(lcio_test_reader ${LCIO_LIBRARIES})
     install(TARGETS lcio_test_reader)
+
+    if(CERNLIB_FOUND)
+        add_subdirectory(Hbooker)
+    endif(CERNLIB_FOUND)
+
 endif(LCIO_FOUND)
+
 
 # link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 

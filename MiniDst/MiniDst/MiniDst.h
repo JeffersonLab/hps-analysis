@@ -173,15 +173,16 @@ public:
    bool use_ecal_hits{true};
    bool use_svt_raw_hits{false};
 
-   bool use_svt_hits{true};
+   bool use_svt_hits{false};
    bool use_kf_tracks{true};
-   bool use_gbl_tracks{true};
-   bool use_matched_tracks{true};
-   bool use_gbl_kink_data{true};
+   bool use_gbl_tracks{false};
+   bool use_matched_tracks{false};
+   bool use_extra_tracks{false};
+   bool use_gbl_kink_data{false};
    bool use_mc_particles{false};
    bool use_mc_scoring{false};
    bool use_kf_particles{true};
-   bool use_gbl_particles{true};
+   bool use_gbl_particles{false};
 
    /// These determine what types of particles will be written out.
    // No vertex
@@ -351,6 +352,14 @@ public:
    vector<double> track_px;
    vector<double> track_py;
    vector<double> track_pz;
+   vector<double> track_x_at_lasthit; /** The x position of the extrapolated track at last hit */
+   vector<double> track_y_at_lasthit; /** The y position of the extrapolated track at last hit */
+   vector<double> track_z_at_lasthit; /** The z position of the extrapolated track at last hit */
+   vector<double> track_omega_at_lasthit;
+   vector<double> track_tan_lambda_at_lasthit;
+   vector<double> track_phi0_at_lasthit;
+   vector<double> track_d0_at_lasthit;
+   vector<double> track_z0_at_lasthit;
    vector<double> track_x_at_ecal; /** The x position of the extrapolated track at the Ecal face. */
    vector<double> track_y_at_ecal; /** The y position of the extrapolated track at the Ecal face. */
    vector<double> track_z_at_ecal; /** The z position of the extrapolated track at the Ecal face. */

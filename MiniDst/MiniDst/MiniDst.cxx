@@ -175,6 +175,14 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("track_px",&track_px, write_any_tracks);
    branch_map_try_emplace("track_py",&track_py, write_any_tracks);
    branch_map_try_emplace("track_pz",&track_pz, write_any_tracks);
+   branch_map_try_emplace("track_x_at_lasthit",&track_x_at_lasthit, write_any_tracks && use_extra_tracks);
+   branch_map_try_emplace("track_y_at_lasthit",&track_y_at_lasthit, write_any_tracks && use_extra_tracks);
+   branch_map_try_emplace("track_z_at_lasthit",&track_z_at_lasthit, write_any_tracks && use_extra_tracks);
+   branch_map_try_emplace("track_omega_at_lasthit",&track_omega_at_lasthit, write_any_tracks && use_extra_tracks);
+   branch_map_try_emplace("track_tan_lambda_at_lasthit",&track_tan_lambda_at_lasthit, write_any_tracks && use_extra_tracks);
+   branch_map_try_emplace("track_phi0_at_lasthit",&track_phi0_at_lasthit, write_any_tracks && use_extra_tracks);
+   branch_map_try_emplace("track_d0_at_lasthit",&track_d0_at_lasthit, write_any_tracks && use_extra_tracks);
+   branch_map_try_emplace("track_z0_at_lasthit",&track_z0_at_lasthit, write_any_tracks && use_extra_tracks);
    branch_map_try_emplace("track_x_at_ecal",&track_x_at_ecal, write_any_tracks);
    branch_map_try_emplace("track_y_at_ecal",&track_y_at_ecal, write_any_tracks);
    branch_map_try_emplace("track_z_at_ecal",&track_z_at_ecal, write_any_tracks);

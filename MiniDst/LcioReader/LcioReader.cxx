@@ -812,6 +812,39 @@ void LcioReader::Process(){
          track_z0.push_back(lcio_track->getZ0());
          track_type.push_back(lcio_track->getType());
 
+         std::vector<EVENT::TrackState*> TrackStateVec = lcio_track->getTrackStates();
+
+         if(use_extra_tracks) {
+            const EVENT::TrackState *track_state
+                  = lcio_track->getTrackState(EVENT::TrackState::AtLastHit);
+            if (track_state) {
+               const float *hit_pos = track_state->getReferencePoint();
+               float omega = track_state->getOmega();
+               float phi = track_state->getPhi();
+               float tanlambda = track_state->getTanLambda();
+               float z0 = track_state->getZ0();
+               float d0 = track_state->getD0();
+               // cout << "o,p,t,z: " << omega << ", " << phi << ", " << tanlambda << ", " << z0 << endl;
+               track_x_at_lasthit.push_back(hit_pos[0]);  // Note: these are not rotated, they were put in detector
+               track_y_at_lasthit.push_back(hit_pos[1]);  //       coordinates before being written to file.
+               track_z_at_lasthit.push_back(hit_pos[2]);
+               track_omega_at_lasthit.push_back(omega);
+               track_phi0_at_lasthit.push_back(phi);
+               track_tan_lambda_at_lasthit.push_back(tanlambda);
+               track_z0_at_lasthit.push_back(z0);
+               track_d0_at_lasthit.push_back(d0);
+            } else {
+               track_x_at_lasthit.push_back(-9999.);
+               track_y_at_lasthit.push_back(-9999.);
+               track_z_at_lasthit.push_back(-9999.);
+               track_omega_at_lasthit.push_back(-9999.);
+               track_phi0_at_lasthit.push_back(-9999.);
+               track_tan_lambda_at_lasthit.push_back(-9999.);
+               track_z0_at_lasthit.push_back(-9999.);
+               track_d0_at_lasthit.push_back(-9999.);
+            }
+         }
+
          const EVENT::TrackState *track_state
                = lcio_track->getTrackState(EVENT::TrackState::AtCalorimeter);
          if (track_state) {
@@ -820,9 +853,9 @@ void LcioReader::Process(){
             track_y_at_ecal.push_back(ecal_pos[2]);
             track_z_at_ecal.push_back(ecal_pos[0]);
          } else {
-            track_x_at_ecal.push_back(-99.);
-            track_y_at_ecal.push_back(-99.);
-            track_z_at_ecal.push_back(-99.);
+            track_x_at_ecal.push_back(-9999.);
+            track_y_at_ecal.push_back(-9999.);
+            track_z_at_ecal.push_back(-9999.);
          }
 
          EVENT::LCObjectVec track_data_list;
@@ -837,6 +870,9 @@ void LcioReader::Process(){
             // There should always be one and only one for GBL tracks, 0 for matched tracks.
             IMPL::LCGenericObjectImpl *track_info =
                   static_cast<IMPL::LCGenericObjectImpl *>(track_data_list.at(0));
+
+            track_state
+                  = lcio_track->getTrackState(EVENT::TrackState::AtIP);
 
             // Sanity check...
             if (track_is_gbl && (track_info->getNDouble() < 12 || track_info->getNDouble() > 14 ||  /* 2016 or 2019 */
@@ -853,6 +889,11 @@ void LcioReader::Process(){
                track_px.push_back(track_info->getFloatVal(1));
                track_py.push_back(track_info->getFloatVal(2));
                track_pz.push_back(track_info->getFloatVal(3));
+//               double pt = sqrt(track_info->getFloatVal(1)*track_info->getFloatVal(1)+
+//                                      track_info->getFloatVal(2)*track_info->getFloatVal(2)+
+//                                      track_info->getFloatVal(3)*track_info->getFloatVal(3));
+//               double magfield = pt*track_state->getOmega();
+//               cout << "Magfield: " << magfield << "  in SI: " << magfield/2.99792458e-4 << endl;
             }else {
                track_px.push_back(-999.);
                track_py.push_back(-999.);
@@ -1415,10 +1456,10 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
 
    if( i_stored_track_ptr == any_track_to_index_map.end() ) {
       cout << "Track was not found in the any_track_to_index_map. \n";
-      sub->track_time.push_back(-99);
+      sub->track_time.push_back(-9999);
       sub->track_nhit.push_back(-99);
-      sub->pos_ecal_x.push_back(-99);
-      sub->pos_ecal_y.push_back(-99);
+      sub->pos_ecal_x.push_back(-9999);
+      sub->pos_ecal_y.push_back(-9999);
       sub->track.push_back(-99);
    }else {
       int i_stored_track = i_stored_track_ptr->second;

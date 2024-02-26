@@ -56,7 +56,7 @@ int main(int argc, char **argv){
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("T,all_tracks", "Store all tracks (set gbl, kf and matched track to true)",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-         ("xt,extra_track","Store extra information from tracks, i.e. track states",
+         ("X,extra_track","Store extra information from tracks, i.e. track states",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("no_kf_particles","Do NOT store the KF particles or vertexes.",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))

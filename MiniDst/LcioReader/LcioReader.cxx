@@ -183,7 +183,7 @@ void LcioReader::SetupLcioDataType(){
          use_gbl_particles = false;
       }
       if (use_matched_tracks && !has_collection("MatchedTracks")) {
-         cout << "WARNING: he LCIO file does not have MatchedTracks. Turning of matched track writing. \n";
+         cout << "WARNING: The LCIO file does not have MatchedTracks. Turning of matched track writing. \n";
          use_matched_tracks = false;
       }
       for (auto type = particle_types_single.begin(); type< particle_types_single.end(); ++type) {
@@ -1142,15 +1142,21 @@ void LcioReader::Process(){
       ///
       ///////////////////////////////////////////////////////////////////////////////////////////////
 
+      vector<int> ecal_truth_to_hit_index;  // A table for each truth hit pointing to the ecal hit.
+      if(use_ecal_hits) {
+         // We want to add the "truth" information to hits. However, NOT EACH HIT HAS TRUTH.
+         // No idea why, but just look in the LCIO file, EcalCalHits is often larger than EcalHits.
+         // A cursory check shows some low energy hits from EcalCalHits do not have a corresponding item in EcalHits.
 
-      if(use_ecal_hits) { // Add the "truth" information to hits.
          auto ecal_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalCalHits"));
          auto ecal_truth = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalHits"));
 
+         // Go through all the TRUTH hits from the EcalHits collection.
          for(int i_truth = 0; i_truth < ecal_truth->getNumberOfElements(); ++i_truth){
             IMPL::SimCalorimeterHitImpl *lcio_ecal_truth  =
                   static_cast<IMPL::SimCalorimeterHitImpl *>(ecal_truth->getElementAt(i_truth));
 
+            // Find the corresponding hit in the EcalCalHits collection, and check is they are the same.
             int hit_idx = ecal_id0_to_hit_index[lcio_ecal_truth->getCellID0()];
             IMPL::CalorimeterHitImpl *lcio_hit
                   = static_cast<IMPL::CalorimeterHitImpl *>(ecal_hits->getElementAt(hit_idx));
@@ -1159,18 +1165,22 @@ void LcioReader::Process(){
                int id_truth = lcio_ecal_truth->getCellID0();
                printf("======+++== The TRUTH did not match the ECAL HIT for idx = %2d,%2d %08d != %08d \n",
                       i_truth, hit_idx, id_hit, id_truth);
+               ecal_truth_to_hit_index.push_back(-1);
                continue;
             }
-            // We get the list of MC particles related to this hit. Can be more than one.
+            ecal_truth_to_hit_index.push_back(hit_idx);  // Store the truth -> ecal hit id.
+            // We get the list of MC particles related to this hit. Can be more than one, can be quite a lot.
             int nmcc = lcio_ecal_truth->getNMCContributions();
-            vector<int> mc_part_index_list;
-            vector<int> mc_part_pdg_list;
-            vector<double> mc_part_ec_list;
+            vector<int> mc_part_index_list;  // Index of the MC Particle
+            vector<int> mc_part_pdg_list;    // PDG
+            vector<double> mc_part_ec_list;  // Energy contribution
             int ultimate_parent_idx = -1;
             int ultimate_parent_pdg = -9999;
             double ultimate_parent_energy_contribution = -1.;
             map<int, double> map_id_to_ec_sum;
 
+            // For each of the contributing MC Particles, collect the energy contributed to the hit,
+            // and the MC particle that deposited the energy.
             for(int i_mcp=0; i_mcp<nmcc; ++i_mcp){
                // int truth_pdg = lcio_ecal_truth->getPDGCont(i_mcp);     // This is useless, always = 0.
                double truth_e = lcio_ecal_truth->getEnergyCont(i_mcp); //
@@ -1188,10 +1198,13 @@ void LcioReader::Process(){
 
                // We now want to find the ultimate parent MC particle.
                // Under normal conditions, if there are multiple hits in this crystal, the ultimate parent
-               // will be the same particle. If this is not the case, we take the hit that contributed most
+               // will be the same particle for these hits.
+               // If this is not the case, we take the hit that contributed most
                // energy in the crystal, and take the parent of that.
                auto parent_particle = mc_particle;
                int n_parents = parent_particle->getParents().size();
+
+               // We walk up the parent tree until there is no more parent. This is the ultimate parent.
                while( n_parents > 0){
                   //parent_particle = mc_particle->getParents()[0];  // In our case, only one parent per MCParticle.
                   auto parents = parent_particle->getParents();
@@ -1201,6 +1214,8 @@ void LcioReader::Process(){
                      printf("More than one parent particle????? \n");
                   }
                }
+
+               // We add the contributions of each MC Particle to the energy of the parent in a map.
                idid = id_to_id.find(parent_particle->id());
                auto idec = map_id_to_ec_sum.find(idid->second);
                if (idec != map_id_to_ec_sum.end()){ // Already had one, so add it.
@@ -1231,22 +1246,40 @@ void LcioReader::Process(){
       }
 
       if(use_ecal_cluster){
-         // Sort through the cluster hits to determin the best guess parentage of the cluster.
+         // Sort through the cluster hits to determine the best guess parentage of the cluster.
          for(int ic=0; ic< ecal_cluster_hits.size(); ++ic){
             double n_tot=0.;
             map<int,double> pdg_count;  // Assumes auto initialization to zero of new elements
             for(int ih=0; ih< ecal_cluster_hits[ic].size(); ++ih){
-               int p_id = ecal_hit_mc_parent_id[ecal_cluster_hits[ic][ih]];
-               double weight = ecal_hit_energy[ecal_cluster_hits[ic][ih]];
-               pdg_count[p_id] += weight;
-               n_tot += weight;
+               int hit_id = ecal_cluster_hits[ic][ih];
+               auto found = std::find(ecal_truth_to_hit_index.begin(),ecal_truth_to_hit_index.end(),hit_id);
+               if(found == ecal_truth_to_hit_index.end()){
+                  // This hit does not have any truth, so we just ignore it.
+               }else{
+                  int truth_id = std::distance(ecal_truth_to_hit_index.begin(),found);
+                  int p_id = ecal_hit_mc_parent_id[truth_id];
+                  double weight = ecal_hit_energy[truth_id];
+                  pdg_count[p_id] += weight;
+                  n_tot += weight;
+               }
             }
             // Find the maximum item in the pdg_count map.
-            auto mymax = std::max_element(pdg_count.begin(), pdg_count.end(), [] (const std::pair<int,double>& a, const std::pair<int,double>& b)->bool{ return a.second < b.second; } );
-            int parent_id = mymax->first;
-            ecal_cluster_mc_id.push_back(parent_id);
-            ecal_cluster_mc_pdg.push_back(mc_part_pdg[parent_id]);
-            ecal_cluster_mc_pdg_purity.push_back( mymax->second/n_tot);
+            if(pdg_count.size()) {
+               auto mymax = std::max_element(pdg_count.begin(), pdg_count.end(),
+                                             [](const std::pair<int, double> &a,
+                                                const std::pair<int, double> &b) -> bool {
+                                                return a.second < b.second;
+                                             });
+               int parent_id = mymax->first;
+               ecal_cluster_mc_id.push_back(parent_id);
+               ecal_cluster_mc_pdg.push_back(mc_part_pdg[parent_id]);
+               ecal_cluster_mc_pdg_purity.push_back(mymax->second / n_tot);
+            }else{
+               // There was NO truth hit for this cluster. So fill out invalids.
+               ecal_cluster_mc_id.push_back(-1);
+               ecal_cluster_mc_pdg.push_back(-999);
+               ecal_cluster_mc_pdg_purity.push_back(0);
+            }
          }
       }
    }

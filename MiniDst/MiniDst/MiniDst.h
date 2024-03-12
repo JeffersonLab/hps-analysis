@@ -171,6 +171,7 @@ public:
    bool use_ecal_cluster{true};
    bool use_ecal_cluster_uncor{false};
    bool use_ecal_hits{true};
+   bool use_ecal_hits_truth{true};
    bool use_svt_raw_hits{false};
 
    bool use_svt_hits{false};

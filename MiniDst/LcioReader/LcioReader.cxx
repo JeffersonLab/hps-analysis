@@ -133,6 +133,12 @@ void LcioReader::SetupLcioDataType(){
          use_ecal_hits = false;
       }
 
+      if (use_ecal_hits && use_ecal_hits_truth && !has_collection("EcalHits")) {
+         cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit reading. \n";
+         use_ecal_hits_truth = false;
+      }
+
+
       if (use_ecal_cluster && !has_collection("EcalClustersCorr")) {
          cout << "WARNING: The LCIO file does not have EcalClustersCorr. Turning of ECal cluster reading. \n";
          use_ecal_cluster = false;
@@ -1143,7 +1149,7 @@ void LcioReader::Process(){
       ///////////////////////////////////////////////////////////////////////////////////////////////
 
       vector<int> ecal_truth_to_hit_index;  // A table for each truth hit pointing to the ecal hit.
-      if(use_ecal_hits) {
+      if(use_ecal_hits && use_ecal_hits_truth) {
          // We want to add the "truth" information to hits. However, NOT EACH HIT HAS TRUTH.
          // No idea why, but just look in the LCIO file, EcalCalHits is often larger than EcalHits.
          // A cursory check shows some low energy hits from EcalCalHits do not have a corresponding item in EcalHits.

@@ -891,7 +891,7 @@ void LcioReader::Process(){
                iso_values[i_iso] = track_info->getDoubleVal(i_iso);
             }
             track_time.push_back(track_info->getFloatVal(0));
-            if(track_info->getNFloat() == 4) {
+            if(track_info->getNFloat() >= 4) {
                track_px.push_back(track_info->getFloatVal(1));
                track_py.push_back(track_info->getFloatVal(2));
                track_pz.push_back(track_info->getFloatVal(3));

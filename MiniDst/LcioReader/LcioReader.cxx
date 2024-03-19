@@ -895,11 +895,6 @@ void LcioReader::Process(){
                track_px.push_back(track_info->getFloatVal(1));
                track_py.push_back(track_info->getFloatVal(2));
                track_pz.push_back(track_info->getFloatVal(3));
-//               double pt = sqrt(track_info->getFloatVal(1)*track_info->getFloatVal(1)+
-//                                      track_info->getFloatVal(2)*track_info->getFloatVal(2)+
-//                                      track_info->getFloatVal(3)*track_info->getFloatVal(3));
-//               double magfield = pt*track_state->getOmega();
-//               cout << "Magfield: " << magfield << "  in SI: " << magfield/2.99792458e-4 << endl;
             }else {
                track_px.push_back(-999.);
                track_py.push_back(-999.);

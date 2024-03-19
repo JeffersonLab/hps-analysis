@@ -32,7 +32,7 @@
 
 #include "MiniDst.h"
 
-#define __LCIOReader__Version__ "1.1.0"
+#define __LCIOReader__Version__ "1.1.1"
 using namespace std;
 
 // Collection in May 2021 versions of the 2019 data with both KF and GBL tracking.

@@ -856,7 +856,8 @@ void LcioReader::Process(){
          }
 
          const EVENT::TrackState *track_state
-               = lcio_track->getTrackState(EVENT::TrackState::AtCalorimeter);
+               = lcio_track->getTrackState(EVENT::TrackState::LastLocation);
+              // = lcio_track->getTrackState(EVENT::TrackState::AtCalorimeter);
          if (track_state) {
             const float *ecal_pos = track_state->getReferencePoint();
             track_x_at_ecal.push_back(ecal_pos[1]);  // Note: Un-rotate from tracking coordinate system.

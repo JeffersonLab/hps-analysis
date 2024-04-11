@@ -856,8 +856,8 @@ void LcioReader::Process(){
          }
 
          const EVENT::TrackState *track_state
-               = lcio_track->getTrackState(EVENT::TrackState::LastLocation);
-              // = lcio_track->getTrackState(EVENT::TrackState::AtCalorimeter);
+              // = lcio_track->getTrackState(EVENT::TrackState::LastLocation);
+              = lcio_track->getTrackState(EVENT::TrackState::AtCalorimeter);
          if (track_state) {
             const float *ecal_pos = track_state->getReferencePoint();
             track_x_at_ecal.push_back(ecal_pos[1]);  // Note: Un-rotate from tracking coordinate system.
@@ -917,11 +917,12 @@ void LcioReader::Process(){
          }
          track_isolation.push_back(iso_values);
 
+         EVENT::TrackerHitVec tracker_hits = lcio_track->getTrackerHits();
+         track_n_hits.push_back(tracker_hits.size());
+
          if(use_svt_hits ) {
             // Get the collection of 3D hits associated with a LCIO Track
-            EVENT::TrackerHitVec tracker_hits = lcio_track->getTrackerHits();
 
-            track_n_hits.push_back(tracker_hits.size());
             vector<int> svt_hits;
             svt_hits.reserve(tracker_hits.size());
             for (int i_trk = 0; i_trk < tracker_hits.size(); ++i_trk) {

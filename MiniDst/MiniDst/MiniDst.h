@@ -357,9 +357,9 @@ public:
    vector<double> track_x_at_lasthit; /** The x position of the extrapolated track at last hit */
    vector<double> track_y_at_lasthit; /** The y position of the extrapolated track at last hit */
    vector<double> track_z_at_lasthit; /** The z position of the extrapolated track at last hit */
-   vector<double> track_px_at_lasthit; /** 3 momentum at last hit obtained from the reference point. **/
-   vector<double> track_py_at_lasthit; /** This requires a hack on hps-java **/
-   vector<double> track_pz_at_lasthit;
+   //vector<double> track_px_at_lasthit; /** 3 momentum at last hit obtained from the reference point. **/
+   //vector<double> track_py_at_lasthit; /** This requires a hack on hps-java **/
+   //vector<double> track_pz_at_lasthit;
 
    vector<double> track_omega_at_lasthit;
    vector<double> track_tan_lambda_at_lasthit;

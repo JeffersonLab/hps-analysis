@@ -841,14 +841,14 @@ void LcioReader::Process(){
                float tanlambda = track_state->getTanLambda();
                float z0 = track_state->getZ0();
                float d0 = track_state->getD0();
-               const float *mom_at_lasthit = lcio_track->getReferencePoint();
+               // const float *mom_at_lasthit = lcio_track->getReferencePoint();  // This is not correct to vanilla hps-java output.
                // cout << "o,p,t,z: " << omega << ", " << phi << ", " << tanlambda << ", " << z0 << endl;
                track_x_at_lasthit.push_back(hit_pos[0]);  // Note: these are not rotated, they were put in detector
                track_y_at_lasthit.push_back(hit_pos[1]);  //       coordinates before being written to file.
                track_z_at_lasthit.push_back(hit_pos[2]);
-               track_px_at_lasthit.push_back(mom_at_lasthit[0]);
-               track_py_at_lasthit.push_back(mom_at_lasthit[1]);
-               track_pz_at_lasthit.push_back(mom_at_lasthit[2]);
+               //track_px_at_lasthit.push_back(mom_at_lasthit[0]);
+               //track_py_at_lasthit.push_back(mom_at_lasthit[1]);
+               //track_pz_at_lasthit.push_back(mom_at_lasthit[2]);
                track_omega_at_lasthit.push_back(omega);
                track_phi0_at_lasthit.push_back(phi);
                track_tan_lambda_at_lasthit.push_back(tanlambda);
@@ -858,9 +858,9 @@ void LcioReader::Process(){
                track_x_at_lasthit.push_back(-9999.);
                track_y_at_lasthit.push_back(-9999.);
                track_z_at_lasthit.push_back(-9999.);
-               track_px_at_lasthit.push_back(-9999.);
-               track_py_at_lasthit.push_back(-9999.);
-               track_pz_at_lasthit.push_back(-9999.);
+               //track_px_at_lasthit.push_back(-9999.);
+               //track_py_at_lasthit.push_back(-9999.);
+               //track_pz_at_lasthit.push_back(-9999.);
                track_omega_at_lasthit.push_back(-9999.);
                track_phi0_at_lasthit.push_back(-9999.);
                track_tan_lambda_at_lasthit.push_back(-9999.);

@@ -43,6 +43,7 @@ using Multi_Branch = std::map<std::string, Multi_Value>;
 // Same structure/union for 2019 trigger as EVIOTool::TSBank
 //
 using namespace std;
+
 using TriggerBits_t  = struct{  // Trigger structure for the 2019 data set.
    bool Single_0_Top: 1; //  0   ( 150-8191) MeV (-31,31)   Low energy cluster
    bool Single_1_Top: 1; //  1   ( 300-3000) MeV (  5,31)   e+

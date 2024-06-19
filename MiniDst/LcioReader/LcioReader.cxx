@@ -7,10 +7,15 @@
 ///
 #include "LcioReader.h"
 
-LcioReader::LcioReader(const string &input_file) {
+LcioReader::LcioReader(const string &input_file, const int debug_level) {
+   md_Debug = debug_level;
+   cout << "LcioReader Debug level is " << md_Debug << std::endl;
    if(!input_file.empty()) input_files.push_back(input_file);
 };
-LcioReader::LcioReader(const vector<string> &infile_list) {
+
+LcioReader::LcioReader(const vector<string> &infile_list, const int debug_level){
+   md_Debug = debug_level;
+   cout << "LcioReader Debug level is " << md_Debug << std::endl;
    for(auto f : infile_list){
       input_files.push_back(f);
    }
@@ -26,7 +31,7 @@ LcioReader::LcioReader(const vector<string> &infile_list) {
 
 void LcioReader::Start(){
    if( md_Debug>0 ) {
-      printf("LCIO READER version " __LCIOReader__Version__ "\n");
+      printf("LCIO READER version " LCIOReader__Version__ "\n");
    }
    MiniDst::Start();
 }
@@ -54,10 +59,13 @@ void LcioReader::Clear(){
 void LcioReader::SetupLcioDataType(){
    // Read the LCIO file and determine what capabilities it has.
    // Set appropriate flags accordingly.
+
    if(input_files.empty()){
       cout << "No input files. Cannot initialize. \n";
       return;
    }
+
+   run_number = lcio_event->getRunNumber();
 
    if (md_Debug & kDebug_L1) cout << "Setting up the LCIO data. \n";
    if (!data_type_is_known) { // Determine the data type by looking at the collections
@@ -66,13 +74,14 @@ void LcioReader::SetupLcioDataType(){
       }
       else if (run_number < 9000) { // The 2015 or 2016 engineering runs.
          is_2016_data = true;
-         if (md_Debug & kInfo) cout << "LCIO -> This is 2015/2016 data. \n";
+         if(magnetic_field < 0.0001) magnetic_field = 0.523400;  // Field strength in Tesla for 2016 run.
+         if (md_Debug & kDebug_Info) cout << "LCIO -> This is 2015/2016 data. Field set to " << magnetic_field << "T.\n";
       } else if (run_number <= 10750) { // 2019 physics run
          is_2019_data = true;
-         if (md_Debug & kInfo) cout << "LCIO -> This is 2019 data. \n";
+         if (md_Debug & kDebug_Info) cout << "LCIO -> This is 2019 data. \n";
       } else if (run_number > 10750) { // 2019 physics run
          is_2019_data = true;             // 2021 data behaves the same as 2019 data. (?)
-         if (md_Debug & kInfo) cout << "LCIO -> This is 2021 data. \n";
+         if (md_Debug & kDebug_Info) cout << "LCIO -> This is 2021 data. \n";
       }
 
       col_names = lcio_event->getCollectionNames();
@@ -86,21 +95,21 @@ void LcioReader::SetupLcioDataType(){
 // help us determine what type of data we are looking at.
 //                    if( s == "TriggerBank"){
 //                        is_2016_data = true;
-//                        if(md_Debug & kInfo) cout << "LCIO -> This is 2015/2016 data. \n";
+//                        if(md_Debug & kDebug_Info) cout << "LCIO -> This is 2015/2016 data. \n";
 //                    }
 //                    if( s == "TSBank"){
 //                        is_2019_data = true;
 //                        is_2016_data = false;
-//                        if(md_Debug & kInfo) cout << "LCIO -> This is 2019 data. \n";
+//                        if(md_Debug & kDebug_Info) cout << "LCIO -> This is 2019 data. \n";
 //                    }
       if (has_collection("MCParticle")) {
          is_MC_data = true;
-         if (md_Debug & kInfo) cout << "LCIO -> This is Monte Carlo data. \n";
+         if (md_Debug & kDebug_Info) cout << "LCIO -> This is Monte Carlo data. \n";
          // Check the scoring planes.
          for(int i=0; i< scoring_planes.size(); ++i){
             if( !has_collection(scoring_planes[i].c_str())){
                scoring_planes_active[i] = false;
-               if(md_Debug & kInfo) cout << "Scoring plane " << scoring_planes[i] << " not found. Turned off.\n";
+               if(md_Debug & kDebug_Warning) cout << "Scoring plane " << scoring_planes[i] << " not found. Turned off.\n";
             }
          }
       }else{
@@ -114,7 +123,7 @@ void LcioReader::SetupLcioDataType(){
       }else{
          has_rf_hits = false;
          if(!is_MC_data){
-            cout << "WARNING: The LCIO file does not have RF Hits. Turning of RFHit reading.\n";
+            if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have RF Hits. Turning of RFHit reading.\n";
          }
       }
 
@@ -129,48 +138,50 @@ void LcioReader::SetupLcioDataType(){
       /////////////////////////////////////////////////////////////////////////////////////////////////
 
       if (use_ecal_hits && !has_collection("EcalCalHits")) {
-         cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit reading. \n";
+         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit reading. \n";
          use_ecal_hits = false;
       }
 
       if (use_ecal_hits && use_ecal_hits_truth && !has_collection("EcalHits")) {
-         cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit reading. \n";
+         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit reading. \n";
          use_ecal_hits_truth = false;
       }
 
 
       if (use_ecal_cluster && !has_collection("EcalClustersCorr")) {
-         cout << "WARNING: The LCIO file does not have EcalClustersCorr. Turning of ECal cluster reading. \n";
+         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have EcalClustersCorr. Turning of ECal cluster reading. \n";
          use_ecal_cluster = false;
       }
 
       if (use_ecal_cluster_uncor && !has_collection("EcalClusters")) {
-         cout << "WARNING: The LCIO file does not have EcalClusters. Turning of ECal cluster reading. \n";
+         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have EcalClusters. Turning of ECal cluster reading. \n";
          use_ecal_cluster_uncor = false;
       }
 
       if (use_hodo_hits && !has_collection("HodoCalHits")) {
-         cout << "WARNING: The LCIO file does not have HodoCalHits. Turning of Hodoscope hit reading. \n";
+         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have HodoCalHits. Turning of Hodoscope hit reading. \n";
          use_hodo_hits = false;
       }
 
       if (use_hodo_clusters && !has_collection("HodoGenericClusters")) {
-         cout << "WARNING: The LCIO file does not have HodoGenericClusters. Turning of Hodoscope cluster reading. \n";
+         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have HodoGenericClusters. Turning of Hodoscope cluster reading. \n";
          use_hodo_clusters = false;
       }
 
       if (use_svt_raw_hits && (!has_collection("SVTRawTrackerHits") ||
                                !has_collection("SVTShapeFitParameters") ||
                                !has_collection("SVTFittedRawTrackerHits"))) {
-         cout << "WARNING: The LCIO file does not have SVTRawTrackerHits or " <<
-              "SVTShapeFitParameters or SVTFittedRawTrackerHits.\n";
-         cout << "         Turning of SVT raw hit writing. \n";
+         if(md_Debug & kDebug_Warning) {
+            cout << "WARNING: The LCIO file does not have SVTRawTrackerHits or " <<
+                 "SVTShapeFitParameters or SVTFittedRawTrackerHits.\n";
+            cout << "         Turning of SVT raw hit writing. \n";
+         }
          use_svt_raw_hits = false;
       }
 
       if (use_svt_hits && !(has_collection("RotatedHelicalTrackHits") ||
                             has_collection("StripClusterer_SiTrackerHitStrip1D"))) {
-         cout << "WARNING: The LCIO file does not have RotatedHelicalTrackHits. Turning of svt 3D hit writing. \n";
+         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have RotatedHelicalTrackHits. Turning of svt 3D hit writing. \n";
          use_svt_hits = false;
       } else {
          if (has_collection("StripClusterer_SiTrackerHitStrip1D"))
@@ -179,17 +190,17 @@ void LcioReader::SetupLcioDataType(){
             svt_hit_collections.push_back("RotatedHelicalTrackHits");
       }
       if ((use_kf_tracks || use_kf_particles) && !has_collection("KalmanFullTracks")) {
-         cout << "WARNING: The LCIO file does not have KalmanFullTracks. Turning of KF track writing. \n";
+         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have KalmanFullTracks. Turning of KF track writing. \n";
          use_kf_tracks = false;
          use_kf_particles = false;
       }
       if ((use_gbl_tracks || use_gbl_particles) && !has_collection("GBLTracks")) {
-         cout << "WARNING: The LCIO file does not have GBLTracks. Turning of GBL track writing. \n";
+         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have GBLTracks. Turning of GBL track writing. \n";
          use_gbl_tracks = false;
          use_gbl_particles = false;
       }
       if (use_matched_tracks && !has_collection("MatchedTracks")) {
-         cout << "WARNING: The LCIO file does not have MatchedTracks. Turning of matched track writing. \n";
+         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have MatchedTracks. Turning of matched track writing. \n";
          use_matched_tracks = false;
       }
       for (auto type = particle_types_single.begin(); type< particle_types_single.end(); ++type) {
@@ -198,7 +209,7 @@ void LcioReader::SetupLcioDataType(){
             cout << "Checking for " << collection_name << " in lcio file.\n";
          }
          if(!has_collection(collection_name.c_str())){
-            cout << "WARNING: The LCIO file does not have " << collection_name <<". Removing from list.\n";
+            if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have " << collection_name <<". Removing from list.\n";
             // See https://www.techiedelight.com/remove-elements-vector-inside-loop-cpp
             // We need to make sure the iterator is not invalidated by the erase.
             particle_types_single.erase(type--);
@@ -210,7 +221,7 @@ void LcioReader::SetupLcioDataType(){
             cout << "Checking for " << collection_name << " in lcio file.\n";
          }
          if(!has_collection(collection_name.c_str())){
-            cout << "WARNING: The LCIO file does not have " << collection_name <<". Removing from list.\n";
+            if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have " << collection_name <<". Removing from list.\n";
             // See https://www.techiedelight.com/remove-elements-vector-inside-loop-cpp
             // We need to make sure the iterator is not invalidated by the erase.
             particle_types_double.erase(type--);
@@ -847,6 +858,9 @@ void LcioReader::Process(){
                track_x_at_lasthit.push_back(-9999.);
                track_y_at_lasthit.push_back(-9999.);
                track_z_at_lasthit.push_back(-9999.);
+               track_px_at_lasthit.push_back(-9999.);
+               track_py_at_lasthit.push_back(-9999.);
+               track_pz_at_lasthit.push_back(-9999.);
                track_omega_at_lasthit.push_back(-9999.);
                track_phi0_at_lasthit.push_back(-9999.);
                track_tan_lambda_at_lasthit.push_back(-9999.);
@@ -882,30 +896,54 @@ void LcioReader::Process(){
             IMPL::LCGenericObjectImpl *track_info =
                   static_cast<IMPL::LCGenericObjectImpl *>(track_data_list.at(0));
 
-            track_state
-                  = lcio_track->getTrackState(EVENT::TrackState::AtIP);
+//            track_state
+//                  = lcio_track->getTrackState(EVENT::TrackState::AtIP);
+
+            double px{-999.}, py{-999.}, pz{-999.};
 
             // Sanity check...
             if (track_is_gbl && (track_info->getNDouble() < 12 || track_info->getNDouble() > 14 ||  /* 2016 or 2019 */
                                  track_info->getNFloat() < 4   || track_info->getNInt() < 1) ||
                 track_is_kf &&  (track_info->getNFloat() < 4 || track_info->getNInt() < 1) ){
-               cout << "Dude, you got messed up SVT tracking data!\n";
+               static int n_warning{0};
+
+               if(n_warning < 2) {  // Only show this warning twice.
+                  if(md_Debug & kDebug_Warning) {
+                     std::cout << "Dude! This looks like an old SLCIO file. track_info->getNFloat() = "
+                               << track_info->getNFloat() << "\n";
+                     std::cout << "Using magnetic field strength of " << magnetic_field << " to calculate px,py,pz "
+                               << std::endl;
+                  }
+                  n_warning++;
+               }
+               // Compute the px, py, pz component from the magnetic field and the tracking parameters. See hps-java TrackUtils.java
+               double omega = lcio_track->getOmega();
+               if (abs(omega) < 0.0000001) {
+                  omega = 0.0000001;
+               }
+               double Pt = abs((1. / omega) * magnetic_field * 2.99792458E-4);
+               // Get px, py, pz already taking into account the tracking coordinate to detector coordinate conversion.
+               pz = Pt * cos(lcio_track->getPhi());
+               px = Pt * sin(lcio_track->getPhi());
+               py = Pt * lcio_track->getTanLambda();
             }
 
             for (int i_iso = 0; i_iso < track_info->getNDouble(); ++i_iso) {
                iso_values[i_iso] = track_info->getDoubleVal(i_iso);
             }
             track_time.push_back(track_info->getFloatVal(0));
-            if(track_info->getNFloat() >= 4) {
-               track_px.push_back(track_info->getFloatVal(1));
-               track_py.push_back(track_info->getFloatVal(2));
-               track_pz.push_back(track_info->getFloatVal(3));
-            }else {
-               track_px.push_back(-999.);
-               track_py.push_back(-999.);
-               track_pz.push_back(-999.);
-            }
             track_volume.push_back(track_info->getIntVal(0));
+
+            if(track_info->getNFloat() >= 4) {
+               px = track_info->getFloatVal(1);
+               py = track_info->getFloatVal(2);
+               pz = track_info->getFloatVal(3);
+            }
+            track_px.push_back(px);
+            track_py.push_back(py);
+            track_pz.push_back(pz);
+
+
          } else {
             if(track_is_gbl) cout << "Track without TrackData for type GBL\n";
             if(track_is_kf) cout << "Track without KFTrackData for type KF\n";

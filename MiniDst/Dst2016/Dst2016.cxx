@@ -58,7 +58,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
         Abort("Bad event");
         return false;
     }
-    if( (evt_count++ % fCounter_Freq ) == 0) {
+    if( md_Debug>0 && ((evt_count++ % fCounter_Freq ) == 0)) {
         printf("i: %9ld  event: %9d  fChain evt: %9lld  output evt: %9lld\n", evt_count, event->getEventNumber(),
                 fChain->GetReadEntry(), md_output_tree->GetEntries());
     }
@@ -173,7 +173,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
         }
     }
 
-    if(use_kf_tracks){
+    if(use_kf_tracks || use_gbl_tracks){
 #ifdef DEBUG
         // Does EVERY GBL track have a valid SEED?
         for(int i=0;i < GetNumberOfGblTracks(); ++i) {
@@ -236,12 +236,28 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             std::vector<double> phis(track->phi_kinks, track->phi_kinks + 14);
             track_lambda_kinks.push_back(lambdas);
             track_phi_kinks.push_back(phis);
-            track_gbl_ref.push_back(i);      // Reference yourself.
+
+           double omega = track->omega;
+           if (abs(omega) < 0.0000001) {
+              omega = 0.0000001;
+           }
+           double Pt = abs((1. / omega) * 0.523400 * 2.99792458E-4); // 2016 magfield was 0.523400 Tesla
+           // Get px, py, pz already taking into account the tracking coordinate to detector coordinate conversion.
+           double pz = Pt * cos(track->phi0);
+           double px = Pt * sin(track->phi0);
+           double py = Pt * track->tan_lambda;
+
+           track_px.push_back(px);
+           track_py.push_back(py);
+           track_pz.push_back(pz);
+
+
+           track_gbl_ref.push_back(i);      // Reference yourself.
             track_ref.push_back(-1);         // Set to invalid. Fill this later when/if processing seed tracks.
         }
     }
 
-    if(use_kf_tracks){
+    if(use_kf_tracks || use_gbl_tracks){
         for(int i=0;i < GetNumberOfTracks(); ++i) {
             SvtTrack *track = GetTrack(i);
             vector<double> iso(track->isolation, track->isolation + 14);
@@ -262,7 +278,21 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             track_y_at_ecal.push_back(track->y_at_ecal);
             track_z_at_ecal.push_back(track->z_at_ecal);
 
-            // Match the svt_hits to the hits on track
+           double omega = track->omega;
+           if (abs(omega) < 0.0000001) {
+              omega = 0.0000001;
+           }
+           double Pt = abs((1. / omega) * 0.523400 * 2.99792458E-4); // 2016 magfield was 0.523400 Tesla
+           // Get px, py, pz already taking into account the tracking coordinate to detector coordinate conversion.
+           double pz = Pt * cos(track->phi0);
+           double px = Pt * sin(track->phi0);
+           double py = Pt * track->tan_lambda;
+
+           track_px.push_back(px);
+           track_py.push_back(py);
+           track_pz.push_back(pz);
+
+           // Match the svt_hits to the hits on track
             if (use_svt_hits) {
                 for (int j = 0; j < track->svt_hits->GetEntries(); ++j) {
                     SvtHit *svt_hit = (SvtHit *) track->svt_hits->At(j);
@@ -318,10 +348,10 @@ Bool_t  Dst2016::Process(Long64_t entry) {
     }
 
     // Single Track Particles.
-    for( auto type: particle_types_single) {
+    for( auto type: particle_types_single_dst2016) {
         for (int i = 0; i < GetNumberOfParticles(HpsParticle::ParticleType(type)); ++i) {
             HpsParticle *hps_part = GetParticle(HpsParticle::ParticleType(type), i);
-            part.type.push_back( int(type));
+            part.type.push_back( particle_type_translate_dst2016_to_minidst.at(type));
             part.energy.push_back(hps_part->energy);
             part.pdg.push_back(hps_part->pdg);
             part.charge.push_back(hps_part->charge);
@@ -382,10 +412,19 @@ Bool_t  Dst2016::Process(Long64_t entry) {
     }
 
     // Double Track Particles, i.e.  Constrained V0 Candidates.
-    for(int type: particle_types_double) {
+    for(int type: particle_types_double_dst2016) {
+        bool is_moller_type = (type >= 4 && type <= 6);
         for (int i = 0; i < GetNumberOfParticles(HpsParticle::ParticleType(type)); ++i) {
             HpsParticle *hps_vert_part = GetParticle(HpsParticle::ParticleType(type), i);
-            v0.type.push_back( int(type));
+           if (hps_vert_part->n_daughters != 2) {
+#ifdef DEBUG
+              std::cout << "Weird, but I expected 2 and only 2 daughters, but got " << hps_vert_part->n_daughters
+                        << std::endl;
+#endif
+              continue;
+           }
+
+            v0.type.push_back(particle_type_translate_dst2016_to_minidst.at(type));
             v0.energy.push_back(hps_vert_part->energy);
             v0.mass.push_back(hps_vert_part->getMass());
             v0.pdg.push_back(hps_vert_part->pdg);
@@ -402,16 +441,12 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             v0.vertex_z.push_back(hps_vert_part->vtx_z);
             v0.vertex_chi2.push_back(hps_vert_part->vtx_fit_chi2);
 
-#ifdef DEBUG
-            if (hps_vert_part->n_daughters != 2)
-                std::cout << "Weird, but I expected 2 and only 2 daughters, but got " << hps_vert_part->n_daughters << std::endl;
-#endif
             /// The following is for convenience in analysis.
             /// Here we identify the electron and positron that make the V0 particle, and fill
             /// some useful quantities for each:  chi2 of track, goodness_of_pid, track time, cluster time.
             //
             // Todo: This code can be prettified: the em and ep code duplicates and could done with a struct instead.
-            if (hps_vert_part->n_daughters > 1) {
+            if (hps_vert_part->n_daughters == 2) {
                 auto *particle_at0 = dynamic_cast<HpsParticle *>(hps_vert_part->getParticles()->At(0)); // getParticles returns TRefArray.
                 auto *particle_at1 = dynamic_cast<HpsParticle *>(hps_vert_part->getParticles()->At(1));
                 int found_idx_em = -99;
@@ -451,7 +486,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                 for (int idx = 0; idx < GetNumberOfParticles(HpsParticle::FINAL_STATE_PARTICLE); ++idx) {
                     HpsParticle *fs_part = GetParticle(HpsParticle::FINAL_STATE_PARTICLE, idx);
                     if (particle_at0 == fs_part || particle_at1 == fs_part) {
-                        if(fs_part->getPDG() == 11) {  // Particle is an electron.
+                        if(fs_part->getPDG() == 11 && found_idx_em < 0) {  // Particle is an electron, and not yet found.
                             found_idx_em = idx;
                             TRefArray *track_refs = fs_part->getTracks();
                             if(track_refs->GetEntries() == 0){  // no track?
@@ -478,7 +513,9 @@ Bool_t  Dst2016::Process(Long64_t entry) {
 
                             TRefArray *cluster_refs = fs_part->getClusters();
                             if( cluster_refs->GetEntries() == 0){
+#ifdef DEBUG
                                 cout << "Weird electron without a cluster-ref!\n";
+#endif
                             }else{
 #ifdef DEBUG
                                 if(cluster_refs->GetEntries()>1){
@@ -505,7 +542,10 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                             }
                             found_em_good_pid = fs_part->getGoodnessOfPID();
 
-                        }else if(fs_part->getPDG() == -11){  // Particle is a positron.
+                        }else if( (fs_part->getPDG() == -11 && !is_moller_type) ||
+                              ( (fs_part->getPDG() == 11 && is_moller_type && found_idx_em>=0))){
+                           // The other particle is a positron, or for Moller the other particle is an electron,
+                           // and an electron was already found.
                             found_idx_ep = idx;
                             TRefArray *track_refs = fs_part->getTracks();
                             if(track_refs->GetEntries() == 0){
@@ -530,11 +570,13 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                             }
                             TRefArray *cluster_refs = fs_part->getClusters();
                             if( cluster_refs->GetEntries() == 0){
-                                cout << "Weird positron without a cluster-ref!\n";
+#ifdef DEBUG
+                                cout << "Weird, positron without a cluster-ref!\n";
+#endif
                             }else{
 #ifdef DEBUG
                                 if(cluster_refs->GetEntries()>1){
-                                    cout << "Weird positron with more than one cluster!! \n";
+                                    cout << "Weird, positron with more than one cluster!! \n";
                                 }
 #endif
                                 EcalCluster *clust = (EcalCluster *)cluster_refs->At(0) ;
@@ -566,7 +608,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
                 if( found_idx_em == found_idx_ep || found_idx_em <0 || found_idx_ep <0 ){
                     std::cout << "Problem with particle. The e+ or e- was not found, or e+ == e- \n";
                 }
-                if( part.charge[found_idx_em]>0 || part.charge[found_idx_ep]<0 ){
+                if( !is_moller_type && (part.charge[found_idx_em]>0 || part.charge[found_idx_ep]<0) ){
                     std::cout << "Problem with particle: e- has +charge or e+ has -charge.\n";
                 }
                 if( track_chi2[part.track[found_idx_em]] != found_em_chi2){
@@ -696,7 +738,7 @@ void Dst2016::Terminate() {
     if(md_Debug & MiniDst::kDebug_L1) cout << "Dst2016::Terminate() \n";
 
     TList *list=GetOutputList();
-    if(md_Debug & MiniDst::kDebug_L1) cout << "The list has "<< list->GetEntries() << " entries \n";
+    if(md_Debug & MiniDst::kDebug_L2) cout << "The list has "<< list->GetEntries() << " entries \n";
 
     // Write the contends to a file/
     if(md_Debug & MiniDst::kDebug_L1) cout << "Writing output file: " << md_output_file_name << endl;

@@ -311,7 +311,7 @@ void MiniDst::SetBranchMap() {
    // Create the output TTree
    if (!md_output_file) {
       if (md_Debug & kDebug_Info) std::cout << "Opening output file: " << md_output_file_name << std::endl;
-      md_output_file = new TFile(md_output_file_name.data(), "RECREATE");
+      md_output_file = new TFile(md_output_file_name.data(), "RECREATE","MiniDST");
    } else std::cout << "The output file should not be open already!\n\n\n\n";
 
    md_output_tree = new TTree("MiniDST", "HPS mini-DST");
@@ -417,7 +417,13 @@ void MiniDst::Process() {
    // For vanilla MiniDst there is nothing to process.
 }
 
-void MiniDst::End(){
-   md_output_file->Write();
-   md_output_file->Close();
+void MiniDst::End() {
+   if (md_output_file->IsOpen()) {
+      if (!md_output_file->IsWritable()) {
+         cout << "End -- file is open but not writable!!??\n";
+      } else {
+         md_output_file->Write();
+         md_output_file->Close();
+      }
+   }
 }

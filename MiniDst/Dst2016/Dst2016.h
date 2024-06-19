@@ -37,6 +37,27 @@ public:
         md_Debug = level;
         fDebug=level;};
 
+   vector<int> particle_types_single_dst2016{HpsParticle::FINAL_STATE_PARTICLE, HpsParticle::OTHER_ELECTRONS};
+
+   // Yes vertex.
+   vector<int> particle_types_double_dst2016{HpsParticle::UC_V0_CANDIDATE, HpsParticle::BSC_V0_CANDIDATE,
+                                             HpsParticle::TC_V0_CANDIDATE, HpsParticle::UC_VC_CANDIDATE,
+                                             HpsParticle::UC_MOLLER_CANDIDATE, HpsParticle::BSC_MOLLER_CANDIDATE,
+                                             HpsParticle::TC_MOLLER_CANDIDATE};
+
+   const map<int, int> particle_type_translate_dst2016_to_minidst{
+         {HpsParticle::FINAL_STATE_PARTICLE, MiniDst::FINAL_STATE_PARTICLE_GBL}, // Note, no KF in dst2016
+         {HpsParticle::UC_V0_CANDIDATE, MiniDst::UC_V0_VERTICES_GBL},
+         {HpsParticle::BSC_V0_CANDIDATE, MiniDst::BSC_V0_VERTICES_GBL},
+         {HpsParticle::TC_V0_CANDIDATE, MiniDst::TC_V0_VERTICES_GBL},
+         {HpsParticle::UC_MOLLER_CANDIDATE, MiniDst::UC_MOLLER_VERTICES_GBL},
+         {HpsParticle::BSC_MOLLER_CANDIDATE, MiniDst::BSC_MOLLER_VERTICES_GBL},
+         {HpsParticle::TC_MOLLER_CANDIDATE, MiniDst::TC_MOLLER_VERTICES_GBL},
+         {HpsParticle::OTHER_ELECTRONS, MiniDst::OTHER_ELECTRONS_GBL},
+         {HpsParticle::UC_VC_CANDIDATE,MiniDst::UC_VC_VERTICES_GBL}
+   };
+
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winconsistent-missing-override"
 ClassDef(Dst2016, 1);

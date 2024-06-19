@@ -62,6 +62,8 @@ int main(int argc, char **argv){
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("no_gbl_particles","Do NOT store the GBL particles or vertexes.",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+         ("m,magfield","Magnetic field strength to use in Tesla to compute px,py,pz",
+               cxxopts::value<double>()->default_value("0."))
          ("M,no_mc_particles", "DO NOT Store MCParticles, even if they are in the input",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("x,use_mc_scoring", "Store extra MC output from scoring planes.",
@@ -108,6 +110,15 @@ int main(int argc, char **argv){
          cout << "Output: " << outfile << endl;
       }
 
+      int debug_code = 0;
+      if( debug <= 0) debug_code = 0;
+      if (debug == 1) debug_code = MiniDst::kDebug_Error + MiniDst::kDebug_Warning;
+      if (debug >= 2) debug_code += MiniDst::kDebug_Error + MiniDst::kDebug_Warning + MiniDst::kDebug_Info;
+      if (debug >= 3) debug_code += MiniDst::kDebug_L1;
+      if (debug >= 4) debug_code += MiniDst::kDebug_L2;
+      if (debug >= 5) debug_code += MiniDst::kDebug_L3;
+      if (debug >= 6) debug_code += MiniDst::kDebug_L4;
+
       MiniDst *dst{nullptr};
       bool is_dst_type = false;
       if( infiles.size()>0 && infiles[0].find(".root") != string::npos ) {
@@ -124,7 +135,9 @@ int main(int argc, char **argv){
             dst->use_mc_particles = true;
          }
       }else if( infiles.size()>0 && infiles[0].find(".slcio") != string::npos ) {
-         auto dstlcio = new LcioReader(infiles);
+         auto dstlcio = new LcioReader(infiles, debug_code);
+         if(args["magfield"].as<double>() > 0.) dstlcio->magnetic_field = args["magfield"].as<double>();
+
          dst = static_cast<MiniDst*>(dstlcio);
 
          // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
@@ -139,16 +152,7 @@ int main(int argc, char **argv){
          cout << "We need either an SLCIO file, or a DST2016 root file for input. \n Abort. \n";
          exit(1);
       }
-      int debug_code = 0;
-      if( debug <= 0){
-         debug_code = 0;
-      }else if (debug == 1){
-         debug_code = 0x0A;
-      }else{
-         debug_code = 0x0A + ( (debug-1) << 4);
-         printf("Debug code = 0x%02X \n",debug_code);
-      }
-      if(debug>0) cout << "Debug code = " << debug_code << endl;
+
       dst->SetDebugLevel(debug_code);
       dst->use_ecal_cluster = store_all || args["ecal_clusters"].as<bool>() || args["all_clusters"].as<bool>();
       dst->use_ecal_cluster_uncor = args["ecal_clusters_uncor"].as<bool>();

@@ -32,7 +32,7 @@
 
 #include "MiniDst.h"
 
-#define __LCIOReader__Version__ "1.1.1"
+#define LCIOReader__Version__ "1.2"
 using namespace std;
 
 // Collection in May 2021 versions of the 2019 data with both KF and GBL tracking.
@@ -94,11 +94,11 @@ class LcioReader : public MiniDst {
     };
 
 public:
-    explicit LcioReader(const string &input_file="");
-    explicit LcioReader(const vector<string> &infile_list);
+    explicit LcioReader(const string &input_file="", int debug_level=0x07);
+    explicit LcioReader(const vector<string> &infile_list, int debug_level=0x07);
     ~LcioReader() override = default;
 
-    static string _version_(){return(__LCIOReader__Version__);};
+    static string _version_(){return(LCIOReader__Version__);};
     void Clear() override;
     void Start() override;
     void SetupLcioDataType();
@@ -106,13 +106,13 @@ public:
     long Run(int max_event) override;
     void End() override;
 
-    virtual void Fill_Basic_Particle_From_LCIO(Basic_Particle_t *bp, EVENT::ReconstructedParticle *lcio_part,
+    void Fill_Basic_Particle_From_LCIO(Basic_Particle_t *bp, EVENT::ReconstructedParticle *lcio_part,
                                                bool fill_momentum=true);
-    virtual void Fill_Single_Particle_From_LCIO(Single_Particle_t *bp,EVENT::ReconstructedParticle *lcio_part, int type);
-    virtual void Fill_Vertex_From_LCIO(Vertex_Particle_t *bp,EVENT::Vertex *lcio_vert, int type);
-    virtual void Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::ReconstructedParticle *daughter, int type);
+    void Fill_Single_Particle_From_LCIO(Single_Particle_t *bp,EVENT::ReconstructedParticle *lcio_part, int type);
+    void Fill_Vertex_From_LCIO(Vertex_Particle_t *bp,EVENT::Vertex *lcio_vert, int type);
+    void Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::ReconstructedParticle *daughter, int type);
 
-    bool has_collection(const char *name){
+    bool has_collection(const char *name) const{
         return(std::find(col_names->begin(), col_names->end(), name) != col_names->end());}
 
 public:
@@ -128,6 +128,8 @@ public:
     bool is_2019_data{false};  // True for 2019 data: i.e. there is a TSBank and a VTPBank.
     bool is_MC_data{false};    // True is there is an MCParticles bank.
     bool has_rf_hits{true};
+
+    double magnetic_field{0.};
 
     /// Maps to help navigate the event.
     /// Set them up here so that they are available in different sections.

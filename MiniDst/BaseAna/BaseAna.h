@@ -22,7 +22,6 @@ using namespace std;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wconversion"
 #include <TROOT.h>
-#include <TProofServ.h>
 #include <TChain.h>
 #include <TFile.h>
 #include <TSelector.h>

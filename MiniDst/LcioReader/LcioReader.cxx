@@ -33,6 +33,20 @@ void LcioReader::Start(){
    if( md_Debug>0 ) {
       printf("LCIO READER version " LCIOReader__Version__ "\n");
    }
+   // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
+   // Also, this lets us remove any items from the branches that are not in the LCIO file.
+   if(input_files.empty()){
+      cout << "No input files. Cannot initialize. \n";
+      // TODO: We should throw an error here, or something.
+      return;
+   }
+
+   lcio_reader->open(input_files[0]);
+   lcio_event =lcio_reader->readNextEvent();
+   run_number = lcio_event->getRunNumber();
+   SetupLcioDataType();
+   lcio_reader->close();
+
    MiniDst::Start();
 }
 
@@ -59,15 +73,10 @@ void LcioReader::SetupLcioDataType(){
    // Read the LCIO file and determine what capabilities it has.
    // Set appropriate flags accordingly.
 
-   if(input_files.empty()){
-      cout << "No input files. Cannot initialize. \n";
-      return;
-   }
-
-   run_number = lcio_event->getRunNumber();
-
-   if (md_Debug & kDebug_L1) cout << "Setting up the LCIO data. \n";
    if (!data_type_is_known) { // Determine the data type by looking at the collections
+      if (md_Debug & kDebug_L1) cout << "Setting up the LCIO data. \n";
+
+      run_number = lcio_event->getRunNumber();
       if (run_number == 0){  // Some form of MC data, probably SLIC output (?)
          is_MC_data = true;
       }
@@ -102,8 +111,12 @@ void LcioReader::SetupLcioDataType(){
 //                        if(md_Debug & kDebug_Info) cout << "LCIO -> This is 2019 data. \n";
 //                    }
       if (has_collection("MCParticle")) {
-         is_MC_data = true;
          if (md_Debug & kDebug_Info) cout << "LCIO -> This is Monte Carlo data. \n";
+         if(use_mc_particles) is_MC_data = true;
+         else{
+            cout << "LCIO -> Monte Carle data, but no_mc_particle flag. MCParticles not written. \n";
+         }
+
          // Check the scoring planes.
          for(int i=0; i< scoring_planes.size(); ++i){
             if( !has_collection(scoring_planes[i].c_str())){
@@ -115,6 +128,7 @@ void LcioReader::SetupLcioDataType(){
          is_MC_data = false;
          use_mc_particles = false;
          use_mc_scoring = false;
+         use_ecal_hits_truth = false;
       }
 
       if(has_collection("RFHits")){
@@ -142,13 +156,13 @@ void LcioReader::SetupLcioDataType(){
       }
 
       if (use_ecal_hits && use_ecal_hits_truth && !has_collection("EcalHits")) {
-         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit reading. \n";
+         if( (md_Debug & kDebug_Warning) ) cout << "WARNING: The LCIO file does not have EcalHits. Ecal Hits Truth turned off.\n";
          use_ecal_hits_truth = false;
       }
 
 
       if (use_ecal_cluster && !has_collection("EcalClustersCorr")) {
-         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have EcalClustersCorr. Turning of ECal cluster reading. \n";
+         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have EcalClustersCorr. Turning of ECal corrected cluster reading. \n";
          use_ecal_cluster = false;
       }
 

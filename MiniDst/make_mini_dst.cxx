@@ -92,7 +92,6 @@ int main(int argc, char **argv){
       auto& all_tracks = args["all_tracks"].as<bool>();
       auto& kf_tracks = args["kf_tracks"].as<bool>();
       auto& matched_tracks = args["matched_tracks"].as<bool>();
-      auto& no_mc_particles = args["no_mc_particles"].as<bool>();
       auto& num_evt = args["num_evt"].as<long>();
       int debug = 0;
       if(args.count("quiet") == 0 ){
@@ -121,7 +120,7 @@ int main(int argc, char **argv){
 
       MiniDst *dst{nullptr};
       bool is_dst_type = false;
-      if( infiles.size()>0 && infiles[0].find(".root") != string::npos ) {
+      if( !infiles.empty() && infiles[0].find(".root") != string::npos ) {
          // The first file in the list has .root extension.
          is_dst_type = true;
          auto chain = new TChain("HPS_Event");
@@ -130,7 +129,7 @@ int main(int argc, char **argv){
          }
          auto dst2016 = new Dst2016(chain);
          dst = static_cast<MiniDst*>(dst2016);
-         if(dst2016->event->getNumberOfMCParticles() > 0 && !dst->use_mc_particles && !no_mc_particles){
+         if(dst2016->event->getNumberOfMCParticles() > 0 && !dst->use_mc_particles && !args["no_mc_particles"].as<bool>()){
             cout << "Warning: Input is MC Data, but write_mc_particles is not set. Turning on write_mc_particles!\n";
             dst->use_mc_particles = true;
          }
@@ -140,14 +139,14 @@ int main(int argc, char **argv){
 
          dst = static_cast<MiniDst*>(dstlcio);
 
-         // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
-         dstlcio->lcio_reader->open(infiles[0]);
-         auto lcio_event = dstlcio->lcio_reader->readNextEvent();
-         const vector<string> *col_names = lcio_event->getCollectionNames();
-
-         if( std::find(col_names->begin(), col_names->end(), "MCParticle") != col_names->end()
-             and !no_mc_particles) dst->use_mc_particles = true;
-         dstlcio->lcio_reader->close();
+//         // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
+//         dstlcio->lcio_reader->open(infiles[0]);
+//         auto lcio_event = dstlcio->lcio_reader->readNextEvent();
+//         const vector<string> *col_names = lcio_event->getCollectionNames();
+//
+//         if( std::find(col_names->begin(), col_names->end(), "MCParticle") != col_names->end()
+//             and !no_mc_particles) dst->use_mc_particles = true;
+//         dstlcio->lcio_reader->close();
       }else{
          cout << "We need either an SLCIO file, or a DST2016 root file for input. \n Abort. \n";
          exit(1);
@@ -170,6 +169,7 @@ int main(int argc, char **argv){
       dst->use_extra_tracks = args["extra_track"].as<bool>();
       dst->use_kf_particles = !args["no_kf_particles"].as<bool>();
       dst->use_gbl_particles = !args["no_gbl_particles"].as<bool>();
+      dst->use_mc_particles = !args["no_mc_particles"].as<bool>();
       dst->use_mc_scoring = args["use_mc_scoring"].as<bool>();
       dst->SetOutputFileName(outfile);
 

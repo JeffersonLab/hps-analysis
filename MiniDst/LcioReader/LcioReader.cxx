@@ -43,7 +43,6 @@ void LcioReader::Clear(){
    MiniDst::Clear();
 
    // Clear all the maps
-   // hodo_hit_to_index_map.clear();
    ecal_hit_to_index_map.clear();
    ecal_id0_to_hit_index.clear();
    ecal_cluster_to_index_map.clear();

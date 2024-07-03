@@ -154,6 +154,26 @@ public:
       UC_VC_VERTICES_GBL      = 8 + 9
    };
 
+   const vector<string> ParticleTypeNames{
+         "Final state particle KF",
+         "UC V0 vertex KF",
+         "BSC V0 vertex KF",
+         "TC V0 vertex KF",
+         "UC Moller vertex KF",
+         "BSC Moller vertex KF",
+         "TC Moller vertex KF",
+         "Other electron KF",
+         "UC VC vertex KF",
+         "Final state particle GBL",
+         "UC V0 vertex GBL",
+         "BSC V0 vertex GBL",
+         "TC V0 vertex GBL",
+         "UC Moller vertex GBL",
+         "BSC Moller vertex GBL",
+         "TC Moller vertex GBL",
+         "Other electron GBL",
+         "UC VC vertex GBL"
+   };
 public:
 
    unsigned int md_Debug{0x07};  // Start at Info+Warning+Error level.

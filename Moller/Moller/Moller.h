@@ -5,7 +5,7 @@
 #ifndef MOLLER_MOLLER_H
 #define MOLLER_MOLLER_H
 
-#define __MOLLER_VERSION__ "0.0.1"
+#define __MOLLER_VERSION__ "0.1.1"
 
 #include "TObject.h"
 #include "TChain.h"
@@ -29,10 +29,16 @@ public:
     void Setup();
     void Process();
     void Print(Option_t *opt = "");
-    RNode GetLastFilterNode() { return filters.back().node; };
+
+   RNode Pass(RNode in, bool exact = true);
+   RNode Cut_2_electrons(RNode in, bool exact = true);
+
+
+
     FilterStore &GetLastFilter() { return filters.back(); };
     FilterStore &GetFilter(unsigned int i) { return filters[i]; };
     FilterStore &GetFilter(std::string_view name) { return filters[filtermap[name]]; };
+    RNode GetLastFilterNode() { return filters.back().node; };
     RNode GetFilterNode(unsigned int i) { return filters[i].node; };
     RNode GetFilterNode(std::string_view name) { return filters[filtermap[name]].node; };
 

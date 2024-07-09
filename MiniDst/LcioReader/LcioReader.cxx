@@ -314,8 +314,8 @@ void LcioReader::Process(){
                = static_cast<EVENT::LCGenericObject *>(lcio_triggers->getElementAt(i));
          int nvalues = lcio_trig->getNInt();
          int test_val = lcio_trig->getIntVal(0);
-         if (md_Debug & kDebug_L1)
-            printf("Trigger int 0 = 0x%04x (%6d) has %2d int values\n",
+         if (md_Debug & kDebug_L4)
+            printf("Trigger int 0 = 0x%04x (%6d) has %2d int values.\n",
                    test_val, test_val, nvalues);
          if (test_val == 57610) { // Trigger bits are here.
             unsigned int trigger_bits = lcio_trig->getIntVal(1);

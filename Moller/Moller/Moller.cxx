@@ -160,6 +160,23 @@ RNode Moller::Refine_El_Pairs_2(RNode in, std::string in_name, std::string out_n
    return in.Define(out_name, track_tan_lambda_cut, {in_name, "part_py"});
 };
 
+RNode Moller::Refine_El_Pairs_3(RNode in, double min_theta, double max_theta,std::string in_name, std::string out_name){
+   // Cut on the sum of the theta angle for the tracks between min_theta and max_theta, see Bradley's thesis.
+
+   auto track_theta_cut = [min_theta, max_theta](std::vector< std::pair<int,int> > pairs, RVec<int> part_track, RVec<double> track_theta){
+      std::vector< std::pair<int,int> > out;
+      for(auto p: pairs){
+         double angle_sum = track_theta[part_track[p.first]] + track_theta[part_track[p.second]];
+         if( min_theta < angle_sum && angle_sum < max_theta){
+            out.push_back(p);
+         }
+      }
+      return out;
+   };
+
+   return in.Define(out_name, track_theta_cut, {in_name, "part_track", "track_theta"});
+}
+
 
 RNode Moller::Add_Moller_Inv_Mass(RNode in, std::string pair_name, std::string out_name){
    // Add the invariant mass for the two electrons in the event.

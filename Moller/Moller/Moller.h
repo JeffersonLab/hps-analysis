@@ -35,6 +35,7 @@ public:
    RNode Anti_Select_El_Pairs(RNode in, double time_cut=4., std::string out_name="electron_pairs");
    RNode Refine_El_Pairs_1(RNode in, double pmin=2.306*0.75, double pmax=2.306*1.15, std::string in_name="electron_pairs", std::string out_name="el_pairs_r1");
    RNode Refine_El_Pairs_2(RNode in, std::string in_name="el_pairs_r1", std::string out_name="el_pairs_r2");
+   RNode Refine_El_Pairs_3(RNode in, double mint_heta=0.04, double max_theta=0.048,std::string in_name="el_pairs_r2", std::string out_name="el_pairs_r3");
    RNode Cut_2_electrons(RNode in, bool exact = true);
 
    // Variadic function permits any number of arguments. Unfortunately, the RDataFrame.Define or .Filter do not work with this.

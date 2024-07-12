@@ -353,8 +353,8 @@ public:
    vector<double> svt_hit_edep;  // Energy deposit. Not is 2016 DST.
    vector<vector<int>> svt_hit_raw_index;
    vector<vector<int>> svt_hit_raw_other;
-   vector<vector<int>> svt_hit_layer;
-   vector<vector<int>> svt_hit_module;
+   vector<int> svt_hit_layer;
+   vector<int> svt_hit_module;
    vector<vector<int>> svt_hit_strip;
 
    // SVT Tracks

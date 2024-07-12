@@ -8,14 +8,14 @@
 #include "LcioReader.h"
 
 LcioReader::LcioReader(const string &input_file, const int debug_level) {
-   md_Debug = debug_level;
+   if(md_Debug > 0) md_Debug = debug_level;
    cout << "LcioReader Debug level is " << md_Debug << std::endl;
    if(!input_file.empty()) input_files.push_back(input_file);
 };
 
 LcioReader::LcioReader(const vector<string> &infile_list, const int debug_level){
    md_Debug = debug_level;
-   cout << "LcioReader Debug level is " << md_Debug << std::endl;
+   if(md_Debug > 0) cout << "LcioReader Debug level is " << md_Debug << std::endl;
    for(auto f : infile_list){
       input_files.push_back(f);
    }
@@ -697,8 +697,8 @@ void LcioReader::Process(){
             EVENT::LCObjectVec raw_hits = lcio_svt_hit->getRawHits();
             vector<int> raw_index;
             vector<int> raw_other;
-            vector<int> layer;
-            vector<int> module;
+            int layer;
+            int module;
             vector<int> strip;
             for (int i_hit = 0; i_hit < raw_hits.size(); ++i_hit) {
                auto lcio_raw_hit = static_cast<EVENT::TrackerRawData *>(raw_hits.at(i_hit));
@@ -726,12 +726,8 @@ void LcioReader::Process(){
                                  (ULong64_t(lcio_raw_hit->getCellID1()) << 32);
                raw_svt_hit_decoder.setValue(value);
 
-               //int system = raw_svt_hit_decoder["system"];
-               //int barrel = raw_svt_hit_decoder["barrel"];
-               layer.push_back(raw_svt_hit_decoder["layer"]);
-               module.push_back(raw_svt_hit_decoder["module"]);
-               //int sensor = raw_svt_hit_decoder["sensor"];
-               // int side = raw_svt_hit_decoder["side"];
+               layer = raw_svt_hit_decoder["layer"];
+               module = raw_svt_hit_decoder["module"];
                strip.push_back(raw_svt_hit_decoder["strip"]);
             }
             svt_hit_raw_index.push_back(raw_index);

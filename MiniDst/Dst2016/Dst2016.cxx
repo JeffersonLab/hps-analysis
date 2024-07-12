@@ -167,9 +167,7 @@ Bool_t  Dst2016::Process(Long64_t entry) {
             svt_hit_cyz.push_back(svthit->cyz);
             svt_hit_czz.push_back(svthit->czz);
             svt_hit_time.push_back(svthit->time);
-            vector<int> layer;
-            layer.push_back(svthit->layer);
-            svt_hit_layer.push_back(layer);
+            svt_hit_layer.push_back(svthit->layer);
         }
     }
 

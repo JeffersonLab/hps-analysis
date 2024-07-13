@@ -305,9 +305,11 @@ void LcioReader::Process(){
       EVENT::LCCollection *lcio_triggers
             = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("TriggerBank"));
       int n_trigger_banks = lcio_triggers->getNumberOfElements();
-      if (n_trigger_banks != 3) {
+      static int n_warning{0};
+      if (n_trigger_banks != 3 && n_warning < 3) {
          // There should be 3 banks from EVIO: 0xe10c (57612) 0xe10a (57610) and 0xe10f (57615)
-         cout << "Holy cow, there were inconsistent number of triggers in this event!";
+         cout << "Holy cow, there were inconsistent number of triggers in this event! Hmmm, could be MC.";
+         n_warning++;
       };
       for (int i = 0; i < n_trigger_banks; ++i) {
          EVENT::LCGenericObject *lcio_trig

@@ -12,8 +12,6 @@ Moller::Moller(std::string files) {
     }
 }
 
-
-
 void Moller::Setup() {
     ///
     /// Setup a standard analysis.

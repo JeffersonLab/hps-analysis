@@ -2,10 +2,15 @@
 // Created by Maurik Holtrop on 7/17/20.
 //
 
+// References:
+// "Resonance search analysis of 2016 HPS spring run data." Bump hunt folks, https://confluence.slac.stanford.edu/download/attachments/146715820/HPS_2016_Bump_Hunt_Internal_Note.pdf
+// "Search for a Heavy Photon in Electro-Produced e+e− Pairs with the HPS Experiment at JLab", Omar Moreno, Nathan Baltzell, Mathew Graham, John Jaros, https://confluence.slac.stanford.edu/download/attachments/146715820/engrun2015_resonance_search.pdf
+
+
 #ifndef MOLLER_MOLLER_H
 #define MOLLER_MOLLER_H
 
-#define __MOLLER_VERSION__ "0.2.0"
+#define __MOLLER_VERSION__ "0.3.0"
 
 #include "TObject.h"
 #include "TChain.h"
@@ -22,6 +27,16 @@ using RNode = ROOT::RDF::RNode;
 class Moller {
 
 public:
+
+   double e_time_cut_min{0.};
+   double e_time_cut_max{2.};
+   double E_beam{2.3};
+   double e_maximum_momentum{0.75*E_beam};  //
+   double ee_mom_sum_max{2.1};      // From 2016 note, table 8. Alternate is 1.18*E_beam
+   double ee_mom_sum_min{2.45};       // ... Alternate is 0.8*E_beam
+   double four_vector_rotation{-0.0302};
+
+
    Moller(std::string files = "");
 
    void Setup();

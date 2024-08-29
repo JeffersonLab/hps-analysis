@@ -190,15 +190,15 @@ RNode Moller::Add_Momentum_Sum(RNode in, std::string in_name, std::string out_na
    return in.Define(out_name, add_psum, {in_name, "part_px", "part_py", "part_pz"});
 }
 
-RNode Moller::Refine_El_Pairs_1(RNode in, double pmin, double pmax, std::string in_name, std::string out_name){
+RNode Moller::Refine_El_Pairs_1(RNode in, double pcut, double pmin, double pmax, std::string in_name, std::string out_name){
    // Momentum ( p_{1,2} > pmin) and momentum sum cut for the electron pairs found in "in_name" collection of pairs: pmin < p1+p2 < pmax
-   auto mom_sum_cut = [pmin, pmax](RVec< std::pair<int, int> > pairs, RVec<double> part_px, RVec<double> part_py, RVec<double> part_pz ){
+   auto mom_sum_cut = [pcut, pmin, pmax](RVec< std::pair<int, int> > pairs, RVec<double> part_px, RVec<double> part_py, RVec<double> part_pz ){
       RVec< std::pair<int,int> > out;
       for(auto p: pairs){
          TVector3 p1(part_px[p.first], part_py[p.first], part_pz[p.first]);
          TVector3 p2(part_px[p.second], part_py[p.second], part_pz[p.second]);
          double psum = (p1+p2).Mag();
-         if( p1.Mag() < pmin && p2.Mag() < pmin && pmin < psum && psum < pmax){
+         if( p1.Mag() < pcut && p2.Mag() < pcut && pmin < psum && psum < pmax){
             out.push_back(p);
          }
       }
@@ -230,7 +230,8 @@ RNode Moller::Refine_El_Pairs_2(RNode in, double phi_cut, std::string in_name, s
    auto track_tan_lambda_cut = [phi_cut](RVec<std::pair<int,int> > pairs, RVec<TLorentzVector> p4v1, RVec<TLorentzVector> p4v2){
       RVec< std::pair<int,int> > out;
       for(int i=0; i<pairs.size(); ++i){
-         double phi_diff = p4v1[i].Phi()-p4v2[i].Phi(); phi_diff = (phi_diff>0)?phi_diff: phi_diff+TMath::Pi();
+         double phi_diff = p4v1[i].Phi()-p4v2[i].Phi();
+         phi_diff = (phi_diff>0)?phi_diff: phi_diff+TMath::Pi();
          if( abs(phi_diff - TMath::Pi()/2) < phi_cut ){
             out.push_back(pairs[i]);
          }
@@ -275,6 +276,54 @@ RNode Moller::Refine_El_Pairs_X(RNode in, double min_theta, double max_theta, st
    return in.Define(out_name, track_theta_cut, {in_name, angle1, angle2});
 }
 
+RNode Moller::Refine_El_Pairs_X2(RNode in,std::string in_name, std::string out_name, bool isData){
+   // This is the cut that uses the fiducial cut on the tracks as defined in Omar's Analysis Note, Appendix F.
+   //
+   auto TrackIsFiducial = [isData](double tr_x, double tr_y) -> bool {
+      bool fiducial = false;
+      if (isData) {
+         if (tr_y > 0) {
+            if (tr_y < 42. && tr_y < 13 - 0.26 * tr_x && tr_y > 18 - 0.08 * tr_x &&
+                ((tr_x > -125. && tr_x < -95.) || (tr_x > -85 && tr_x < -55.))) {
+               fiducial = true;
+            }
+         } else if (tr_y < 0) {
+            if (tr_y < -23. && tr_y < -15. + 0.08 * tr_x && tr_y > -18. + 0.22 * tr_x &&
+                ((tr_x > -75. && tr_x < -45) || (tr_x > -110. && tr_x < -95.))) {
+               fiducial = true;
+            }
+         }
+      } else {
+         if (tr_y > 0) {
+            if (tr_y > 23. && tr_y > 15 - 0.1 * tr_x && tr_y < 12 - 0.3 * tr_x && ((tr_x > -75. && tr_x
+                                                                                                   < -50.) ||
+                                                                                   (tr_x > -130. && tr_x < -95))) {
+               fiducial = true;
+            }
+         } else if (tr_y < 0) {
+            if (tr_y < -22 && tr_y < -15 + 0.1 * tr_x && tr_y > -15 + 0.25 * tr_x &&
+                ((tr_x > -120. && tr_x < -94) || (tr_x > -75 && tr_x < -50.))) {
+               fiducial = true;
+            }
+         }
+      }
+      return fiducial;
+   };
+
+   auto TracksFiducialTest = [TrackIsFiducial]( RVec<std::pair<int,int> > pairs, RVec<double> track_x_at_ecal , RVec<double> track_y_at_ecal) {
+      RVec< std::pair<int,int> > out;
+      for(int i=0; i<pairs.size(); ++i){
+         if( TrackIsFiducial(track_x_at_ecal[pairs[i].first], track_y_at_ecal[pairs[i].first]) &&
+             TrackIsFiducial(track_x_at_ecal[pairs[i].second], track_y_at_ecal[pairs[i].second]) ){
+            out.push_back(pairs[i]);
+         }
+      }
+      return out;
+   };
+
+   return in.Define(out_name, TracksFiducialTest, {in_name, "track_x_at_ecal", "track_y_at_ecal"});
+
+}
 
 RNode Moller::Add_Moller_Inv_Mass(RNode in, std::string pair_name, std::string out_name){
    // Add the invariant mass for the two electrons in the event.

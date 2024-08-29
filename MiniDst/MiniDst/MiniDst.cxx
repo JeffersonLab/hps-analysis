@@ -427,3 +427,132 @@ void MiniDst::End() {
       }
    }
 }
+
+int MiniDst::Add_Ecal_Hit(MiniDst &event_in, int i_hit) {
+   /// Copy an ECal hit from event_in at i_hit and add it to the current MiniDst event.
+   ///
+   ecal_hit_energy.push_back(event_in.ecal_hit_energy[i_hit]);
+   ecal_hit_x.push_back(event_in.ecal_hit_x[i_hit]);
+   ecal_hit_y.push_back(event_in.ecal_hit_y[i_hit]);
+   ecal_hit_z.push_back(event_in.ecal_hit_z[i_hit]);
+   ecal_hit_time.push_back(event_in.ecal_hit_time[i_hit]);
+   ecal_hit_index_x.push_back(event_in.ecal_hit_index_x[i_hit]);
+   ecal_hit_index_y.push_back(event_in.ecal_hit_index_y[i_hit]);
+   return ecal_hit_energy.size()-1;
+}
+
+int MiniDst::Add_Ecal_Cluster(MiniDst &event_in, int i_cluster, bool also_copy_ecal_hits) {
+   /// Copy Ecal Cluster at i_cluster from event_in and add it to the current event.
+   /// This will also add the hits from ecal_hit_ associated with the cluster.
+   /// event_in = event to copy from
+   /// i_cluster = cluster number in that event.
+   ///
+   ecal_cluster_energy.push_back(event_in.ecal_cluster_energy[i_cluster]);
+   ecal_cluster_time.push_back(event_in.ecal_cluster_time[i_cluster]);
+   ecal_cluster_x.push_back(event_in.ecal_cluster_x[i_cluster]);
+   ecal_cluster_y.push_back(event_in.ecal_cluster_y[i_cluster]);
+   ecal_cluster_z.push_back(event_in.ecal_cluster_z[i_cluster]);
+   ecal_cluster_seed_ix.push_back(event_in.ecal_cluster_seed_ix[i_cluster]);
+   ecal_cluster_seed_iy.push_back(event_in.ecal_cluster_seed_iy[i_cluster]);
+   ecal_cluster_seed_energy.push_back(event_in.ecal_cluster_seed_energy[i_cluster]);
+
+   if(also_copy_ecal_hits) {
+      vector<int> copied_cluster_hits;
+      bool seed_hit_copied = false;
+      for (int i_hit = 0; i_hit < event_in.ecal_cluster_hits[i_cluster].size(); ++i_hit) {
+         int new_hit = Add_Ecal_Hit(event_in, event_in.ecal_cluster_hits[i_cluster][i_hit]);
+         if (event_in.ecal_cluster_hits[i_cluster][i_hit] == event_in.ecal_cluster_seed_index[i_cluster]) {
+            ecal_cluster_seed_index.push_back(new_hit);
+            seed_hit_copied = true;
+         }
+         copied_cluster_hits.push_back(new_hit);
+      }
+      if(!seed_hit_copied){
+         cout << "Seed hit not copied for cluster " << i_cluster << endl;
+         ecal_cluster_seed_index.push_back(-1);
+      }
+      ecal_cluster_hits.push_back(copied_cluster_hits);
+      ecal_cluster_nhits.push_back(copied_cluster_hits.size());
+   }else{
+      ecal_cluster_seed_index.push_back(-1);
+      ecal_cluster_hits.push_back({-1});
+      ecal_cluster_nhits.push_back(event_in.ecal_cluster_nhits[i_cluster]);
+   }
+
+   if(event_in.ecal_cluster_mc_id.size() > 0) {
+      ecal_cluster_mc_id.push_back(event_in.ecal_cluster_mc_id[i_cluster]);
+      ecal_cluster_mc_pdg.push_back(event_in.ecal_cluster_mc_pdg[i_cluster]);
+      ecal_cluster_mc_pdg_purity.push_back(event_in.ecal_cluster_mc_pdg_purity[i_cluster]);
+   }
+
+   return ecal_cluster_energy.size()-1;
+}
+
+int MiniDst::Add_Track(MiniDst &event_in, int i_track, bool also_copy_svt_hits) {
+   /// Copy a track from event_in at i_track and add it to the current event.
+   ///
+   if(also_copy_svt_hits){
+      cout << "Woops, implement the SVT hit copy first!\n";
+   }
+
+   if( event_in.track_type[i_track]==0){
+      track_n_matched++;
+   }else if(event_in.track_type[i_track]<32){
+      track_n_kf++;
+   }else{
+      track_n_gbl++;
+   }
+   track_type.push_back(event_in.track_type[i_track]);
+   track_n_hits.push_back(event_in.track_n_hits[i_track]);
+   track_volume.push_back(event_in.track_volume[i_track]);
+   track_d0.push_back(event_in.track_d0[i_track]);
+   track_phi0.push_back(event_in.track_phi0[i_track]);
+   track_omega.push_back(event_in.track_omega[i_track]);
+   track_tan_lambda.push_back(event_in.track_tan_lambda[i_track]);
+   track_z0.push_back(event_in.track_z0[i_track]);
+   track_chi2.push_back(event_in.track_chi2[i_track]);
+   track_time.push_back(event_in.track_time[i_track]);
+   track_px.push_back(event_in.track_px[i_track]);
+   track_py.push_back(event_in.track_py[i_track]);
+   track_pz.push_back(event_in.track_pz[i_track]);
+   if(event_in.track_x_at_lasthit.size() > i_track) { // The lasthit information is available
+      track_x_at_lasthit.push_back(event_in.track_x_at_lasthit[i_track]);
+      track_y_at_lasthit.push_back(event_in.track_y_at_lasthit[i_track]);
+      track_z_at_lasthit.push_back(event_in.track_z_at_lasthit[i_track]);
+      track_omega_at_lasthit.push_back(event_in.track_omega_at_lasthit[i_track]);
+      track_tan_lambda_at_lasthit.push_back(event_in.track_tan_lambda_at_lasthit[i_track]);
+      track_phi0_at_lasthit.push_back(event_in.track_phi0_at_lasthit[i_track]);
+      track_d0_at_lasthit.push_back(event_in.track_d0_at_lasthit[i_track]);
+      track_z0_at_lasthit.push_back(event_in.track_z0_at_lasthit[i_track]);
+   }
+   track_x_at_ecal.push_back(event_in.track_x_at_ecal[i_track]);
+   track_y_at_ecal.push_back(event_in.track_y_at_ecal[i_track]);
+   track_z_at_ecal.push_back(event_in.track_z_at_ecal[i_track]);
+   track_isolation.push_back(event_in.track_isolation[i_track]);  // Places pointer to existing vector.
+   track_covmatrix.push_back(event_in.track_covmatrix[i_track]);
+
+   if(event_in.track_lambda_kinks.size() > i_track) {   // KF tracks don't have kinks.
+      track_lambda_kinks.push_back(event_in.track_lambda_kinks[i_track]);
+      track_phi_kinks.push_back(event_in.track_phi_kinks[i_track]);
+   }
+   track_particle.push_back(-1);
+   track_gbl_ref.push_back(-1);
+   track_ref.push_back(-1);
+   track_svt_hits.push_back({-1});
+
+   return track_type.size()-1;
+}
+
+int MiniDst::Add_Particle(MiniDst &event_in, int i_particle) {
+   /// Copy a particle from event_in at i_particle and add it to the current event.
+   ///
+   int i_ecal = -1;
+   if(event_in.part.ecal_cluster[i_particle] >= 0) {
+      i_ecal = Add_Ecal_Cluster(event_in, event_in.part.ecal_cluster[i_particle], true);
+   }
+   int i_track = -1;
+   if(event_in.part.track[i_particle] >= 0) {
+      i_track = Add_Track(event_in, event_in.part.track[i_particle], false);
+   }
+   return part.Add(event_in.part, i_particle, i_ecal, i_track);
+}

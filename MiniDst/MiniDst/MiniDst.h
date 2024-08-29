@@ -22,7 +22,7 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"
 
-#define __MiniDst__Version__ "1.2.0"
+#define MiniDst_Version_ "1.2.0"
 //
 // The following construction defines a "Variant", a type in C++17 and later that can contain different kinds of object.
 // In our case the variant contains each of the possible types that we have in the output tree.
@@ -53,7 +53,7 @@ using TriggerBits_t  = struct{  // Trigger structure for the 2019 data set.
    bool Single_1_Bot: 1; //  5   ( 300-3000) MeV (  5,31)   e+
    bool Single_2_Bot: 1; //  6   ( 300-3000) MeV (  5,31)   e+ : Position dependent energy cut
    bool Single_3_Bot: 1; //  7   ( 300-3000) MeV (  5,31)   e+ : HODO L1*L2  Match with cluster
-   bool Pair_0      : 1; //  8    A'
+   bool Pair_0      : 1; //  8    A-prime
    bool Pair_1      : 1; //  9    Moller
    bool Pair_2      : 1; // 10    pi0
    bool Pair_3      : 1; // 11    -
@@ -76,7 +76,7 @@ using TriggerBits_int_t = union{
 class MiniDst : public TObject {
 
 public:
-   static string _version_(){return(__MiniDst__Version__);};
+   static string _version_(){return(MiniDst_Version_);};
    MiniDst(): md_output_file_name("minidst.root"){};
    explicit MiniDst(string output_file_name): md_output_file_name(output_file_name){};
    ~MiniDst() override = default;
@@ -110,6 +110,11 @@ public:
       xxx.clear();
    }
 
+   // Multi-event utilities
+   int Add_Ecal_Hit(MiniDst &event_in, int i_hit);
+   int Add_Ecal_Cluster(MiniDst &event_in, int i_cluster, bool also_copy_ecal_hits=false);
+   int Add_Track(MiniDst &event_in, int i_track, bool also_copy_svt_hits=false);
+   int Add_Particle(MiniDst &event_in, int i_particle);
 
 public:
 

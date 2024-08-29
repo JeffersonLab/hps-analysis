@@ -10,7 +10,7 @@
 #ifndef MOLLER_MOLLER_H
 #define MOLLER_MOLLER_H
 
-#define __MOLLER_VERSION__ "0.3.0"
+#define __MOLLER_VERSION__ "0.3.1"
 
 #include "TObject.h"
 #include "TChain.h"
@@ -32,8 +32,8 @@ public:
    double e_time_cut_max{2.};
    double E_beam{2.3};
    double e_maximum_momentum{0.75*E_beam};  //
-   double ee_mom_sum_max{2.1};      // From 2016 note, table 8. Alternate is 1.18*E_beam
-   double ee_mom_sum_min{2.45};       // ... Alternate is 0.8*E_beam
+   double ee_mom_sum_min{2.1};      // From 2016 note, table 8. Alternate is 0.8*E_beam
+   double ee_mom_sum_max{2.45};       // ... Alternate is 1.18*E_beam
    double four_vector_rotation{-0.0302};
 
 
@@ -50,12 +50,13 @@ public:
    RNode Add_Four_Vectors(RNode in, double y_rotation=-0.0302, std::string pair_name="electron_pairs", std::string part_name="part_", std::string out_name_prefix="p4");
    RNode Add_Moller_Inv_Mass(RNode in, std::string pair_name="electron_pairs", std::string out_name="moller_inv_mass");
    RNode Add_Momentum_Sum(RNode in, std::string pair_name="electron_pair", std::string out_name="el_pair_psum");
-   RNode Refine_El_Pairs_1(RNode in, double pmin=2.306*0.75, double pmax=2.306*1.15, std::string in_name="electron_pairs", std::string out_name="el_pairs_r1");
+   RNode Refine_El_Pairs_1(RNode in, double pcut=2., double pmin=2.306*0.75, double pmax=2.306*1.15, std::string in_name="electron_pairs", std::string out_name="el_pairs_r1");
    RNode Refine_El_Pairs_2(RNode in, std::string in_name="el_pairs_r1", std::string out_name="el_pairs_r2");
    RNode Refine_El_Pairs_2(RNode in, double phi_cut, std::string in_name="el_pairs_r1", std::string p4_prefix="r1_", std::string out_name="el_pairs_r2");
    RNode Refine_El_Pairs_3(RNode in, double theta_cut, std::string in_name="el_pairs_r2", std::string p4_prefix="r2_", std::string out_name="el_pairs_r3");
 
    RNode Refine_El_Pairs_X(RNode in, double mint_heta=0.04, double max_theta=0.048, std::string angle1="r2_p4tht1", std::string angle2="r2_p4tht2", std::string in_name="el_pairs_r2", std::string out_name="el_pairs_r3");
+   RNode Refine_El_Pairs_X2(RNode in,std::string in_name, std::string out_name, bool isData=true);
    RNode Cut_2_electrons(RNode in, bool exact = true);
 
    // Variadic function permits any number of arguments. Unfortunately, the RDataFrame.Define or .Filter do not work with this.

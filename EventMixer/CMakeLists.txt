@@ -75,8 +75,9 @@ include_directories(${CMAKE_INSTALL_PREFIX}/include)
 link_directories("/data/HPS/lib")
 
 add_subdirectory(GammaMixer)
+add_subdirectory(MollerMixer)
 
 add_executable(make_mixed_dst make_mixed_dst.cxx)
-target_link_libraries(make_mixed_dst GammaMixer MiniDst  ${ROOT_LIBRARIES})
+target_link_libraries(make_mixed_dst GammaMixer MollerMixer MiniDst  ${ROOT_LIBRARIES})
 install(TARGETS make_mixed_dst)
 

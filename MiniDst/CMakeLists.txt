@@ -126,12 +126,14 @@ add_subdirectory(Dst2016)
 
 if(LCIO_FOUND)
     add_subdirectory(LcioReader)
+    add_compile_definitions(LCIO_FOUND)
     add_executable(make_mini_dst make_mini_dst.cxx)
     set(EXTRA_LIBRARIES LcioReader)
     # HPSTR reading requires both the LCIO and HPSTR Libraries, because the HPSTR event definition is not clean
     # i.e. unnecessarily depends on the LCIO objects.
     if(HPSTR_FOUND)
         add_subdirectory(HpstrReader)
+        add_compile_definitions(HPSTR_FOUND)
         set(EXTRA_LIBRARIES HpstrReader ${EXTRA_LIBRARIES})
     endif(HPSTR_FOUND)
 

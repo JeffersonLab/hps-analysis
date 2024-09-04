@@ -6,7 +6,10 @@
 #include "TChain.h"
 #include "MiniDst.h"
 #include "Dst2016.h"
+#ifdef HPSTR_FOUND
 #include "HpstrReader.h"
+#endif
+
 #include "LcioReader.h"
 #include <locale.h>
 
@@ -134,8 +137,13 @@ int main(int argc, char **argv){
          // Because, brilliantly, Hpstr uses the *same* name "HPS_Event" for the TTree, we cannot distinguish
          // this totally different DST from the 2016 DST. So we need to use a command line switch.
          if( args["hpstr"].as<bool>() ){
+#ifdef HPSTR_FOUND
             auto hpstr = new HpstrReader(chain);
             dst = static_cast<MiniDst *>(hpstr);
+#else
+            cout << "HpstrReader requested, but not compiled in. \n";
+            exit(1);
+#endif
          }else {
             auto dst2016 = new Dst2016(chain);
             dst = static_cast<MiniDst *>(dst2016);

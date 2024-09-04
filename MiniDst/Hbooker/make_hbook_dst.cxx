@@ -247,8 +247,8 @@ int main(int argc, char **argv){
                  }
                  if (num_evt > 0 && ldst->evt_count > num_evt) break;  // End the loop, we are done.
 
-                 ldst->Process();  // fills the mdst structures.
-                 hb->Process();    // Copies the data into FORTRAN commons and writes event to NTuple.
+                 ldst->Process(ldst->evt_count);  // fills the mdst structures.
+                 hb->Process(0);    // Copies the data into FORTRAN commons and writes event to NTuple.
               } // End event loop.
 
               ldst->lcio_reader->close();

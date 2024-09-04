@@ -244,7 +244,7 @@ void LcioReader::SetupLcioDataType(){
    }
 }
 
-void LcioReader::Process(){
+bool LcioReader::Process(Long64_t entry){
    /// Process all the information from the current LCIO event.
    Clear();  // Clear all the vectors that contain data, so we can push_back on them again.
 
@@ -1373,7 +1373,7 @@ long LcioReader::Run(int max_event) {
          }
          if (max_event > 0 && evt_count > max_event) break;  // End the loop, we are done.
 
-         Process();
+         Process(evt_count);
          if(md_output_tree){
             if( md_abort_tree_fill){
                cout << "Bad Event -- Not filling TTree \n";

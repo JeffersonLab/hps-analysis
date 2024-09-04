@@ -10,7 +10,7 @@ project(MakeMiniDst)
 
 # Set the project version
 set(HPS_ANALYSIS_VERSION_MAJOR 0)
-set(HPS_ANALYSIS_VERSION_MINOR 1)
+set(HPS_ANALYSIS_VERSION_MINOR 3)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -78,6 +78,22 @@ else()
     message(STATUS "=================================================================")
 endif(CERNLIB_FOUND)
 
+find_package(HPSTR)
+if(HPSTR_FOUND)
+    include_directories( AFTER "${HPSTR_INCLUDE_DIRS}")
+    message(STATUS "Hpstr found: ${HPSTR_INCLUDE_DIRS} ${HPSTR_LIBRARIES}")
+else()
+    message(STATUS "==================================================================")
+    message(STATUS "Hpstr was not found, so you will not be able to convert Hpstr files.")
+    message(STATUS "Sorry. ")
+    message(STATUS "You really should not have to convert Hpstr files, if that format was sane. ")
+    message(STATUS "It is not. Go and ask the creators and promotors of that format to explain it to you.")
+    message(STATUS "While you are talking to them, also ask that they fix their CMakeLists.txt to properly install stuff.")
+    message(STATUS "In the meantime, just convert the SLCIO files directly to minidst.")
+    message(STATUS "=================================================================")
+endif(HPSTR_FOUND)
+
+
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -111,7 +127,15 @@ add_subdirectory(Dst2016)
 if(LCIO_FOUND)
     add_subdirectory(LcioReader)
     add_executable(make_mini_dst make_mini_dst.cxx)
-    target_link_libraries(make_mini_dst MiniDst Dst2016 LcioReader ${ROOT_LIBRARIES})
+    set(EXTRA_LIBRARIES LcioReader)
+    # HPSTR reading requires both the LCIO and HPSTR Libraries, because the HPSTR event definition is not clean
+    # i.e. unnecessarily depends on the LCIO objects.
+    if(HPSTR_FOUND)
+        add_subdirectory(HpstrReader)
+        set(EXTRA_LIBRARIES HpstrReader ${EXTRA_LIBRARIES})
+    endif(HPSTR_FOUND)
+
+    target_link_libraries(make_mini_dst MiniDst Dst2016 ${EXTRA_LIBRARIES} ${ROOT_LIBRARIES})
     install(TARGETS make_mini_dst)
     add_executable(lcio_test_reader lcio_test_reader.cpp)
     target_link_libraries(lcio_test_reader ${LCIO_LIBRARIES})
@@ -124,7 +148,6 @@ if(LCIO_FOUND)
 endif(LCIO_FOUND)
 
 
-# link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 
 #
 # Somehow on Linux the stdc++ does not (always) get properly picked up.
@@ -140,5 +163,9 @@ message("*")
 message("* ROOT version: ${ROOT_VERSION} ")
 message("* ROOT location: $ENV{ROOTSYS} ")
 message("* LCIO include: ${LCIO_INCLUDE_DIR} ")
+message("* CERNLIB include: ${CERNLIB_INCLUDE_DIR} ")
+message("* HPSTR_INCLUDE_DIRS: ${HPSTR_INCLUDE_DIRS} ")
+message("* HPSTR_LIBRARIES: ${HPSTR_LIBRARIES} ")
 message("* Compiler ID:  ${CMAKE_CXX_COMPILER_ID}")
 message("* Compiler Ver: ${CMAKE_CXX_COMPILER_VERSION}")
+message("-----------------------------------------------")

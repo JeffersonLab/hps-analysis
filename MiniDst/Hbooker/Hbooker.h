@@ -126,7 +126,7 @@ public:
    void SetOutputFileName(string outfile){hb_output_file_name = outfile;}
    void Start();
    void Run(long numevt);
-   void Process();
+   bool Process(Long64_t entry);
    void End();
 };
 

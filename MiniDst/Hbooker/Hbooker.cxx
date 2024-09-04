@@ -97,11 +97,11 @@ void Hbooker::Run(long num_evt) {
       num_evt = tree->GetEntries();
    for(long evt=0; evt< num_evt; ++evt){
       tree->GetEntry(evt);
-      Process();
+      Process(evt);
    }
 }
 
-void Hbooker::Process() {
+bool Hbooker::Process(Long64_t entry) {
    // Process one event. It is assumed the event is already "loaded" into mdst.
    // Unfortunately, we need to **copy** all the data into the common block.
    EVNT.run_number = mdst->run_number;
@@ -198,6 +198,7 @@ void Hbooker::Process() {
       }
    }
    HFNT(hbook_id);
+   return true;
 }
 
 

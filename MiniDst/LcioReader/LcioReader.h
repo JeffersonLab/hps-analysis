@@ -102,7 +102,7 @@ public:
     void Clear() override;
     void Start() override;
     void SetupLcioDataType();
-    void Process() override;
+    bool Process(Long64_t entry) override;
     long Run(int max_event) override;
     void End() override;
 

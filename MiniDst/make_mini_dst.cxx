@@ -6,6 +6,7 @@
 #include "TChain.h"
 #include "MiniDst.h"
 #include "Dst2016.h"
+#include "HpstrReader.h"
 #include "LcioReader.h"
 #include <locale.h>
 
@@ -41,6 +42,8 @@ int main(int argc, char **argv){
          ("H,hodo_clusters", "Store Hodo Clusters",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("h,hodo_hits", "Store Hodo Hits",
+          cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+         ("hpstr","Read root file in Hpstr format.",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("s,svt_hits", "Store SVT 3D and/or strip Hits",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
@@ -123,15 +126,24 @@ int main(int argc, char **argv){
       if( !infiles.empty() && infiles[0].find(".root") != string::npos ) {
          // The first file in the list has .root extension.
          is_dst_type = true;
+
          auto chain = new TChain("HPS_Event");
          for (auto &v : infiles) {
             chain->Add(v.c_str());
          }
-         auto dst2016 = new Dst2016(chain);
-         dst = static_cast<MiniDst*>(dst2016);
-         if(dst2016->event->getNumberOfMCParticles() > 0 && !dst->use_mc_particles && !args["no_mc_particles"].as<bool>()){
-            cout << "Warning: Input is MC Data, but write_mc_particles is not set. Turning on write_mc_particles!\n";
-            dst->use_mc_particles = true;
+         // Because, brilliantly, Hpstr uses the *same* name "HPS_Event" for the TTree, we cannot distinguish
+         // this totally different DST from the 2016 DST. So we need to use a command line switch.
+         if( args["hpstr"].as<bool>() ){
+            auto hpstr = new HpstrReader(chain);
+            dst = static_cast<MiniDst *>(hpstr);
+         }else {
+            auto dst2016 = new Dst2016(chain);
+            dst = static_cast<MiniDst *>(dst2016);
+            if (dst2016->event->getNumberOfMCParticles() > 0 && !dst->use_mc_particles &&
+                !args["no_mc_particles"].as<bool>()) {
+               cout << "Warning: Input is MC Data, but write_mc_particles is not set. Turning on write_mc_particles!\n";
+               dst->use_mc_particles = true;
+            }
          }
       }else if( infiles.size()>0 && infiles[0].find(".slcio") != string::npos ) {
          auto dstlcio = new LcioReader(infiles, debug_code);

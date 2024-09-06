@@ -153,14 +153,22 @@ bool MollerMixer::Find_Good_Moller_Pair(MiniDst &event1, MiniDst &event2, int &f
    /// * A pair of good electrons here is simply PDG==11 and P_sum_min < Psum < P_sum_max, and each electron P< p_max.
    int i_electron1=found1;
    int i_electron2 = found2;
+   int count_e_evt1 = 0;
+   for(int i=0; i<event1.part.pdg.size(); ++i) if(event1.part.pdg[i]==11) count_e_evt1++;
+   int count_e_evt2 = 0;
+   for(int i=0; i<event2.part.pdg.size(); ++i) if(event2.part.pdg[i]==11) count_e_evt2++;
+   if( count_e_evt1 < 2 || count_e_evt2 < 2) return false;  // Need at least 2 electrons in each event.
+   
    while( i_electron1< event1.part.pdg.size() && i_electron2 < event2.part.pdg.size()) {
       if (event1.part.pdg[i_electron1] == 11 && event2.part.pdg[i_electron2] == 11) { // 2 electrons.
          //////////////////////////////// GOOD Moller PAIR CONDITIONS /////////////////////////////////
          ///
+         ///  Each event has two electrons.   <== same condition as for data!
          ///  P_{1,2} < P_max
          ///  Psum_min < Psum < Psum_max;
          ///
          /////////////////////////////////////////////////////////////////////////////////////////////
+
          TVector3 p1(event1.part.px[i_electron1], event1.part.py[i_electron1], event1.part.pz[i_electron1]);
          TVector3 p2(event2.part.px[i_electron2], event2.part.py[i_electron2], event2.part.pz[i_electron2]);
          double psum = (p1 + p2).Mag();

@@ -79,9 +79,20 @@ else()
 endif(CERNLIB_FOUND)
 
 find_package(HPSTR)
+
 if(HPSTR_FOUND)
-    include_directories( AFTER "${HPSTR_INCLUDE_DIRS}")
-    message(STATUS "Hpstr found: ${HPSTR_INCLUDE_DIRS} ${HPSTR_LIBRARIES}")
+    # include_directories( AFTER "${HPSTR_INCLUDE_DIRS}")
+    # The line above cannot be used, because (thanks Omar) the Hpstr library has the same names for the classes
+    # as the old DST2016 version, but *complete different* definitions. So you need to be super careful which version
+    # of the include definitions you are using for each bit of code.
+    message(STATUS "Hpstr found: ${HPSTR_INCLUDE_DIR} ${HPSTR_LIBRARIES}")
+
+    get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+    message("POST =====")
+    foreach(dir ${dirs})
+        message(STATUS "dir='${dir}'")
+    endforeach()
+
 else()
     message(STATUS "==================================================================")
     message(STATUS "Hpstr was not found, so you will not be able to convert Hpstr files.")
@@ -131,11 +142,13 @@ if(LCIO_FOUND)
     set(EXTRA_LIBRARIES LcioReader)
     # HPSTR reading requires both the LCIO and HPSTR Libraries, because the HPSTR event definition is not clean
     # i.e. unnecessarily depends on the LCIO objects.
+
     if(HPSTR_FOUND)
-        add_subdirectory(HpstrReader)
-        add_compile_definitions(HPSTR_FOUND)
-        set(EXTRA_LIBRARIES HpstrReader ${EXTRA_LIBRARIES})
+ #       add_subdirectory(HpstrReader)
+ #       add_compile_definitions(HPSTR_FOUND)
+ #       list(APPEND EXTRA_LIBRARIES HpstrReader)
     endif(HPSTR_FOUND)
+
 
     target_link_libraries(make_mini_dst MiniDst Dst2016 ${EXTRA_LIBRARIES} ${ROOT_LIBRARIES})
     install(TARGETS make_mini_dst)
@@ -148,8 +161,6 @@ if(LCIO_FOUND)
     endif(CERNLIB_FOUND)
 
 endif(LCIO_FOUND)
-
-
 
 #
 # Somehow on Linux the stdc++ does not (always) get properly picked up.

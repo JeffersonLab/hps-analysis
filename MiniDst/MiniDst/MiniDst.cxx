@@ -410,11 +410,12 @@ long MiniDst::Run(int nevt){
    return(0);
 }
 
-void MiniDst::Process() {
+bool MiniDst::Process(Long64_t entry) {
    /// Process a single event.
    /// Intended to be overridden by sub-classes that have an event loop.
 
    // For vanilla MiniDst there is nothing to process.
+  return true;
 }
 
 void MiniDst::End() {

@@ -415,6 +415,7 @@ bool MiniDst::Process(Long64_t entry){
    /// Intended to be overridden by sub-classes that have an event loop.
 
    // For vanilla MiniDst there is nothing to process.
+  return true;
 }
 
 void MiniDst::End() {
@@ -556,3 +557,4 @@ int MiniDst::Add_Particle(MiniDst &event_in, int i_particle) {
    }
    return part.Add(event_in.part, i_particle, i_ecal, i_track);
 }
+

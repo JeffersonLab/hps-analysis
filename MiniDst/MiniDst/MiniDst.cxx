@@ -400,9 +400,11 @@ void MiniDst::Clear(){
             [](vector<double> *arg) { arg->clear(); },
             [](vector< vector<short> > *arg) { arg->clear(); },
             [](vector< vector<int> > *arg) { arg->clear(); },
-            [](vector< vector<double> >*arg) {arg->clear(); }
+            [](vector< vector<double> >*arg) {arg->clear(); },
       },bran);
    }
+   v0.clear();
+   part.clear();
 }
 
 long MiniDst::Run(int nevt){

@@ -430,6 +430,18 @@ public:
          pz.push_back(base.pz[id]);
          return int(base.type.size() -1);
       }
+      void clear(void){
+         type.clear();
+         lcio_type.clear();
+         energy.clear();
+         mass.clear();
+         pdg.clear();
+         charge.clear();
+         goodness_of_pid.clear();
+         px.clear();
+         py.clear();
+         pz.clear();
+      }
    };
 
    struct Single_Particle_t : Basic_Particle_t{
@@ -444,6 +456,12 @@ public:
          track.push_back(new_track_id);
          track_chi2.push_back(single.track_chi2[id]);
          return int(track.size() -1);
+      }
+      void clear(){
+         Basic_Particle_t::clear();
+         ecal_cluster.clear();
+         track.clear();
+         track_chi2.clear();
       }
    };
 
@@ -470,6 +488,25 @@ public:
       vector<int>    clus_iy;   /// Cluster seed iy.
       vector<double> clus_pos_x; /// Cluster x position.
       vector<double> clus_pos_y;
+
+      void clear(void){
+         part.clear();
+         track.clear();
+         track_nhit.clear();
+         p.clear();
+         chi2.clear();
+         good_pid.clear();
+         track_time.clear();
+         pos_ecal_x.clear();
+         pos_ecal_y.clear();
+         clus.clear();
+         clus_energy.clear();
+         clus_time.clear();
+         clus_ix.clear();
+         clus_iy.clear();
+         clus_pos_x.clear();
+         clus_pos_y.clear();
+      }
    };
 
    struct Vertex_Particle_t: Basic_Particle_t{
@@ -488,6 +525,18 @@ public:
 
       // ToDo: Add the covariance matrix.
       // vector<double> covar;
+
+      void clear(void){
+         Basic_Particle_t::clear();
+         vertex_x.clear();
+         vertex_y.clear();
+         vertex_z.clear();
+         vertex_chi2.clear();
+         vertex_prob.clear();
+         mass_err.clear();
+         em.clear();
+         ep.clear();
+      }
    };
 
    Vertex_Particle_t v0;

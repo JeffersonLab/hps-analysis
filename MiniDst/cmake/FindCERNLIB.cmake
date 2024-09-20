@@ -5,7 +5,8 @@ find_library(CERNLIB_LIBRARY_PACKLIB packlib ${CERN}/lib ${CERN}/lib/cernlib/202
 find_library(CERNLIB_LIBRARY_KERNLIB kernlib ${CERN}/lib ${CERN}/lib/cernlib/2023/lib)
 set(CERNLIB_LIBRARIES ${CERNLIB_LIBRARY_PACKLIB} ${CERNLIB_LIBRARY_KERNLIB})
 if(APPLE)
-    set(CERNLIB_LIBRARIES ${CERNLIB_LIBRARIES} gfortran m dl)
+    # Sorry, this is not generic. It could be replaced with a proper "find" routine.
+    set(CERNLIB_LIBRARIES ${CERNLIB_LIBRARIES} -L/opt/homebrew/Cellar/gcc/14.1.0_1/lib/gcc/current gfortran m dl)
 else(APPLE)
     # We assume JLab. We need the *specific* version of the gfortran library.
     set(CERNLIB_LIBRARIES ${CERNLIB_LIBRARIES} /usr/lib64/libgfortran.so.3.0.0 m nsl crypt dl)

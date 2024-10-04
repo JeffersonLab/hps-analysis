@@ -48,6 +48,7 @@ public:
    RNode Select_El_Pairs_MC(RNode in, double time_cut_min = 0., double time_cut_max=2., double z_cut = 0.001, std::string out_name="mc_electron_pairs");
 
    RNode Add_Four_Vectors(RNode in, double y_rotation=-0.0302, std::string pair_name="electron_pairs", std::string part_name="part_", std::string out_name_prefix="p4");
+   RNode Add_Four_Vectors_V0(RNode in, double y_rotation=-0.0302, int v0_type=4, std::string out_name_prefix="v_uc");
    RNode Add_Moller_Inv_Mass(RNode in, std::string pair_name="electron_pairs", std::string out_name="moller_inv_mass");
    RNode Add_Momentum_Sum(RNode in, std::string pair_name="electron_pair", std::string out_name="el_pair_psum");
    RNode Refine_El_Pairs_1(RNode in, double pcut=2., double pmin=2.306*0.75, double pmax=2.306*1.15, std::string in_name="electron_pairs", std::string out_name="el_pairs_r1");

@@ -41,6 +41,32 @@ void LcioReader::Start(){
       return;
    }
 
+   if(kf_has_not_postscript){
+      for(int i=0; i<Type_to_Collection.size(); ++i){
+         if(Type_to_Collection[i].find("_KF") != string::npos){
+            Type_to_Collection[i] = Type_to_Collection[i].substr(0, Type_to_Collection[i].size()-3);
+         }
+      }
+      for(int i=0; i<Type_to_VertexCollection.size(); ++i){
+         if(Type_to_VertexCollection[i].find("_KF") != string::npos){
+            Type_to_VertexCollection[i] = Type_to_VertexCollection[i].substr(0, Type_to_VertexCollection[i].size()-3);
+         }
+      }
+   }
+
+   if(gbl_has_no_postscript){
+      for(auto &name: Type_to_Collection){
+         if(name.find("_GBL") != string::npos){
+            name = name.substr(0, name.size()-4);
+         }
+      }
+      for(auto &name: Type_to_VertexCollection){
+         if(name.find("_GBL") != string::npos){
+            name = name.substr(0, name.size()-4);
+         }
+      }
+   }
+
    lcio_reader->open(input_files[0]);
    lcio_event =lcio_reader->readNextEvent();
    run_number = lcio_event->getRunNumber();

@@ -63,6 +63,10 @@ int main(int argc, char **argv){
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("no_gbl_particles","Do NOT store the GBL particles or vertexes.",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+         ("kf_has_postfix","The KF collections have the _KF postfix. (default is no postfix)",
+          cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+         ("gbl_has_no_postfix","The GBL collections do not have the _GBL postfix. (default is _GBL)",
+          cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("m,magfield","Magnetic field strength to use in Tesla to compute px,py,pz",
                cxxopts::value<double>()->default_value("0."))
          ("M,no_mc_particles", "DO NOT Store MCParticles, even if they are in the input",
@@ -139,7 +143,8 @@ int main(int argc, char **argv){
       }else if( infiles.size()>0 && infiles[0].find(".slcio") != string::npos ) {
          auto dstlcio = new LcioReader(infiles, debug_code);
          if(args["magfield"].as<double>() > 0.) dstlcio->magnetic_field = args["magfield"].as<double>();
-
+         if(args["kf_has_postfix"].as<bool>()) dstlcio->kf_has_not_postscript = false;
+         if(args["gbl_has_no_postfix"].as<bool>()) dstlcio->gbl_has_no_postscript = true;
          dst = static_cast<MiniDst*>(dstlcio);
 
 //         // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.

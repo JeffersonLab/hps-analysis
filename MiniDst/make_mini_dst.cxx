@@ -190,11 +190,11 @@ int main(int argc, char **argv){
          vector<int> copy_double(dst->particle_types_double); // make a copy
          dst->particle_types_double.clear();
          for(int p: copy_double){
-            if(p >= dst->FINAL_STATE_PARTICLE_GBL) dst->particle_types_single.push_back(p);
+            if(p >= dst->FINAL_STATE_PARTICLE_GBL) dst->particle_types_double.push_back(p);
          }
       }
 
-      if(args["no_gbl_particles"].as<bool>()){  // Erase and and all GBL particle types in the output list.
+      if(args["no_gbl_particles"].as<bool>()){  // Erase all GBL particle types in the output list.
          vector<int> copy_single(dst->particle_types_single); // make a copy
          dst->particle_types_single.clear();
          for(int p: copy_single){
@@ -203,7 +203,7 @@ int main(int argc, char **argv){
          vector<int> copy_double(dst->particle_types_double); // make a copy
          dst->particle_types_double.clear();
          for(int p: copy_double){
-            if(p < dst->FINAL_STATE_PARTICLE_GBL) dst->particle_types_single.push_back(p);
+            if(p < dst->FINAL_STATE_PARTICLE_GBL) dst->particle_types_double.push_back(p);
          }
       }
 

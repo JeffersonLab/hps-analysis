@@ -304,11 +304,14 @@ RNode Moller::Refine_El_Pairs_2(RNode in, double phi_cut, std::string in_name, s
    auto track_tan_lambda_cut = [phi_cut](RVec<std::pair<int,int> > pairs, RVec<TLorentzVector> p4v1, RVec<TLorentzVector> p4v2){
       RVec< std::pair<int,int> > out;
       for(int i=0; i<pairs.size(); ++i){
+         // The following was in the old version 3.1, and I think is just plain WRONG!
+         //         double phi_diff = p4v1[i].Phi()-p4v2[i].Phi();
+         //         phi_diff = (phi_diff>0)?phi_diff: phi_diff+TMath::Pi();
+         //         if( abs(phi_diff - TMath::Pi()/2) < phi_cut ){
+         //            out.push_back(pairs[i]);
          double phi_diff = p4v1[i].Phi()-p4v2[i].Phi();
-         phi_diff = (phi_diff>0)?phi_diff: phi_diff+TMath::Pi();
-         if( abs(phi_diff - TMath::Pi()/2) < phi_cut ){
-            out.push_back(pairs[i]);
-         }
+         phi_diff = phi_diff< -TMath::Pi()?phi_diff + 2*TMath::Pi(): phi_diff;
+         if(abs(phi_diff) < phi_cut) out.push_back(pairs[i]);
       }
       return out;
    };

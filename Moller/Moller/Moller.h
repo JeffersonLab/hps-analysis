@@ -10,7 +10,7 @@
 #ifndef MOLLER_MOLLER_H
 #define MOLLER_MOLLER_H
 
-#define __MOLLER_VERSION__ "0.3.1"
+#define __MOLLER_VERSION__ "0.3.2"
 
 #include "TObject.h"
 #include "TChain.h"

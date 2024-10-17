@@ -110,81 +110,6 @@ RNode Moller::Add_Four_Vectors(RNode in, double y_rotation, std::string pair_nam
    return in;
 }
 
-RNode Moller::Add_Four_Vectors_V0(RNode in, double y_rotation, int  v0_type, std::string out_name_prefix) {
-   // Add two four-vectors and related variables to the dataframe.
-
-//   auto add_4vector_first = [y_rotation](int v0_idx, RVec<double> px, RVec<double> py, RVec<double> pz){
-//      RVec<TLorentzVector> out;
-//      TLorentzVector v4;
-//      int item = pairs[i].first;
-//         v4.SetXYZM(px[item], py[item], pz[item], 0.000510998949996);
-//         v4.RotateY(y_rotation);
-//         out.emplace_back(v4);
-//      }
-//      return out;
-//   };
-//
-//   auto add_4vector_second = [y_rotation](RVec<std::pair<int,int> > pairs, RVec<double> px, RVec<double> py, RVec<double> pz){
-//      RVec<TLorentzVector> out;
-//      for(int i=0; i<pairs.size(); ++i) {
-//         TLorentzVector v4;
-//         int item = pairs[i].second;
-//         v4.SetXYZM(px[item], py[item], pz[item], 0.000510998949996);
-//         v4.RotateY(y_rotation);
-//         out.emplace_back(v4);
-//      }
-//      return out;
-//   };
-//
-//
-//   auto add_minv = [](RVec<TLorentzVector> v1, RVec<TLorentzVector> v2){
-//      assert(v1.size() == v2.size());
-//      RVec<double> out;
-//      for(int i=0; i< v1.size(); ++i) {
-//         out.push_back((v1[i] + v2[i]).M());
-//      }
-//      return out;
-//   };
-//
-//   auto add_theta = [](RVec<TLorentzVector> v1){
-//      RVec<double> out;
-//      for(int i=0; i< v1.size(); ++i) {
-//         out.push_back(v1[i].Theta());
-//      }
-//      return out;
-//   };
-//
-//   auto add_energy = [](RVec<TLorentzVector> v1){
-//      RVec<double> out;
-//      for(int i=0; i< v1.size(); ++i) {
-//         out.push_back(v1[i].E());
-//      }
-//      return out;
-//   };
-//
-//   auto add_beam_theta_x = [](RVec<TLorentzVector> v1, RVec<TLorentzVector> v2){
-//      assert(v1.size() == v2.size());
-//      RVec<double> out;
-//      for(int i=0; i< v1.size(); ++i) {
-//         out.push_back( atan2((v1[i]+v2[i]).X(), (v1[i]+v2[i]).Z()));
-//      }
-//      return out;
-//   };
-//
-//   in = in.Define(out_name_prefix+"v1", add_4vector_first, {pair_name, part_name + "px", part_name + "py", part_name + "pz"});
-//   in = in.Define(out_name_prefix+"v2", add_4vector_second, {pair_name, part_name + "px", part_name + "py", part_name + "pz"});
-//   in = in.Define(out_name_prefix+"minv", add_minv, {out_name_prefix+"v1", out_name_prefix+"v2"});
-//   in = in.Define(out_name_prefix+"tht1", add_theta, {out_name_prefix+"v1"});
-//   in = in.Define(out_name_prefix+"tht2", add_theta, {out_name_prefix+"v2"});
-//   in = in.Define(out_name_prefix+"E1", add_energy, {out_name_prefix+"v1"});
-//   in = in.Define(out_name_prefix+"E2", add_energy, {out_name_prefix+"v2"});
-//
-//   in = in.Define(out_name_prefix+"beam_theta_x", add_beam_theta_x, {out_name_prefix+"v1", out_name_prefix+"v2"});
-//
-   return in;
-}
-
-
 RNode Moller::Cut_2_electrons(RNode in, bool exact) {
    // Cut to select events that have two electrons. If exact = true (default) then cut on two and only
    // two electrons.
@@ -225,10 +150,30 @@ RNode Moller::Select_El_Pairs(RNode in, double time_cut_min, double time_cut_max
    return in.Define(out_name, select_el_pairs, {"part_pdg", "part_track", "track_time"});
 }
 
+RNode Moller::Select_El_Pairs_v0(RNode in, int type, double time_cut_min, double time_cut_max, std::string out_name){
+   // Select vertexes from the v0 collection of type "type" that have a track time difference time_cut_min
+   // (0ns) <= time_diff <= time_cut_max (2ns).
+   // Return the RDataFrame with an "out_name" variable that are pair<int,int> type which are indexes to the part banks.
+   auto select_v0_pairs = [type, time_cut_min, time_cut_max]
+         (RVec<int> v0_type, const RVec<int>& v0_em_track, const RVec<int>& v0_ep_track, const RVec<double>& track_time)-> RVec< std::pair<int,int>> {
+      RVec< std::pair<int,int> > out;
+      for(int i=0; i<v0_type.size(); ++i)
+         if(v0_type[i] == type){
+            int ii = v0_em_track[i];
+            int jj = v0_ep_track[i];
+            if (abs(track_time[ii] - track_time[jj]) >= time_cut_min &&
+            abs(track_time[ii] - track_time[jj]) <= time_cut_max) {
+               out.emplace_back(std::make_pair(ii, jj));
+            }
+         }
+      return out;
+   };
+
+   return in.Define(out_name, select_v0_pairs, {"v0_type", "v0_em_track", "v0_ep_track", "track_time"});
+}
 
 RNode Moller::Select_El_Pairs_MC(RNode in, double time_cut_min, double time_cut_max, double z_cut, std::string out_name){
-   // Select all pairs of electrons from the event that have track_time within time_cut = 2ns.
-   // Return the RDataFrame with an "electron_pairs" variable that are pair<int,int> type which are indexes to the part banks.
+   // Select all pairs of electrons from the MCPartcile collection that are primary electrons.
 
    auto select_el_pairs_mc = [time_cut_min, time_cut_max, z_cut](RVec<int> pdg, RVec<double> time, RVec<double> z)-> RVec< std::pair<int,int>> {
       RVec< std::pair<int,int> > out;

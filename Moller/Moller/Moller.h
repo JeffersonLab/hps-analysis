@@ -10,7 +10,7 @@
 #ifndef MOLLER_MOLLER_H
 #define MOLLER_MOLLER_H
 
-#define __MOLLER_VERSION__ "0.3.2"
+#define __MOLLER_VERSION__ "0.3.3"
 
 #include "TObject.h"
 #include "TChain.h"
@@ -44,6 +44,7 @@ public:
    void Print(Option_t *opt = "");
 
    RNode Select_El_Pairs(RNode in, double time_cut=4., double time_cut_max=20., std::string out_name="electron_pairs");
+   RNode Select_El_Pairs_v0(RNode in, int type=4, double time_cut=4., double time_cut_max=20., std::string out_name="v0_uc_pairs");
 //   RNode Select_El_Pairs(RNode in, double time_cut=2., std::string out_name="electron_pairs");
    RNode Select_El_Pairs_MC(RNode in, double time_cut_min = 0., double time_cut_max=2., double z_cut = 0.001, std::string out_name="mc_electron_pairs");
 

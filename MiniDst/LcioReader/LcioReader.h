@@ -32,7 +32,7 @@
 
 #include "MiniDst.h"
 
-#define LCIOReader__Version__ "1.2.2"
+#define LCIOReader__Version__ "1.2.3"
 using namespace std;
 
 // Collection in May 2021 versions of the 2019 data with both KF and GBL tracking.
@@ -56,7 +56,7 @@ class LcioReader : public MiniDst {
 // Unfortunately, in the *data* these collection types are controlled in the lcsim steering file, and are thus
 // not consistent between various data sets.
 // In older data sets the _GBL marker will not be present. In newer data sets the _KF marker will be omitted.
-// Which one is which can be switched by the kf_has_not_postscript flag.
+// Which one is which can be switched by the kf_has_no_postscript flag.
 //
     vector<string> Type_to_Collection{
         "FinalStateParticles_KF",  // FINAL_STATE_PARTICLE: 0
@@ -88,15 +88,15 @@ class LcioReader : public MiniDst {
             "TargetConstrainedMollerVertices_KF", // TC_MOLLER_CANDIDATE: 6,
             "", // OTHER_ELECTRONS: 7,
             "UnconstrainedVcVertices_KF", // UC_VC_CANDIDATE: 8
-            "",  // FINAL_STATE_PARTICLE: 0
-            "UnconstrainedV0Vertices_GBL", // UC_V0_VERTICES_GBL: 1,
-            "BeamspotConstrainedV0Vertices_GBL", // BSC_V0_VERTICES_GBL: 2,
-            "TargetConstrainedV0Vertices_GBL", // TC_V0_VERTICES_GBL: 3,
-            "UnconstrainedMollerVertices_GBL", // UC_MOLLER_VERTICES_GBL: 4,
-            "BeamspotConstrainedMollerVertices_GBL", // BSC_MOLLER_VERTICES_GBL: 5,
-            "TargetConstrainedMollerVertices_GBL", // TC_MOLLER_VERTICES_GBL: 6,
-            "", // OTHER_ELECTRONS_GBL: 7,
-            "UnconstrainedVcVertices_GBL", // UC_VC_VERTICES_GBL: 8
+            "",  // FINAL_STATE_PARTICLE: 0+9
+            "UnconstrainedV0Vertices_GBL", // UC_V0_VERTICES_GBL: 1+9,
+            "BeamspotConstrainedV0Vertices_GBL", // BSC_V0_VERTICES_GBL: 2+9,
+            "TargetConstrainedV0Vertices_GBL", // TC_V0_VERTICES_GBL: 3+9,
+            "UnconstrainedMollerVertices_GBL", // UC_MOLLER_VERTICES_GBL: 4+9,
+            "BeamspotConstrainedMollerVertices_GBL", // BSC_MOLLER_VERTICES_GBL: 5+9,
+            "TargetConstrainedMollerVertices_GBL", // TC_MOLLER_VERTICES_GBL: 6+9,
+            "", // OTHER_ELECTRONS_GBL: 7+9,
+            "UnconstrainedVcVertices_GBL", // UC_VC_VERTICES_GBL: 8+9
     };
 
 public:
@@ -134,7 +134,7 @@ public:
     bool is_2019_data{false};  // True for 2019 data: i.e. there is a TSBank and a VTPBank.
     bool is_MC_data{false};    // True is there is an MCParticles bank.
     bool has_rf_hits{true};
-    bool kf_has_not_postscript{true}; // Set to true if the Vertex etc collections have no postscript of _KF.
+    bool kf_has_no_postscript{true}; // Set to true if the Vertex etc collections have no postscript of _KF.
     bool gbl_has_no_postscript{false}; // GBL has not postscript of _GBL.
 
     double magnetic_field{0.};

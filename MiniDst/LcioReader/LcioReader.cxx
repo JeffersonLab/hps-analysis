@@ -41,31 +41,31 @@ void LcioReader::Start(){
       return;
    }
 
-   if(kf_has_not_postscript){
-      for(int i=0; i<Type_to_Collection.size(); ++i){
-         if(Type_to_Collection[i].find("_KF") != string::npos){
-            Type_to_Collection[i] = Type_to_Collection[i].substr(0, Type_to_Collection[i].size()-3);
-         }
-      }
-      for(int i=0; i<Type_to_VertexCollection.size(); ++i){
-         if(Type_to_VertexCollection[i].find("_KF") != string::npos){
-            Type_to_VertexCollection[i] = Type_to_VertexCollection[i].substr(0, Type_to_VertexCollection[i].size()-3);
-         }
-      }
-   }
-
-   if(gbl_has_no_postscript){
-      for(auto &name: Type_to_Collection){
-         if(name.find("_GBL") != string::npos){
-            name = name.substr(0, name.size()-4);
-         }
-      }
-      for(auto &name: Type_to_VertexCollection){
-         if(name.find("_GBL") != string::npos){
-            name = name.substr(0, name.size()-4);
-         }
-      }
-   }
+//   if(kf_has_no_postscript){
+//      for(int i=0; i<Type_to_Collection.size(); ++i){
+//         if(Type_to_Collection[i].find("_KF") != string::npos){
+//            Type_to_Collection[i] = Type_to_Collection[i].substr(0, Type_to_Collection[i].size()-3);
+//         }
+//      }
+//      for(int i=0; i<Type_to_VertexCollection.size(); ++i){
+//         if(Type_to_VertexCollection[i].find("_KF") != string::npos){
+//            Type_to_VertexCollection[i] = Type_to_VertexCollection[i].substr(0, Type_to_VertexCollection[i].size()-3);
+//         }
+//      }
+//   }
+//
+//   if(gbl_has_no_postscript){
+//      for(auto &name: Type_to_Collection){
+//         if(name.find("_GBL") != string::npos){
+//            name = name.substr(0, name.size()-4);
+//         }
+//      }
+//      for(auto &name: Type_to_VertexCollection){
+//         if(name.find("_GBL") != string::npos){
+//            name = name.substr(0, name.size()-4);
+//         }
+//      }
+//   }
 
    lcio_reader->open(input_files[0]);
    lcio_event =lcio_reader->readNextEvent();
@@ -95,36 +95,39 @@ void LcioReader::Clear(){
    any_particle_to_index_map.clear();
 }
 
-void LcioReader::SetupLcioDataType(){
+void LcioReader::SetupLcioDataType() {
    // Read the LCIO file and determine what capabilities it has.
    // Set appropriate flags accordingly.
 
-   if (!data_type_is_known) { // Determine the data type by looking at the collections
-      if (md_Debug & kDebug_L1) cout << "Setting up the LCIO data. \n";
+   if (data_type_is_known) { // Determine the data type by looking at the collections
+      return; // Nothing to do.
+   }
 
-      run_number = lcio_event->getRunNumber();
-      if (run_number == 0){  // Some form of MC data, probably SLIC output (?)
-         is_MC_data = true;
-      }
-      else if (run_number < 9000) { // The 2015 or 2016 engineering runs.
-         is_2016_data = true;
-         if(magnetic_field < 0.0001) magnetic_field = 0.523400;  // Field strength in Tesla for 2016 run.
-         if (md_Debug & kDebug_Info) cout << "LCIO -> This is 2015/2016 data. Field set to " << magnetic_field << "T.\n";
-      } else if (run_number <= 10750) { // 2019 physics run
-         is_2019_data = true;
-         if (md_Debug & kDebug_Info) cout << "LCIO -> This is 2019 data. \n";
-      } else if (run_number > 10750) { // 2019 physics run
-         is_2019_data = true;             // 2021 data behaves the same as 2019 data. (?)
-         if (md_Debug & kDebug_Info) cout << "LCIO -> This is 2021 data. \n";
-      }
+   if (md_Debug & kDebug_L1) cout << "Setting up the LCIO data. \n";
 
-      col_names = lcio_event->getCollectionNames();
-      if (md_Debug & kDebug_L1) {
-         cout << "LCIO Collections found:\n";
-         for (string s: *col_names) {
-            cout << s << endl;
-         }
+   run_number = lcio_event->getRunNumber();
+   if (run_number == 0) {  // Some form of MC data, probably SLIC output (?)
+      is_MC_data = true;
+   } else if (run_number < 9000) { // The 2015 or 2016 engineering runs.
+      is_2016_data = true;
+      if (magnetic_field < 0.0001) magnetic_field = 0.523400;  // Field strength in Tesla for 2016 run.
+      if (md_Debug & kDebug_Info)
+         cout << "LCIO -> This is 2015/2016 data. Field set to " << magnetic_field << "T.\n";
+   } else if (run_number <= 10750) { // 2019 physics run
+      is_2019_data = true;
+      if (md_Debug & kDebug_Info) cout << "LCIO -> This is 2019 data. \n";
+   } else if (run_number > 10750) { // 2019 physics run
+      is_2019_data = true;             // 2021 data behaves the same as 2019 data. (?)
+      if (md_Debug & kDebug_Info) cout << "LCIO -> This is 2021 data. \n";
+   }
+
+   col_names = lcio_event->getCollectionNames();
+   if (md_Debug & kDebug_L1) {
+      cout << "LCIO Collections found:\n";
+      for (string s: *col_names) {
+         cout << s << endl;
       }
+   }
 // In the current reco of data, 2019 LCIO files have both the TriggerBank and the TSBank, so this cannot
 // help us determine what type of data we are looking at.
 //                    if( s == "TriggerBank"){
@@ -136,138 +139,228 @@ void LcioReader::SetupLcioDataType(){
 //                        is_2016_data = false;
 //                        if(md_Debug & kDebug_Info) cout << "LCIO -> This is 2019 data. \n";
 //                    }
-      if (has_collection("MCParticle")) {
-         if (md_Debug & kDebug_Info) cout << "LCIO -> This is Monte Carlo data. \n";
-         if(use_mc_particles) is_MC_data = true;
-         else{
-            cout << "LCIO -> Monte Carle data, but no_mc_particle flag. MCParticles not written. \n";
-         }
+   if (has_collection("MCParticle")) {
+      if (md_Debug & kDebug_Info) cout << "LCIO -> This is Monte Carlo data. \n";
+      if (use_mc_particles) is_MC_data = true;
+      else {
+         cout << "LCIO -> Monte Carle data, but no_mc_particle flag. MCParticles not written. \n";
+      }
 
-         // Check the scoring planes.
-         for(int i=0; i< scoring_planes.size(); ++i){
-            if( !has_collection(scoring_planes[i].c_str())){
-               scoring_planes_active[i] = false;
-               if(md_Debug & kDebug_Warning) cout << "Scoring plane " << scoring_planes[i] << " not found. Turned off.\n";
+      // Check the scoring planes.
+      for (int i = 0; i < scoring_planes.size(); ++i) {
+         if (!has_collection(scoring_planes[i].c_str())) {
+            scoring_planes_active[i] = false;
+            if (md_Debug & kDebug_Warning)
+               cout << "Scoring plane " << scoring_planes[i] << " not found. Turned off.\n";
+         }
+      }
+   } else {
+      is_MC_data = false;
+      use_mc_particles = false;
+      use_mc_scoring = false;
+      use_ecal_hits_truth = false;
+   }
+
+   if (has_collection("RFHits")) {
+      has_rf_hits = true;
+   } else {
+      has_rf_hits = false;
+      if (!is_MC_data) {
+         if (md_Debug & kDebug_Warning)
+            cout << "WARNING: The LCIO file does not have RF Hits. Turning of RFHit reading.\n";
+      }
+   }
+
+   if (is_2016_data && is_2019_data) cout << "WOA - a file that is both 2016 and 2019 data!!!\n";
+   data_type_is_known = true;
+
+   /////////////////////////////////////////////////////////////////////////////////////////////////
+   ///
+   ///  Check the LCIO Data file content.
+   ///  Safety switches. We check the collections names to make sure the needed data is in the file.
+   ///
+   /////////////////////////////////////////////////////////////////////////////////////////////////
+
+   if (use_ecal_hits && !has_collection("EcalCalHits")) {
+      if (md_Debug & kDebug_Warning)
+         cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit reading. \n";
+      use_ecal_hits = false;
+   }
+
+   if (use_ecal_hits && use_ecal_hits_truth && !has_collection("EcalHits")) {
+      if ((md_Debug & kDebug_Warning))
+         cout << "WARNING: The LCIO file does not have EcalHits. Ecal Hits Truth turned off.\n";
+      use_ecal_hits_truth = false;
+   }
+
+
+   if (use_ecal_cluster && !has_collection("EcalClustersCorr")) {
+      if (md_Debug & kDebug_Warning)
+         cout
+               << "WARNING: The LCIO file does not have EcalClustersCorr. Turning of ECal corrected cluster reading. \n";
+      use_ecal_cluster = false;
+   }
+
+   if (use_ecal_cluster_uncor && !has_collection("EcalClusters")) {
+      if (md_Debug & kDebug_Warning)
+         cout << "WARNING: The LCIO file does not have EcalClusters. Turning of ECal cluster reading. \n";
+      use_ecal_cluster_uncor = false;
+   }
+
+   if (use_hodo_hits && !has_collection("HodoCalHits")) {
+      if (md_Debug & kDebug_Warning)
+         cout << "WARNING: The LCIO file does not have HodoCalHits. Turning of Hodoscope hit reading. \n";
+      use_hodo_hits = false;
+   }
+
+   if (use_hodo_clusters && !has_collection("HodoGenericClusters")) {
+      if (md_Debug & kDebug_Warning)
+         cout
+               << "WARNING: The LCIO file does not have HodoGenericClusters. Turning of Hodoscope cluster reading. \n";
+      use_hodo_clusters = false;
+   }
+
+   if (use_svt_raw_hits && (!has_collection("SVTRawTrackerHits") ||
+                            !has_collection("SVTShapeFitParameters") ||
+                            !has_collection("SVTFittedRawTrackerHits"))) {
+      if (md_Debug & kDebug_Warning) {
+         cout << "WARNING: The LCIO file does not have SVTRawTrackerHits or " <<
+              "SVTShapeFitParameters or SVTFittedRawTrackerHits.\n";
+         cout << "         Turning of SVT raw hit writing. \n";
+      }
+      use_svt_raw_hits = false;
+   }
+
+   if (use_svt_hits && !(has_collection("RotatedHelicalTrackHits") ||
+                         has_collection("StripClusterer_SiTrackerHitStrip1D"))) {
+      if (md_Debug & kDebug_Warning)
+         cout << "WARNING: The LCIO file does not have RotatedHelicalTrackHits. Turning of svt 3D hit writing. \n";
+      use_svt_hits = false;
+   } else {
+      if (has_collection("StripClusterer_SiTrackerHitStrip1D"))
+         svt_hit_collections.push_back("StripClusterer_SiTrackerHitStrip1D");
+      if (has_collection("RotatedHelicalTrackHits"))
+         svt_hit_collections.push_back("RotatedHelicalTrackHits");
+   }
+   if ((use_kf_tracks || use_kf_particles) && !has_collection("KalmanFullTracks")) {
+      if (md_Debug & kDebug_Warning)
+         cout << "WARNING: The LCIO file does not have KalmanFullTracks. Turning of KF track writing. \n";
+      use_kf_tracks = false;
+      use_kf_particles = false;
+   }
+   if ((use_gbl_tracks || use_gbl_particles) && !has_collection("GBLTracks")) {
+      if (md_Debug & kDebug_Warning)
+         cout << "WARNING: The LCIO file does not have GBLTracks. Turning of GBL track writing. \n";
+      use_gbl_tracks = false;
+      use_gbl_particles = false;
+   }
+   if (use_matched_tracks && !has_collection("MatchedTracks")) {
+      if (md_Debug & kDebug_Warning)
+         cout << "WARNING: The LCIO file does not have MatchedTracks. Turning of matched track writing. \n";
+      use_matched_tracks = false;
+   }
+
+   // We need to take extra care here. The particle_types_single and particle_types_double collections in the LCIO files are NOT
+   // named consistently betweeen different processings of EVIO file. The issue is that the names of collections are fully
+   // configurable in the "steering files" and thus can be named anything, though usually the conventional name is used.
+   // Issues arrise around the "KF" and "GBL" postfixes, which appeared after the Kalman Filter was implemented. These
+   // postfixes are not applied in a consistent manner.
+   //
+   for (auto type = particle_types_single.begin(); type < particle_types_single.end(); ++type) {
+      string collection_name = Type_to_Collection[*type];
+      if (md_Debug & kDebug_L1) {
+         cout << "Checking for " << collection_name << " in lcio file.\n";
+      }
+      if (!has_collection(collection_name.c_str())) {
+         // Check is a no-postscript version of the collection exists.
+         // split the collection_name into two parts, the first part is the name, the second part is the postfix.
+         size_t pos = collection_name.find_last_of("_");
+         if (pos != string::npos) {
+            string no_postfix = collection_name.substr(0, pos);
+            string postfix = collection_name.substr(pos);
+            if (has_collection(no_postfix.c_str()) &&
+                  ((kf_has_no_postscript && postfix == "_KF") || (gbl_has_no_postscript && postfix == "_GBL"))) {
+               // The no_postfix version exists, and is the one to be used
+               if (md_Debug & kDebug_Warning)
+                  cout << "WARNING: The LCIO file does not have " << collection_name << ". Using " << no_postfix
+                       << " instead.\n";
+               Type_to_Collection[*type] = no_postfix;
+            } else {
+               if (md_Debug & kDebug_Warning)
+                  cout << "WARNING: The LCIO file does not have " << collection_name << " (+extension check failed). Removing from list.\n";
+               // See https://www.techiedelight.com/remove-elements-vector-inside-loop-cpp
+               // We need to make sure the iterator is not invalidated by the erase.
+               particle_types_single.erase(type--);
             }
-         }
-      }else{
-         is_MC_data = false;
-         use_mc_particles = false;
-         use_mc_scoring = false;
-         use_ecal_hits_truth = false;
-      }
-
-      if(has_collection("RFHits")){
-         has_rf_hits = true;
-      }else{
-         has_rf_hits = false;
-         if(!is_MC_data){
-            if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have RF Hits. Turning of RFHit reading.\n";
-         }
-      }
-
-      if (is_2016_data && is_2019_data) cout << "WOA - a file that is both 2016 and 2019 data!!!\n";
-      data_type_is_known = true;
-
-      /////////////////////////////////////////////////////////////////////////////////////////////////
-      ///
-      ///  Check the LCIO Data file content.
-      ///  Safety switches. We check the collections names to make sure the needed data is in the file.
-      ///
-      /////////////////////////////////////////////////////////////////////////////////////////////////
-
-      if (use_ecal_hits && !has_collection("EcalCalHits")) {
-         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit reading. \n";
-         use_ecal_hits = false;
-      }
-
-      if (use_ecal_hits && use_ecal_hits_truth && !has_collection("EcalHits")) {
-         if( (md_Debug & kDebug_Warning) ) cout << "WARNING: The LCIO file does not have EcalHits. Ecal Hits Truth turned off.\n";
-         use_ecal_hits_truth = false;
-      }
-
-
-      if (use_ecal_cluster && !has_collection("EcalClustersCorr")) {
-         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have EcalClustersCorr. Turning of ECal corrected cluster reading. \n";
-         use_ecal_cluster = false;
-      }
-
-      if (use_ecal_cluster_uncor && !has_collection("EcalClusters")) {
-         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have EcalClusters. Turning of ECal cluster reading. \n";
-         use_ecal_cluster_uncor = false;
-      }
-
-      if (use_hodo_hits && !has_collection("HodoCalHits")) {
-         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have HodoCalHits. Turning of Hodoscope hit reading. \n";
-         use_hodo_hits = false;
-      }
-
-      if (use_hodo_clusters && !has_collection("HodoGenericClusters")) {
-         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have HodoGenericClusters. Turning of Hodoscope cluster reading. \n";
-         use_hodo_clusters = false;
-      }
-
-      if (use_svt_raw_hits && (!has_collection("SVTRawTrackerHits") ||
-                               !has_collection("SVTShapeFitParameters") ||
-                               !has_collection("SVTFittedRawTrackerHits"))) {
-         if(md_Debug & kDebug_Warning) {
-            cout << "WARNING: The LCIO file does not have SVTRawTrackerHits or " <<
-                 "SVTShapeFitParameters or SVTFittedRawTrackerHits.\n";
-            cout << "         Turning of SVT raw hit writing. \n";
-         }
-         use_svt_raw_hits = false;
-      }
-
-      if (use_svt_hits && !(has_collection("RotatedHelicalTrackHits") ||
-                            has_collection("StripClusterer_SiTrackerHitStrip1D"))) {
-         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have RotatedHelicalTrackHits. Turning of svt 3D hit writing. \n";
-         use_svt_hits = false;
-      } else {
-         if (has_collection("StripClusterer_SiTrackerHitStrip1D"))
-            svt_hit_collections.push_back("StripClusterer_SiTrackerHitStrip1D");
-         if (has_collection("RotatedHelicalTrackHits"))
-            svt_hit_collections.push_back("RotatedHelicalTrackHits");
-      }
-      if ((use_kf_tracks || use_kf_particles) && !has_collection("KalmanFullTracks")) {
-         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have KalmanFullTracks. Turning of KF track writing. \n";
-         use_kf_tracks = false;
-         use_kf_particles = false;
-      }
-      if ((use_gbl_tracks || use_gbl_particles) && !has_collection("GBLTracks")) {
-         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have GBLTracks. Turning of GBL track writing. \n";
-         use_gbl_tracks = false;
-         use_gbl_particles = false;
-      }
-      if (use_matched_tracks && !has_collection("MatchedTracks")) {
-         if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have MatchedTracks. Turning of matched track writing. \n";
-         use_matched_tracks = false;
-      }
-      for (auto type = particle_types_single.begin(); type< particle_types_single.end(); ++type) {
-         string collection_name = Type_to_Collection[*type];
-         if(md_Debug & kDebug_L1){
-            cout << "Checking for " << collection_name << " in lcio file.\n";
-         }
-         if(!has_collection(collection_name.c_str())){
-            if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have " << collection_name <<". Removing from list.\n";
+         } else {  // Probably never get here, since the collection names all have a postfix?
+            if (md_Debug & kDebug_Warning)
+               cout << "WARNING: The LCIO file does not have " << collection_name << ". Removing from list.\n";
             // See https://www.techiedelight.com/remove-elements-vector-inside-loop-cpp
             // We need to make sure the iterator is not invalidated by the erase.
             particle_types_single.erase(type--);
          }
       }
-      for (auto type = particle_types_double.begin(); type< particle_types_double.end(); ++type) {
-         string collection_name = Type_to_Collection[*type];
-         if(md_Debug & kDebug_L1){
-            cout << "Checking for " << collection_name << " in lcio file.\n";
-         }
-         if(!has_collection(collection_name.c_str())){
-            if(md_Debug & kDebug_Warning) cout << "WARNING: The LCIO file does not have " << collection_name <<". Removing from list.\n";
+   }
+
+   for (auto type = particle_types_double.begin(); type < particle_types_double.end(); ++type) {
+      string collection_name = Type_to_Collection[*type];
+      if (md_Debug & kDebug_L1) {
+         cout << "Checking for " << collection_name << " in lcio file.\n";
+      }
+      if (!has_collection(collection_name.c_str())) {
+         // Check if a no-postscript version of the collection exists.
+         size_t pos = collection_name.find_last_of("_");
+         if (pos != string::npos) {
+            string no_postfix = collection_name.substr(0, pos);
+            string postfix = collection_name.substr(pos);
+            if (has_collection(no_postfix.c_str()) &&
+                  ((kf_has_no_postscript && postfix == "_KF") || (gbl_has_no_postscript && postfix == "_GBL")) ) {
+               // The no_postfix version exists.
+               if (md_Debug & kDebug_Warning)
+                  cout << "WARNING: The LCIO file does not have " << collection_name << ". Using " << no_postfix
+                       << " instead.\n";
+               Type_to_Collection[*type] = no_postfix;
+
+            } else {
+               if (md_Debug & kDebug_Warning)
+                  cout << "WARNING: The LCIO file does not have " << collection_name << ". Removing from list.\n";
+               // See https://www.techiedelight.com/remove-elements-vector-inside-loop-cpp
+               // We need to make sure the iterator is not invalidated by the erase.
+               particle_types_double.erase(type--);
+            }
+         } else {
+            if (md_Debug & kDebug_Warning)
+               cout << "WARNING: The LCIO file does not have " << collection_name << ". Removing from list.\n";
             // See https://www.techiedelight.com/remove-elements-vector-inside-loop-cpp
             // We need to make sure the iterator is not invalidated by the erase.
             particle_types_double.erase(type--);
          }
       }
-      data_type_is_known = true;
    }
+
+   for (auto type = particle_types_double.begin(); type < particle_types_double.end(); ++type) {
+      string collection_name = Type_to_VertexCollection[*type];
+      if (md_Debug & kDebug_L1) {
+         cout << "Checking for " << collection_name << " in lcio file.\n";
+      }
+      if (!has_collection(collection_name.c_str())) {
+         // Check if a no-postscript version of the collection exists.
+         size_t pos = collection_name.find_last_of("_");
+         if (pos != string::npos) {
+            string no_postfix = collection_name.substr(0, pos);
+            string postfix = collection_name.substr(pos);
+            if (has_collection(no_postfix.c_str()) &&
+                  ((kf_has_no_postscript && postfix == "_KF") || (gbl_has_no_postscript && postfix == "_GBL"))) {
+               // The no_postfix version exists.
+               if (md_Debug & kDebug_Warning)
+                  cout << "WARNING: The LCIO file does not have " << collection_name << ". Using " << no_postfix
+                       << " instead.\n";
+               Type_to_VertexCollection[*type] = no_postfix;
+            }
+         }
+      }
+   }
+   data_type_is_known = true;
 }
 
 bool LcioReader::Process(Long64_t entry){

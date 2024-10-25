@@ -18,7 +18,7 @@ int main(int argc, char **argv){
 
    // This is a nicer way to do options in C++. See cxxopts.hpp file.
    string help_string = string("Write a ROOT MiniDst for HPS data.\n") +
-                        "Version: 1.0.9, using MiniDst.h version " + MiniDst::_version_() +
+                        "Version: 1.1, using MiniDst.h version " + MiniDst::_version_() +
                         ", LcioReader version " + LcioReader::_version_() +
                         "\nCompiled with "+__VERSION__+"\n";
    cxxopts::Options options(argv[0], help_string);
@@ -143,7 +143,7 @@ int main(int argc, char **argv){
       }else if( infiles.size()>0 && infiles[0].find(".slcio") != string::npos ) {
          auto dstlcio = new LcioReader(infiles, debug_code);
          if(args["magfield"].as<double>() > 0.) dstlcio->magnetic_field = args["magfield"].as<double>();
-         if(args["kf_has_postfix"].as<bool>()) dstlcio->kf_has_not_postscript = false;
+         if(args["kf_has_postfix"].as<bool>()) dstlcio->kf_has_no_postscript = false;
          if(args["gbl_has_no_postfix"].as<bool>()) dstlcio->gbl_has_no_postscript = true;
          dst = static_cast<MiniDst*>(dstlcio);
 

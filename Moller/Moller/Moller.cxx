@@ -121,84 +121,6 @@ RNode Moller::Add_Four_Vectors(RNode in, double y_rotation, std::string pair_nam
    return in;
 }
 
-RNode Moller::Add_Four_Vectors_v0(RNode in, double y_rotation, std::string v0_name, std::string part_name,
-                               std::string out_name_prefix) {
-   // Add two four-vectors and related variables to the dataframe.
-
-   auto add_4vector_first = [y_rotation](RVec<int> v0_indx,
-         RVec<int> v0_em_part, RVec<double> px, RVec<double> py, RVec<double> pz){
-      RVec<TLorentzVector> out;
-      for(int i=0; i<v0_indx.size(); ++i) {
-         TLorentzVector v4;
-         int item = v0_em_part[v0_indx[i]];
-         v4.SetXYZM(px[item], py[item], pz[item], 0.000510998949996);
-         v4.RotateY(y_rotation);
-         out.emplace_back(v4);
-      }
-      return out;
-   };
-
-   auto add_4vector_second = [y_rotation](RVec<std::pair<int,int> > pairs, RVec<double> px, RVec<double> py, RVec<double> pz){
-      RVec<TLorentzVector> out;
-      for(int i=0; i<pairs.size(); ++i) {
-         TLorentzVector v4;
-         int item = pairs[i].second;
-         v4.SetXYZM(px[item], py[item], pz[item], 0.000510998949996);
-         v4.RotateY(y_rotation);
-         out.emplace_back(v4);
-      }
-      return out;
-   };
-
-
-   auto add_minv = [](RVec<TLorentzVector> v1, RVec<TLorentzVector> v2){
-      assert(v1.size() == v2.size());
-      RVec<double> out;
-      for(int i=0; i< v1.size(); ++i) {
-         out.push_back((v1[i] + v2[i]).M());
-      }
-      return out;
-   };
-
-   auto add_theta = [](RVec<TLorentzVector> v1){
-      RVec<double> out;
-      for(int i=0; i< v1.size(); ++i) {
-         out.push_back(v1[i].Theta());
-      }
-      return out;
-   };
-
-   auto add_energy = [](RVec<TLorentzVector> v1){
-      RVec<double> out;
-      for(int i=0; i< v1.size(); ++i) {
-         out.push_back(v1[i].E());
-      }
-      return out;
-   };
-
-   auto add_beam_theta_x = [](RVec<TLorentzVector> v1, RVec<TLorentzVector> v2){
-      assert(v1.size() == v2.size());
-      RVec<double> out;
-      for(int i=0; i< v1.size(); ++i) {
-         out.push_back( atan2((v1[i]+v2[i]).X(), (v1[i]+v2[i]).Z()));
-      }
-      return out;
-   };
-
-   in = in.Define(out_name_prefix+"v1", add_4vector_first, {v0_name, part_name + "px", part_name + "py", part_name + "pz"});
-   in = in.Define(out_name_prefix+"v2", add_4vector_second, {v0_name, part_name + "px", part_name + "py", part_name + "pz"});
-   in = in.Define(out_name_prefix+"minv", add_minv, {out_name_prefix+"v1", out_name_prefix+"v2"});
-   in = in.Define(out_name_prefix+"tht1", add_theta, {out_name_prefix+"v1"});
-   in = in.Define(out_name_prefix+"tht2", add_theta, {out_name_prefix+"v2"});
-   in = in.Define(out_name_prefix+"E1", add_energy, {out_name_prefix+"v1"});
-   in = in.Define(out_name_prefix+"E2", add_energy, {out_name_prefix+"v2"});
-
-   in = in.Define(out_name_prefix+"beam_theta_x", add_beam_theta_x, {out_name_prefix+"v1", out_name_prefix+"v2"});
-
-   return in;
-}
-
-
 RNode Moller::Cut_2_electrons(RNode in, bool exact) {
    // Cut to select events that have two electrons. If exact = true (default) then cut on two and only
    // two electrons.
@@ -274,9 +196,9 @@ RNode Moller::Select_v0(RNode in, int type, double time_cut_min, double time_cut
       return out;
    };
 
-   return in.Define(out_name,add_electron_pairs,{"v0_em_part","v0_ep_part"}).Define(out_name+"_idx", select_v0, {"v0_type", "v0_em_track", "v0_ep_track", "track_time"});
+   return in.Define(out_name,add_electron_pairs,{"v0_em_part","v0_ep_part"})
+   .Define(out_name+"_idx", select_v0, {"v0_type", "v0_em_track", "v0_ep_track", "track_time"});
 }
-
 
 RNode Moller::Select_El_Pairs_MC(RNode in, double time_cut_min, double time_cut_max, double z_cut, std::string out_name){
    // Select all pairs of electrons from the MCPartcile collection that are primary electrons and

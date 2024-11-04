@@ -60,7 +60,6 @@ public:
    RNode Refine_El_Pairs_X2(RNode in, std::string pairs_name, std::string in_idx_name, std::string out_idx_name, bool isData=true);
 
    RNode Select_v0(RNode in, int type=4, double time_cut=4., double time_cut_max=20., std::string out_name="v0_uc");
-   RNode Add_Four_Vectors_v0(RNode in, double y_rotation=-0.0302, std::string v0_name="v0_uc", std::string part_name="part_", std::string out_name_prefix="v0p4");
 
    RNode Cut_2_electrons(RNode in, bool exact = true);
 

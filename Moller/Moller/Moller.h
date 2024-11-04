@@ -10,7 +10,7 @@
 #ifndef MOLLER_MOLLER_H
 #define MOLLER_MOLLER_H
 
-#define __MOLLER_VERSION__ "0.3.3"
+#define __MOLLER_VERSION__ "1.0"
 
 #include "TObject.h"
 #include "TChain.h"
@@ -44,22 +44,27 @@ public:
    void Print(Option_t *opt = "");
 
    RNode Select_El_Pairs(RNode in, double time_cut=4., double time_cut_max=20., std::string out_name="electron_pairs");
-   RNode Select_El_Pairs_v0(RNode in, int type=4, double time_cut=4., double time_cut_max=20., std::string out_name="v0_uc_pairs");
-//   RNode Select_El_Pairs(RNode in, double time_cut=2., std::string out_name="electron_pairs");
    RNode Select_El_Pairs_MC(RNode in, double time_cut_min = 0., double time_cut_max=2., double z_cut = 0.001, std::string out_name="mc_electron_pairs");
 
    RNode Add_Four_Vectors(RNode in, double y_rotation=-0.0302, std::string pair_name="electron_pairs", std::string part_name="part_", std::string out_name_prefix="p4");
-   //RNode Add_Four_Vectors_V0(RNode in, double y_rotation=-0.0302, int v0_type=4, std::string out_name_prefix="v_uc");
-   RNode Add_Moller_Inv_Mass(RNode in, std::string pair_name="electron_pairs", std::string out_name="moller_inv_mass");
-   RNode Add_Momentum_Sum(RNode in, std::string pair_name="electron_pair", std::string out_name="el_pair_psum");
-   RNode Refine_El_Pairs_1(RNode in, double pcut=2., double pmin=2.306*0.75, double pmax=2.306*1.15, std::string in_name="electron_pairs", std::string out_name="el_pairs_r1");
-   RNode Refine_El_Pairs_2(RNode in, std::string in_name="el_pairs_r1", std::string out_name="el_pairs_r2");
-   RNode Refine_El_Pairs_2(RNode in, double phi_cut, std::string in_name="el_pairs_r1", std::string p4_prefix="r1_", std::string out_name="el_pairs_r2");
+   //RNode Add_Moller_Inv_Mass(RNode in, std::string pair_name="electron_pairs", std::string out_name="moller_inv_mass");
+   //RNode  Add_Momentum_Sum(RNode in, std::string pair_name="electron_pair", std::string out_name="el_pair_psum");
+   RNode Refine_El_Pairs_1(RNode in, double pcut=2., double pmin=2.306*0.75, double pmax=2.306*1.15, std::string pairs_name="electron_pairs", std::string in_index="electron_pairs_idx", std::string out_name="el_index_r1");
+   RNode Refine_El_Pairs_2(RNode in, std::string pairs_name="electron_pairs", std::string in_name="el_pairs_r1", std::string out_name="el_pairs_r2");
+   RNode Refine_El_Pairs_2(RNode in, double phi_cut, std::string pairs_name, std::string in_idx_name="el_pairs_r1", std::string p4_prefix="r1_", std::string out_idx_name="el_pairs_r2");
    RNode Refine_El_Pairs_3(RNode in, double theta_cut, std::string in_name="el_pairs_r2", std::string p4_prefix="r2_", std::string out_name="el_pairs_r3");
+   RNode Refine_El_Pairs_chi2(RNode in, double chi2_cut, std::string pairs_name="electron_pairs", std::string in_name="electron_pairs", std::string out_name="el_pairs_chi");
+   RNode Refine_El_Pairs_nhit(RNode in, int nhit_cut, std::string in_name="electron_pairs", std::string out_name="el_pairs_nhit");
 
-   RNode Refine_El_Pairs_X(RNode in, double mint_heta=0.04, double max_theta=0.048, std::string angle1="r2_p4tht1", std::string angle2="r2_p4tht2", std::string in_name="el_pairs_r2", std::string out_name="el_pairs_r3");
-   RNode Refine_El_Pairs_X2(RNode in,std::string in_name, std::string out_name, bool isData=true);
+   RNode Refine_El_Pairs_X(RNode in, double mint_heta=0.04, double max_theta=0.048, std::string angle1="r2_p4tht1", std::string angle2="r2_p4tht2", std::string in_idx_name="el_pairs_r2", std::string out_idx_name="el_pairs_r3");
+   RNode Refine_El_Pairs_X2(RNode in, std::string pairs_name, std::string in_idx_name, std::string out_idx_name, bool isData=true);
+
+   RNode Select_v0(RNode in, int type=4, double time_cut=4., double time_cut_max=20., std::string out_name="v0_uc");
+   RNode Add_Four_Vectors_v0(RNode in, double y_rotation=-0.0302, std::string v0_name="v0_uc", std::string part_name="part_", std::string out_name_prefix="v0p4");
+
    RNode Cut_2_electrons(RNode in, bool exact = true);
+
+   double mycrystalball(double x, double N, double alpha, double n, double sigma, double mean);
 
    // Variadic function permits any number of arguments. Unfortunately, the RDataFrame.Define or .Filter do not work with this.
    template<typename ...Vecs>

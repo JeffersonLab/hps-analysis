@@ -18,7 +18,7 @@ int main(int argc, char **argv){
 
    // This is a nicer way to do options in C++. See cxxopts.hpp file.
    string help_string = string("Write a ROOT MiniDst for HPS data.\n") +
-                        "Version: 1.0.8, using MiniDst.h version " + MiniDst::_version_() +
+                        "Version: 1.1, using MiniDst.h version " + MiniDst::_version_() +
                         ", LcioReader version " + LcioReader::_version_() +
                         "\nCompiled with "+__VERSION__+"\n";
    cxxopts::Options options(argv[0], help_string);
@@ -62,6 +62,10 @@ int main(int argc, char **argv){
          ("no_kf_particles","Do NOT store the KF particles or vertexes.",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("no_gbl_particles","Do NOT store the GBL particles or vertexes.",
+          cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+         ("kf_has_postfix","The KF collections have the _KF postfix. (default is no postfix)",
+          cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+         ("gbl_has_no_postfix","The GBL collections do not have the _GBL postfix. (default is _GBL)",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("m,magfield","Magnetic field strength to use in Tesla to compute px,py,pz",
                cxxopts::value<double>()->default_value("0."))
@@ -139,7 +143,8 @@ int main(int argc, char **argv){
       }else if( infiles.size()>0 && infiles[0].find(".slcio") != string::npos ) {
          auto dstlcio = new LcioReader(infiles, debug_code);
          if(args["magfield"].as<double>() > 0.) dstlcio->magnetic_field = args["magfield"].as<double>();
-
+         if(args["kf_has_postfix"].as<bool>()) dstlcio->kf_has_no_postscript = false;
+         if(args["gbl_has_no_postfix"].as<bool>()) dstlcio->gbl_has_no_postscript = true;
          dst = static_cast<MiniDst*>(dstlcio);
 
 //         // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
@@ -185,11 +190,11 @@ int main(int argc, char **argv){
          vector<int> copy_double(dst->particle_types_double); // make a copy
          dst->particle_types_double.clear();
          for(int p: copy_double){
-            if(p >= dst->FINAL_STATE_PARTICLE_GBL) dst->particle_types_single.push_back(p);
+            if(p >= dst->FINAL_STATE_PARTICLE_GBL) dst->particle_types_double.push_back(p);
          }
       }
 
-      if(args["no_gbl_particles"].as<bool>()){  // Erase and and all GBL particle types in the output list.
+      if(args["no_gbl_particles"].as<bool>()){  // Erase all GBL particle types in the output list.
          vector<int> copy_single(dst->particle_types_single); // make a copy
          dst->particle_types_single.clear();
          for(int p: copy_single){
@@ -198,7 +203,7 @@ int main(int argc, char **argv){
          vector<int> copy_double(dst->particle_types_double); // make a copy
          dst->particle_types_double.clear();
          for(int p: copy_double){
-            if(p < dst->FINAL_STATE_PARTICLE_GBL) dst->particle_types_single.push_back(p);
+            if(p < dst->FINAL_STATE_PARTICLE_GBL) dst->particle_types_double.push_back(p);
          }
       }
 

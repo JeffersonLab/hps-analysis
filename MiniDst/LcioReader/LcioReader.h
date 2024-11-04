@@ -32,7 +32,7 @@
 
 #include "MiniDst.h"
 
-#define LCIOReader__Version__ "1.2.1"
+#define LCIOReader__Version__ "1.2.3"
 using namespace std;
 
 // Collection in May 2021 versions of the 2019 data with both KF and GBL tracking.
@@ -51,8 +51,14 @@ using namespace std;
 
 
 class LcioReader : public MiniDst {
-
-    const vector<string> Type_to_Collection{
+//
+// Type_to_collection and Type_to_VertexCollection are used to map the type of collection to the collection name.
+// Unfortunately, in the *data* these collection types are controlled in the lcsim steering file, and are thus
+// not consistent between various data sets.
+// In older data sets the _GBL marker will not be present. In newer data sets the _KF marker will be omitted.
+// Which one is which can be switched by the kf_has_no_postscript flag.
+//
+    vector<string> Type_to_Collection{
         "FinalStateParticles_KF",  // FINAL_STATE_PARTICLE: 0
         "UnconstrainedV0Candidates_KF", // UC_V0_CANDIDATE: 1,
         "BeamspotConstrainedV0Candidates_KF", // BSC_V0_CANDIDATE: 2,
@@ -62,17 +68,17 @@ class LcioReader : public MiniDst {
         "TargetConstrainedMollerCandidates_KF", // TC_MOLLER_CANDIDATE: 6,
         "OtherElectrons_KF", // OTHER_ELECTRONS: 7,
         "UnconstrainedVcCandidates_KF", // UC_VC_VERTICES_GBL: 8
-        "FinalStateParticles",  // FINAL_STATE_PARTICLE_GBL: 0+9
-        "UnconstrainedV0Candidates", // UC_V0_VERTICES_GBL: 1+9
-        "BeamspotConstrainedV0Candidates", // BSC_V0_VERTICES_GBL: 2+9
-        "TargetConstrainedV0Candidates", // TC_V0_VERTICES_GBL: 3+9,
-        "UnconstrainedMollerCandidates", // UC_MOLLER_VERTICES_GBL: 4+9,
-        "BeamspotConstrainedMollerCandidates", // BSC_MOLLER_VERTICES_GBL: 5+9,
-        "TargetConstrainedMollerCandidates", // TC_MOLLER_VERTICES_GBL: 6+9,
-        "OtherElectrons", // OTHER_ELECTRONS_GBL: 7+9,
-        "UnconstrainedVcCandidates", // UC_VC_VERTICES_GBL: 8+9
+        "FinalStateParticles_GBL",  // FINAL_STATE_PARTICLE_GBL: 0+9
+        "UnconstrainedV0Candidates_GBL", // UC_V0_VERTICES_GBL: 1+9
+        "BeamspotConstrainedV0Candidates_GBL", // BSC_V0_VERTICES_GBL: 2+9
+        "TargetConstrainedV0Candidates_GBL", // TC_V0_VERTICES_GBL: 3+9,
+        "UnconstrainedMollerCandidates_GBL", // UC_MOLLER_VERTICES_GBL: 4+9,
+        "BeamspotConstrainedMollerCandidates_GBL", // BSC_MOLLER_VERTICES_GBL: 5+9,
+        "TargetConstrainedMollerCandidates_GBL", // TC_MOLLER_VERTICES_GBL: 6+9,
+        "OtherElectrons_GBL", // OTHER_ELECTRONS_GBL: 7+9,
+        "UnconstrainedVcCandidates_GBL", // UC_VC_VERTICES_GBL: 8+9
     };
-    const vector<string> Type_to_VertexCollection{
+    vector<string> Type_to_VertexCollection{
             "",  // FINAL_STATE_PARTICLE: 0
             "UnconstrainedV0Vertices_KF", // UC_V0_CANDIDATE: 1,
             "BeamspotConstrainedV0Vertices_KF", // BSC_V0_CANDIDATE: 2,
@@ -82,15 +88,15 @@ class LcioReader : public MiniDst {
             "TargetConstrainedMollerVertices_KF", // TC_MOLLER_CANDIDATE: 6,
             "", // OTHER_ELECTRONS: 7,
             "UnconstrainedVcVertices_KF", // UC_VC_CANDIDATE: 8
-            "",  // FINAL_STATE_PARTICLE: 0
-            "UnconstrainedV0Vertices", // UC_V0_VERTICES_GBL: 1,
-            "BeamspotConstrainedV0Vertices", // BSC_V0_VERTICES_GBL: 2,
-            "TargetConstrainedV0Vertices", // TC_V0_VERTICES_GBL: 3,
-            "UnconstrainedMollerVertices", // UC_MOLLER_VERTICES_GBL: 4,
-            "BeamspotConstrainedMollerVertices", // BSC_MOLLER_VERTICES_GBL: 5,
-            "TargetConstrainedMollerVertices", // TC_MOLLER_VERTICES_GBL: 6,
-            "", // OTHER_ELECTRONS_GBL: 7,
-            "UnconstrainedVcVertices", // UC_VC_VERTICES_GBL: 8
+            "",  // FINAL_STATE_PARTICLE: 0+9
+            "UnconstrainedV0Vertices_GBL", // UC_V0_VERTICES_GBL: 1+9,
+            "BeamspotConstrainedV0Vertices_GBL", // BSC_V0_VERTICES_GBL: 2+9,
+            "TargetConstrainedV0Vertices_GBL", // TC_V0_VERTICES_GBL: 3+9,
+            "UnconstrainedMollerVertices_GBL", // UC_MOLLER_VERTICES_GBL: 4+9,
+            "BeamspotConstrainedMollerVertices_GBL", // BSC_MOLLER_VERTICES_GBL: 5+9,
+            "TargetConstrainedMollerVertices_GBL", // TC_MOLLER_VERTICES_GBL: 6+9,
+            "", // OTHER_ELECTRONS_GBL: 7+9,
+            "UnconstrainedVcVertices_GBL", // UC_VC_VERTICES_GBL: 8+9
     };
 
 public:
@@ -128,6 +134,8 @@ public:
     bool is_2019_data{false};  // True for 2019 data: i.e. there is a TSBank and a VTPBank.
     bool is_MC_data{false};    // True is there is an MCParticles bank.
     bool has_rf_hits{true};
+    bool kf_has_no_postscript{true}; // Set to true if the Vertex etc collections have no postscript of _KF.
+    bool gbl_has_no_postscript{false}; // GBL has not postscript of _GBL.
 
     double magnetic_field{0.};
 

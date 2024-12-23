@@ -1,5 +1,5 @@
 # Create the Dst2016 library
-cmake_minimum_required(VERSION 3.5.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10.0 FATAL_ERROR)
 project(Dst2016)
 
 # link_directories("/data/HPS/lib")

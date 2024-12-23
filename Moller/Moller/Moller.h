@@ -6,7 +6,7 @@
 // is the manipulated to make cuts. This is 1) more efficient since we don't need to recompute (and store) the 4-vector and related
 // quantities, and 2) it works with the electron_pairs and the v0 vertexes, which have the 2 electrons in v0_em_pair and v0_ep_pair.
 // To make the use of the 4-vectors transparent between for the v0 vertexes, the electron part index is copied into a vector<pair<int,int>>.
-// 
+//
 // References:
 // "Resonance search analysis of 2016 HPS spring run data." Bump hunt folks, https://confluence.slac.stanford.edu/download/attachments/146715820/HPS_2016_Bump_Hunt_Internal_Note.pdf
 // "Search for a Heavy Photon in Electro-Produced e+e− Pairs with the HPS Experiment at JLab", Omar Moreno, Nathan Baltzell, Mathew Graham, John Jaros, https://confluence.slac.stanford.edu/download/attachments/146715820/engrun2015_resonance_search.pdf

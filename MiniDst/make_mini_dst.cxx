@@ -61,7 +61,7 @@ int main(int argc, char **argv){
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("no_kf_particles","Do NOT store the KF particles or vertexes.",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-         ("no_gbl_particles","Do NOT store the GBL particles or vertexes.",
+         ("gbl_particles","Also store the GBL particles or vertexes if available.",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("kf_has_postfix","The KF collections have the _KF postfix. (default is no postfix)",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
@@ -176,7 +176,7 @@ int main(int argc, char **argv){
       dst->use_matched_tracks = matched_tracks || all_tracks || store_all;
       dst->use_extra_tracks = args["extra_track"].as<bool>();
       dst->use_kf_particles = !args["no_kf_particles"].as<bool>();
-      dst->use_gbl_particles = !args["no_gbl_particles"].as<bool>();
+      dst->use_gbl_particles = args["gbl_particles"].as<bool>();
       dst->use_mc_particles = !args["no_mc_particles"].as<bool>();
       dst->use_mc_scoring = args["use_mc_scoring"].as<bool>();
       dst->SetOutputFileName(outfile);
@@ -194,7 +194,7 @@ int main(int argc, char **argv){
          }
       }
 
-      if(args["no_gbl_particles"].as<bool>()){  // Erase all GBL particle types in the output list.
+      if(!args["gbl_particles"].as<bool>()){  // Erase all GBL particle types in the output list.
          vector<int> copy_single(dst->particle_types_single); // make a copy
          dst->particle_types_single.clear();
          for(int p: copy_single){

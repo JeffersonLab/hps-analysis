@@ -174,9 +174,9 @@ int main(int argc, char **argv){
       dst->use_ecal_raw_hits = args["raw_hits"].as<bool>();
       dst->use_hodo_raw_hits = args["raw_hits"].as<bool>();
       dst->use_kf_tracks = kf_tracks || all_tracks || store_all;
-      dst->use_gbl_tracks = all_tracks || store_all || args["gbl_tracks"].as<bool>();
-      dst->use_gbl_kink_data = store_all || args["gbl_kinks"].as<bool>();
-      dst->use_matched_tracks = matched_tracks || all_tracks || store_all;
+      dst->use_gbl_tracks = all_tracks || args["gbl_tracks"].as<bool>();
+      dst->use_gbl_kink_data = args["gbl_kinks"].as<bool>();
+      dst->use_matched_tracks = matched_tracks || all_tracks;
       dst->use_extra_tracks = args["extra_track"].as<bool>();
       dst->use_kf_particles = !args["no_kf_particles"].as<bool>();
       dst->use_gbl_particles = args["gbl_particles"].as<bool>();

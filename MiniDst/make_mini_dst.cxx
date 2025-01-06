@@ -104,8 +104,11 @@ int main(int argc, char **argv){
       }else {
          debug = 0;
       }
-      if(debug) {
+      if(debug > 1) {
          cout << "Debug was set to: " << debug << endl;
+      }
+
+      if(debug) {
          cout << "Input: ";
          for (auto &v : infiles) {
             cout << " " << v;
@@ -181,7 +184,7 @@ int main(int argc, char **argv){
       dst->use_mc_scoring = args["use_mc_scoring"].as<bool>();
       dst->SetOutputFileName(outfile);
 
-      if(args["no_kf_particles"].as<bool>()){  // Erase and and all KF particle types in the output list.
+      if(args["no_kf_particles"].as<bool>()){  // Erase all KF particle types in the output list.
          vector<int> copy_single(dst->particle_types_single); // make a copy
          dst->particle_types_single.clear();
          for(int p: copy_single){

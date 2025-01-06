@@ -8,14 +8,14 @@
 #include "LcioReader.h"
 
 LcioReader::LcioReader(const string &input_file, const int debug_level) {
-   if(md_Debug > 0) md_Debug = debug_level;
-   cout << "LcioReader Debug level is " << md_Debug << std::endl;
+   if(debug_level > 0) md_Debug = debug_level;
+   if(md_Debug) cout << "LcioReader Debug level is " << md_Debug << std::endl;
    if(!input_file.empty()) input_files.push_back(input_file);
 };
 
 LcioReader::LcioReader(const vector<string> &infile_list, const int debug_level){
-   md_Debug = debug_level;
-   if(md_Debug > 0) cout << "LcioReader Debug level is " << md_Debug << std::endl;
+   if(debug_level > 0) md_Debug = debug_level;
+   if(md_Debug & kDebug_Info) cout << "LcioReader Debug level is " << md_Debug << std::endl;
    for(auto f : infile_list){
       input_files.push_back(f);
    }
@@ -30,7 +30,7 @@ LcioReader::LcioReader(const vector<string> &infile_list, const int debug_level)
 };
 
 void LcioReader::Start(){
-   if( md_Debug>0 ) {
+   if( md_Debug & kDebug_Info ) {
       printf("LCIO READER version " LCIOReader__Version__ "\n");
    }
    // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
@@ -316,7 +316,7 @@ void LcioReader::SetupLcioDataType() {
             if (has_collection(no_postfix.c_str()) &&
                   ((kf_has_no_postscript && postfix == "_KF") || (gbl_has_no_postscript && postfix == "_GBL")) ) {
                // The no_postfix version exists.
-               if (md_Debug & kDebug_Warning)
+               if (md_Debug & kDebug_L1)
                   cout << "WARNING: The LCIO file does not have " << collection_name << ". Using " << no_postfix
                        << " instead.\n";
                Type_to_Collection[*type] = no_postfix;

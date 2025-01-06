@@ -281,7 +281,7 @@ void LcioReader::SetupLcioDataType() {
             if (has_collection(no_postfix.c_str()) &&
                   ((kf_has_no_postscript && postfix == "_KF") || (gbl_has_no_postscript && postfix == "_GBL"))) {
                // The no_postfix version exists, and is the one to be used
-               if (md_Debug & kDebug_Warning)
+               if (md_Debug & kDebug_L1)
                   cout << "WARNING: The LCIO file does not have " << collection_name << ". Using " << no_postfix
                        << " instead.\n";
                Type_to_Collection[*type] = no_postfix;
@@ -352,7 +352,7 @@ void LcioReader::SetupLcioDataType() {
             if (has_collection(no_postfix.c_str()) &&
                   ((kf_has_no_postscript && postfix == "_KF") || (gbl_has_no_postscript && postfix == "_GBL"))) {
                // The no_postfix version exists.
-               if (md_Debug & kDebug_Warning)
+               if (md_Debug & kDebug_L1)
                   cout << "WARNING: The LCIO file does not have " << collection_name << ". Using " << no_postfix
                        << " instead.\n";
                Type_to_VertexCollection[*type] = no_postfix;

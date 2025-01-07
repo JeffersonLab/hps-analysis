@@ -9,7 +9,7 @@
 
 LcioReader::LcioReader(const string &input_file, const int debug_level) {
    if(debug_level > 0) md_Debug = debug_level;
-   if(md_Debug) cout << "LcioReader Debug level is " << md_Debug << std::endl;
+   if(md_Debug & kDebug_Info) cout << "LcioReader Debug level is " << md_Debug << std::endl;
    if(!input_file.empty()) input_files.push_back(input_file);
 };
 

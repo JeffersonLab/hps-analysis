@@ -9,13 +9,11 @@
 
 LcioReader::LcioReader(const string &input_file, const int debug_level) {
    if(debug_level > 0) md_Debug = debug_level;
-   if(md_Debug & kDebug_Info) cout << "LcioReader Debug level is " << md_Debug << std::endl;
    if(!input_file.empty()) input_files.push_back(input_file);
 };
 
 LcioReader::LcioReader(const vector<string> &infile_list, const int debug_level){
    if(debug_level > 0) md_Debug = debug_level;
-   if(md_Debug & kDebug_Info) cout << "LcioReader Debug level is " << md_Debug << std::endl;
    for(auto f : infile_list){
       input_files.push_back(f);
    }
@@ -31,7 +29,7 @@ LcioReader::LcioReader(const vector<string> &infile_list, const int debug_level)
 
 void LcioReader::Start(){
    if( md_Debug & kDebug_Info ) {
-      printf("LCIO READER version " LCIOReader__Version__ "\n");
+      printf("LCIO READER version " LCIOReader__Version__ " with debug = %02X \n", md_Debug);
    }
    // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
    // Also, this lets us remove any items from the branches that are not in the LCIO file.

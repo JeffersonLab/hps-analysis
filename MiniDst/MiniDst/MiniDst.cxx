@@ -560,3 +560,40 @@ int MiniDst::Add_Particle(MiniDst &event_in, int i_particle) {
    return part.Add(event_in.part, i_particle, i_ecal, i_track);
 }
 
+void MiniDst::Print(Option_t *option) const {
+   // Pretty print the contents of the current event in the MiniDst class.
+   cout << "======== Event: " << event_number << " Run: " << run_number << "  ========\n";
+   cout << " Particles: \n";
+   for(int i=0; i< part.pdg.size(); ++i){
+      cout << "   Particle " << i << ": type: " << part.type[i] << " pdg: " << part.pdg[i] << " energy: " << part.energy[i]
+           << " px: " << part.px[i] << " py: " << part.py[i] << " pz: " << part.pz[i]
+           << " track: " << part.track[i] << " ecal_cluster: " << part.ecal_cluster[i] << endl;
+      if(part.ecal_cluster[i] >= 0) {
+         cout << "    |- Ecal Cluster: energy: " << ecal_cluster_energy[part.ecal_cluster[i]]
+              << " time: " << ecal_cluster_time[part.ecal_cluster[i]]
+              << " x: " << ecal_cluster_x[part.ecal_cluster[i]]
+              << " y: " << ecal_cluster_y[part.ecal_cluster[i]]
+              << " z: " << ecal_cluster_z[part.ecal_cluster[i]]
+              << " seed_ix: " << ecal_cluster_seed_ix[part.ecal_cluster[i]]
+              << " seed_iy: " << ecal_cluster_seed_iy[part.ecal_cluster[i]]
+              << " seed_energy: " << ecal_cluster_seed_energy[part.ecal_cluster[i]] << endl;
+      }
+      if(part.track[i] >= 0) {
+         cout << "    |- Track: type: " << track_type[part.track[i]]
+              << " n_hits: " << track_n_hits[part.track[i]]
+              << " d0: " << track_d0[part.track[i]]
+              << " phi0: " << track_phi0[part.track[i]]
+              << " omega: " << track_omega[part.track[i]]
+              << " tan_lambda: " << track_tan_lambda[part.track[i]]
+              << " z0: " << track_z0[part.track[i]]
+              << " chi2: " << track_chi2[part.track[i]]
+              << " time: " << track_time[part.track[i]]
+              << " px: " << track_px[part.track[i]]
+              << " py: " << track_py[part.track[i]]
+              << " pz: " << track_pz[part.track[i]] << endl;
+         cout << "     |- At ECal: " << " x: " << track_x_at_ecal[part.track[i]]
+              << " y: " << track_y_at_ecal[part.track[i]]
+              << " z: " << track_z_at_ecal[part.track[i]] << endl;
+      }
+   }
+}

@@ -118,6 +118,9 @@ public:
    int Add_Track(MiniDst &event_in, int i_track, bool also_copy_svt_hits=false);
    int Add_Particle(MiniDst &event_in, int i_particle);
 
+   //
+   void Print(	Option_t *	option = "") const override;
+
 public:
 
    enum Debug_codes {

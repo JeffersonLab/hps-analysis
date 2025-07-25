@@ -33,7 +33,7 @@ LcioReader::LcioReader(const vector<string> &infile_list, const int debug_level)
 
 void LcioReader::Start(){
    if( md_Debug & kDebug_Info ) {
-      printf("LCIO READER version " LCIOReader__Version__ " with debug = %02X \n", md_Debug);
+      printf("LCIO READER version " __LCIOReader__Version__ " with debug = %02X \n", md_Debug);
    }
    // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
    // Also, this lets us remove any items from the branches that are not in the LCIO file.
@@ -1613,6 +1613,7 @@ void LcioReader::Fill_Vertex_From_LCIO(Vertex_Particle_t *vp, EVENT::Vertex *lci
    }
 
    EVENT::ReconstructedParticle *vertex_part = lcio_vert->getAssociatedParticle();
+
    Fill_Basic_Particle_From_LCIO(vp, vertex_part, false); // We DO NOT use the momentum or mass!!!!!
 
    EVENT::ParticleID *lcio_part_id = vertex_part->getParticleIDUsed();

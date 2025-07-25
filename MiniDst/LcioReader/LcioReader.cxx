@@ -6,6 +6,8 @@
 /// to disable the md_output_tree by setting it to nullptr, so it does not write out...
 ///
 #include "LcioReader.h"
+#include "TLorentzVector.h"
+#include "TMath.h"
 
 LcioReader::LcioReader(const string &input_file, const int debug_level) {
    if(md_Debug > 0) md_Debug = debug_level;
@@ -31,7 +33,7 @@ LcioReader::LcioReader(const vector<string> &infile_list, const int debug_level)
 
 void LcioReader::Start(){
    if( md_Debug>0 ) {
-      printf("LCIO READER version " LCIOReader__Version__ "\n");
+      printf("LCIO READER version " __LCIOReader__Version__ "\n");
    }
    // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
    // Also, this lets us remove any items from the branches that are not in the LCIO file.
@@ -1470,11 +1472,9 @@ bool LcioReader::Process(Long64_t entry){
 
 long LcioReader::Run(int max_event) {
 
-
    for (const string &file: input_files) {
 
       if (md_Debug & kDebug_L1) cout << "Opening file : " << file << endl;
-
 
       is_2016_data = false;
       is_2019_data = false;
@@ -1534,28 +1534,87 @@ void LcioReader::Fill_Vertex_From_LCIO(Vertex_Particle_t *vp, EVENT::Vertex *lci
       vp->py.push_back(pv.Py());
       vp->pz.push_back(pv.Pz());
 
-   }else{  // Newer algorithm, 2019 data.
+   }else if(params.size() == 24 || params.size() == 23) {  // Newer algorithm, 2019 data.
       //0 V0PzErr, 1 invMass, 2 V0Pz, 3 vXErr, 4 V0Py, 5 V0Px, 6 V0PErr, 7 V0TargProjY, 8 vZErr,
       //9 V0TargProjXErr, 10 vYErr, 11 V0TargProjYErr, 12 invMassError, 13 p1X, 14 p2Y, 15 p2X,
       // 16 V0P, 17 p1Z, 18 p1Y, 19 p2Z, 20 V0TargProjX, 21 layerCode, 22 V0PxErr, 23 V0PyErr
+      //
+      // NOTE: The data is written as a map<string,float>, but the C++ version of LCIO reads this as a vector<float>.
+      // Yes, this is an idiotic implementation. Occasionally the layerCode is missing, so then the size is 23.
+      // It appears that the order of storage is stable.
+      // In hps-java the parameters are filled in BilliorVertex.java
+      //
       vp->mass.push_back(params[1]);
       vp->mass_err.push_back(params[12]);
-//        TVector3 p1(params[13],params[18],params[17]);
-//        TVector3 p2(params[15],params[14],params[19]);
-//        TVector3 pv = p1+p2;
+
+      vp->em_px_refit.push_back(params[13]);  // Electron momentum X
+      vp->em_py_refit.push_back(params[18]);  // Electron momentum Y
+      vp->em_pz_refit.push_back(params[17]);  // Electron momentum Z
+      vp->ep_px_refit.push_back(params[15]);  // Positron momentum X
+      vp->ep_py_refit.push_back(params[14]);  // Positron momentum Y
+      vp->ep_pz_refit.push_back(params[19]);  // Positron momentum Z
+
       vp->px.push_back(params[5]);
       vp->py.push_back(params[4]);
       vp->pz.push_back(params[2]);
+
+      if (params.size() == 24){
+         vp->px_err.push_back(params[22]); // V0PxErr
+         vp->py_err.push_back(params[23]); // V0PyErr
+      } else if (params.size() == 23) {
+         vp->px_err.push_back(params[21]); // V0PxErr
+         vp->py_err.push_back(params[20]); // V0PyErr
+      }
+      vp->pz_err.push_back(params[0]); // V0PzErr
+
+      vp->p.push_back(params[16]);  // V0P
+      vp->p_err.push_back(params[6]);  // V0PErr
+
+      vp->target_proj_x.push_back(params[20]);  // V0TargProjX
+      vp->target_proj_y.push_back(params[7]);   // V0TargProjY
+      vp->target_proj_x_err.push_back(params[9]);  // V0TargProjXErr
+      vp->target_proj_y_err.push_back(params[11]); // V0TargProjYErr
+
+      vp->vertex_x_err.push_back(params[3]); // vXErr
+      vp->vertex_y_err.push_back(params[10]); // vYErr
+      vp->vertex_z_err.push_back(params[8]); // vZErr
+
+   }else if(params.size() == 21){
+      //0 V0PzErr, 1 invMass, 2 V0Pz, 3 V0Py, 4 V0Px, 5 V0PErr, 6 V0TargProjY, 7 V0TargProjXErr, 8 V0TargProjYErr,
+      //9 invMassError, 10 p1X, 11 p2Y, 12 p2X, 13 V0P, 14 p1Z, 15 p1Y, 16 p2Z, 17 V0TargProjX, 18 layerCode,
+      // 19 V0PxErr, 20 V0PyErr
+      vp->mass.push_back(params[1]);
+      vp->mass_err.push_back(params[9]);
+      vp->em_px_refit.push_back(params[10]);  // Electron momentum X
+      vp->em_py_refit.push_back(params[15]);  // Electron momentum Y
+      vp->em_pz_refit.push_back(params[14]);  // Electron momentum Z
+      vp->ep_px_refit.push_back(params[12]);  // Positron momentum X
+      vp->ep_py_refit.push_back(params[11]);  // Positron momentum Y
+      vp->ep_pz_refit.push_back(params[16]);  // Positron momentum Z
+
+#ifdef DEBUG
+      TVector3 p1(params[10],params[15],params[14]);
+      TVector3 p2(params[12],params[11],params[16]);
+      TVector3 pv = p1+p2;
+      if( abs(pv.Px() - params[4]) > 0.0001 ||
+          abs(pv.Py() - params[3]) > 0.0001 ||
+          abs(pv.Pz() - params[2]) > 0.0001 ){
+         cout << "WARNING: Vertex momentum does not match the sum of daughters. (21)\n";
+         cout << "Vertex momentum:   " << pv.Px() << " " << pv.Py() << " " << pv.Pz() << "\n";
+         cout << "Daughter momentum: " << params[4] << " " << params[3] << " " << params[2] << "\n";
+      }
+#endif
+      vp->px.push_back(params[4]);
+      vp->py.push_back(params[3]);
+      vp->pz.push_back(params[2]);
+   }else{
+      printf("ERROR === Vertex parameters size is %zu, expected 8, 21 or 24.  V0 type = %d\n",
+             params.size(), type);
    }
 
-   //
-   // ToDo: Call Fill_Basic_Particle_From_LCIO instead, but then don't set px,py,pz in Fill_Vertex_From_LCIO!
-   //
    EVENT::ReconstructedParticle *vertex_part = lcio_vert->getAssociatedParticle();
-   Fill_Basic_Particle_From_LCIO(vp, vertex_part, false);
+   Fill_Basic_Particle_From_LCIO(vp, vertex_part, false); // We DO NOT use the momentum or mass!!!!!
 
-   double check_vx_energy = vertex_part->getEnergy();
-//    v0.energy.push_back(check_vx_energy);
    EVENT::ParticleID *lcio_part_id = vertex_part->getParticleIDUsed();
    if(lcio_part_id){
       int pdg = lcio_part_id->getPDG();
@@ -1565,12 +1624,6 @@ void LcioReader::Fill_Vertex_From_LCIO(Vertex_Particle_t *vp, EVENT::Vertex *lci
    }
    // v0.charge.push_back(vertex_part->getCharge());
    // v0.goodness_of_pid.push_back(vertex_part->getGoodnessOfPID());
-
-   double check_vx_mass = vertex_part->getMass();
-   const double *check_vx_mom = vertex_part->getMomentum();
-   double check_vx_px = check_vx_mom[0];
-   double check_vx_py = check_vx_mom[1];
-   double check_vx_pz = check_vx_mom[2];
 
    //const vector<EVENT::Track *> &tracks = vertex_part->getTracks();
    //const EVENT::ClusterVec &cluster_vec = vertex_part->getClusters();
@@ -1588,8 +1641,63 @@ void LcioReader::Fill_Vertex_From_LCIO(Vertex_Particle_t *vp, EVENT::Vertex *lci
       electron = daughters[1];
       positron = daughters[0];
    }
-   Fill_SubPart_From_LCIO(&v0.em, electron, type);
-   Fill_SubPart_From_LCIO(&v0.ep, positron, type);
+
+   Fill_SubPart_From_LCIO( &vp->em, electron, type);
+   Fill_SubPart_From_LCIO( &vp->ep, positron, type);
+
+   // We need to fix up the Energy parameter, which at best is badly calculated and at worst is zero.
+   ROOT::Math::PxPyPzMVector pe4(vp->em_px_refit.back(), vp->em_py_refit.back(), vp->em_pz_refit.back(), 0.000511);
+   ROOT::Math::PxPyPzMVector pp4(vp->ep_px_refit.back(), vp->ep_py_refit.back(), vp->ep_pz_refit.back(), 0.000511);
+   auto v4 = pe4 + pp4;
+   vp->energy.back() = v4.E();  // Set the energy of the vertex particle to the sum of the daughters.
+
+#ifdef DEBUG
+   if(vp->energy.size() != vp->type.size()){
+      cout << "ERROR === Miss filling of the vertex energy.\n";
+   }
+   if( abs(v4.M() - vp->mass.back()) > 0.0001 ){
+      cout << "ERROR === Vertex mass does not match the sum of daughters. \n";
+      cout << "Vertex mass:   " << vp->mass.back() << "\n";
+      cout << "Daughter mass: " << v4.M() << "\n";
+   }
+#endif
+
+#ifdef DEBUG_VERIFY_CODE
+   if(params.size()>21) {
+      TVector3 p1(params[13], params[18], params[17]);
+      TVector3 p2(params[15], params[14], params[19]);
+      TVector3 pv = p1 + p2;
+      double e_px = electron->getMomentum()[0];
+      double e_py = electron->getMomentum()[1];
+      double e_pz = electron->getMomentum()[2];
+      double p_px = positron->getMomentum()[0];
+      double p_py = positron->getMomentum()[1];
+      double p_pz = positron->getMomentum()[2];
+
+      cout << "---------------------------------------------------------------------------------------\n";
+      cout << "Daughter electron: " << e_px << " " << e_py << " " << e_pz << "\n";
+      cout << "Daughter positron: " << p_px << " " << p_py << " " << p_pz << "\n";
+      cout << "Electron mom ref: " << p1.Px() << " " << p1.Py() << " " << p1.Pz() << "\n";
+      cout << "Positron mom ref: " << p2.Px() << " " << p2.Py() << " " << p2.Pz() << "\n";
+      cout << "Vertex mom comp:  " << pv.Px() << " " << pv.Py() << " " << pv.Pz() << "\n";
+      cout << "Vertex mom parm:  " << params[5] << " " << params[4] << " " << params[2] << "\n";
+      cout << "\n";
+      ROOT::Math::PxPyPzMVector pe4(params[13], params[18], params[17], 0.000511);
+      ROOT::Math::PxPyPzMVector pp4(params[15], params[14], params[19], 0.000511);
+//      TLorentzVector pe4, pp4;
+//      pe4.SetXYZM(params[13], params[18], params[17], 0.000511);
+//      pp4.SetXYZM(params[15], params[14], params[19], 0.000511);
+      auto v4 = pe4 + pp4;
+      cout << "Comp mass, E, P:  " << v4.M() << " " << v4.E() << " " << v4.P() << "\n";
+      cout << "Param mass, E, P: " << params[1] << "\n";
+      double vertex_part_mom = sqrt(vertex_part->getMomentum()[0]*vertex_part->getMomentum()[0] +
+                                    vertex_part->getMomentum()[1]*vertex_part->getMomentum()[1] +
+                                    vertex_part->getMomentum()[2]*vertex_part->getMomentum()[2]);
+      cout << "Vertex prt,M,E,P: " << vertex_part->getMass() << " " << vertex_part->getEnergy()  <<" " << vertex_part_mom << "\n";
+      cout << "\n";
+   }
+#endif
+
 }
 
 void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::ReconstructedParticle *daughter, int type){

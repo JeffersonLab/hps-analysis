@@ -217,22 +217,31 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("v0_lcio_type", &v0.lcio_type, write_particles);
    branch_map_try_emplace("v0_energy", &v0.energy, write_particles);
    branch_map_try_emplace("v0_mass", &v0.mass, write_particles);
+   branch_map_try_emplace("v0_mass_err", &v0.mass_err, write_particles);
+
    branch_map_try_emplace("v0_pdg", &v0.pdg, write_particles);
    branch_map_try_emplace("v0_charge", &v0.charge, write_particles);
    branch_map_try_emplace("v0_goodness_of_pid", &v0.goodness_of_pid, write_particles);
+
+   branch_map_try_emplace("v0_p", &v0.p, write_particles);
+   branch_map_try_emplace("v0_p_err", &v0.p_err, write_particles);
+
    branch_map_try_emplace("v0_px", &v0.px, write_particles);
    branch_map_try_emplace("v0_py", &v0.py, write_particles);
    branch_map_try_emplace("v0_pz", &v0.pz, write_particles);
-
+   branch_map_try_emplace("v0_px_err", &v0.px_err, write_particles);
+   branch_map_try_emplace("v0_py_err", &v0.py_err, write_particles);
+   branch_map_try_emplace("v0_pz_err", &v0.pz_err, write_particles);
 
    branch_map_try_emplace("v0_vertex_x", &v0.vertex_x, write_particles);
    branch_map_try_emplace("v0_vertex_y", &v0.vertex_y, write_particles);
    branch_map_try_emplace("v0_vertex_z", &v0.vertex_z, write_particles);
+   branch_map_try_emplace("v0_vertex_x_err", &v0.vertex_x, write_particles);
+   branch_map_try_emplace("v0_vertex_y_err", &v0.vertex_y, write_particles);
+   branch_map_try_emplace("v0_vertex_z_err", &v0.vertex_z, write_particles);
+
    branch_map_try_emplace("v0_vertex_chi2", &v0.vertex_chi2, write_particles);
    branch_map_try_emplace("v0_vertex_prob", &v0.vertex_prob, write_particles);
-
-   branch_map_try_emplace("v0_mass_err", &v0.mass_err, write_particles);
-
 
    branch_map_try_emplace("v0_em_part", &v0.em.part, write_particles);
    branch_map_try_emplace("v0_em_track", &v0.em.track, write_particles);
@@ -250,6 +259,9 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("v0_em_clus_iy", &v0.em.clus_iy, write_particles);
    branch_map_try_emplace("v0_em_clus_pos_x", &v0.em.clus_pos_x, write_particles);
    branch_map_try_emplace("v0_em_clus_pos_y", &v0.em.clus_pos_y, write_particles);
+   branch_map_try_emplace("v0_em_px", &v0.em_px_refit, write_particles);
+   branch_map_try_emplace("v0_em_py", &v0.em_py_refit, write_particles);
+   branch_map_try_emplace("v0_em_pz", &v0.em_pz_refit, write_particles);
 
    branch_map_try_emplace("v0_ep_part", &v0.ep.part, write_particles);
    branch_map_try_emplace("v0_ep_track", &v0.ep.track, write_particles);
@@ -267,6 +279,10 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("v0_ep_clus_iy", &v0.ep.clus_iy, write_particles);
    branch_map_try_emplace("v0_ep_clus_pos_x", &v0.ep.clus_pos_x, write_particles);
    branch_map_try_emplace("v0_ep_clus_pos_y", &v0.ep.clus_pos_y, write_particles);
+
+   branch_map_try_emplace("v0_ep_px", &v0.ep_px_refit, write_particles);
+   branch_map_try_emplace("v0_ep_py", &v0.ep_py_refit, write_particles);
+   branch_map_try_emplace("v0_ep_pz", &v0.ep_pz_refit, write_particles);
 
 
    // MCParticles

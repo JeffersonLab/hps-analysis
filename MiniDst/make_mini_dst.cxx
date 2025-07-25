@@ -209,7 +209,7 @@ int main(int argc, char **argv){
 
 #ifdef DEBUG
       cout << "Extra debug code compiled.\n";
-      dst->Counter_Freq =10000;
+      dst->Counter_Freq =100;
 #endif
       dst->Start();
       dst->Run(num_evt);

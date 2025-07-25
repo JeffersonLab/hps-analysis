@@ -22,7 +22,7 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"
 
-#define MiniDst_Version_ "1.2.2"
+#define MiniDst_Version_ "1.3.0"
 //
 // The following construction defines a "Variant", a type in C++17 and later that can contain different kinds of object.
 // In our case the variant contains each of the possible types that we have in the output tree.
@@ -517,6 +517,10 @@ public:
       vector<double> vertex_x;
       vector<double> vertex_y;
       vector<double> vertex_z;
+      vector<double> vertex_x_err;
+      vector<double> vertex_y_err;
+      vector<double> vertex_z_err;
+
       vector<double> vertex_chi2;
       vector<double> vertex_prob;
 
@@ -526,6 +530,25 @@ public:
       Sub_Particle_t em;  // Electron
       Sub_Particle_t ep;  // Positron
 
+      vector<double> p;
+      vector<double> p_err;
+
+      vector<double> em_px_refit;  // Re-fitted momenta.
+      vector<double> em_py_refit;
+      vector<double> em_pz_refit;
+      vector<double> ep_px_refit;
+      vector<double> ep_py_refit;
+      vector<double> ep_pz_refit;
+
+      vector<double> px_err;
+      vector<double> py_err;
+      vector<double> pz_err;
+
+      vector<double> target_proj_x;
+      vector<double> target_proj_y;
+      vector<double> target_proj_x_err;
+      vector<double> target_proj_y_err;
+
       // ToDo: Add the covariance matrix.
       // vector<double> covar;
 
@@ -534,11 +557,33 @@ public:
          vertex_x.clear();
          vertex_y.clear();
          vertex_z.clear();
+         vertex_x_err.clear();
+         vertex_y_err.clear();
+         vertex_z_err.clear();
+
          vertex_chi2.clear();
          vertex_prob.clear();
+
          mass_err.clear();
          em.clear();
          ep.clear();
+         p.clear();
+         p_err.clear();
+         em_px_refit.clear();
+         em_py_refit.clear();
+         em_pz_refit.clear();
+         ep_px_refit.clear();
+         ep_py_refit.clear();
+         ep_pz_refit.clear();
+         px_err.clear();
+         py_err.clear();
+         pz_err.clear();
+
+         target_proj_x.clear();
+         target_proj_y.clear();
+         target_proj_x_err.clear();
+         target_proj_y_err.clear();
+
       }
    };
 

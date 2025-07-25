@@ -217,22 +217,31 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("v0_lcio_type", &v0.lcio_type, write_particles);
    branch_map_try_emplace("v0_energy", &v0.energy, write_particles);
    branch_map_try_emplace("v0_mass", &v0.mass, write_particles);
+   branch_map_try_emplace("v0_mass_err", &v0.mass_err, write_particles);
+
    branch_map_try_emplace("v0_pdg", &v0.pdg, write_particles);
    branch_map_try_emplace("v0_charge", &v0.charge, write_particles);
    branch_map_try_emplace("v0_goodness_of_pid", &v0.goodness_of_pid, write_particles);
+
+   branch_map_try_emplace("v0_p", &v0.p, write_particles);
+   branch_map_try_emplace("v0_p_err", &v0.p_err, write_particles);
+
    branch_map_try_emplace("v0_px", &v0.px, write_particles);
    branch_map_try_emplace("v0_py", &v0.py, write_particles);
    branch_map_try_emplace("v0_pz", &v0.pz, write_particles);
-
+   branch_map_try_emplace("v0_px_err", &v0.px_err, write_particles);
+   branch_map_try_emplace("v0_py_err", &v0.py_err, write_particles);
+   branch_map_try_emplace("v0_pz_err", &v0.pz_err, write_particles);
 
    branch_map_try_emplace("v0_vertex_x", &v0.vertex_x, write_particles);
    branch_map_try_emplace("v0_vertex_y", &v0.vertex_y, write_particles);
    branch_map_try_emplace("v0_vertex_z", &v0.vertex_z, write_particles);
+   branch_map_try_emplace("v0_vertex_x_err", &v0.vertex_x, write_particles);
+   branch_map_try_emplace("v0_vertex_y_err", &v0.vertex_y, write_particles);
+   branch_map_try_emplace("v0_vertex_z_err", &v0.vertex_z, write_particles);
+
    branch_map_try_emplace("v0_vertex_chi2", &v0.vertex_chi2, write_particles);
    branch_map_try_emplace("v0_vertex_prob", &v0.vertex_prob, write_particles);
-
-   branch_map_try_emplace("v0_mass_err", &v0.mass_err, write_particles);
-
 
    branch_map_try_emplace("v0_em_part", &v0.em.part, write_particles);
    branch_map_try_emplace("v0_em_track", &v0.em.track, write_particles);
@@ -250,6 +259,9 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("v0_em_clus_iy", &v0.em.clus_iy, write_particles);
    branch_map_try_emplace("v0_em_clus_pos_x", &v0.em.clus_pos_x, write_particles);
    branch_map_try_emplace("v0_em_clus_pos_y", &v0.em.clus_pos_y, write_particles);
+   branch_map_try_emplace("v0_em_px", &v0.em_px_refit, write_particles);
+   branch_map_try_emplace("v0_em_py", &v0.em_py_refit, write_particles);
+   branch_map_try_emplace("v0_em_pz", &v0.em_pz_refit, write_particles);
 
    branch_map_try_emplace("v0_ep_part", &v0.ep.part, write_particles);
    branch_map_try_emplace("v0_ep_track", &v0.ep.track, write_particles);
@@ -267,6 +279,10 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("v0_ep_clus_iy", &v0.ep.clus_iy, write_particles);
    branch_map_try_emplace("v0_ep_clus_pos_x", &v0.ep.clus_pos_x, write_particles);
    branch_map_try_emplace("v0_ep_clus_pos_y", &v0.ep.clus_pos_y, write_particles);
+
+   branch_map_try_emplace("v0_ep_px", &v0.ep_px_refit, write_particles);
+   branch_map_try_emplace("v0_ep_py", &v0.ep_py_refit, write_particles);
+   branch_map_try_emplace("v0_ep_pz", &v0.ep_pz_refit, write_particles);
 
 
    // MCParticles
@@ -560,3 +576,40 @@ int MiniDst::Add_Particle(MiniDst &event_in, int i_particle) {
    return part.Add(event_in.part, i_particle, i_ecal, i_track);
 }
 
+void MiniDst::Print(Option_t *option) const {
+   // Pretty print the contents of the current event in the MiniDst class.
+   cout << "======== Event: " << event_number << " Run: " << run_number << "  ========\n";
+   cout << " Particles: \n";
+   for(int i=0; i< part.pdg.size(); ++i){
+      cout << "   Particle " << i << ": type: " << part.type[i] << " pdg: " << part.pdg[i] << " energy: " << part.energy[i]
+           << " px: " << part.px[i] << " py: " << part.py[i] << " pz: " << part.pz[i]
+           << " track: " << part.track[i] << " ecal_cluster: " << part.ecal_cluster[i] << endl;
+      if(part.ecal_cluster[i] >= 0) {
+         cout << "    |- Ecal Cluster: energy: " << ecal_cluster_energy[part.ecal_cluster[i]]
+              << " time: " << ecal_cluster_time[part.ecal_cluster[i]]
+              << " x: " << ecal_cluster_x[part.ecal_cluster[i]]
+              << " y: " << ecal_cluster_y[part.ecal_cluster[i]]
+              << " z: " << ecal_cluster_z[part.ecal_cluster[i]]
+              << " seed_ix: " << ecal_cluster_seed_ix[part.ecal_cluster[i]]
+              << " seed_iy: " << ecal_cluster_seed_iy[part.ecal_cluster[i]]
+              << " seed_energy: " << ecal_cluster_seed_energy[part.ecal_cluster[i]] << endl;
+      }
+      if(part.track[i] >= 0) {
+         cout << "    |- Track: type: " << track_type[part.track[i]]
+              << " n_hits: " << track_n_hits[part.track[i]]
+              << " d0: " << track_d0[part.track[i]]
+              << " phi0: " << track_phi0[part.track[i]]
+              << " omega: " << track_omega[part.track[i]]
+              << " tan_lambda: " << track_tan_lambda[part.track[i]]
+              << " z0: " << track_z0[part.track[i]]
+              << " chi2: " << track_chi2[part.track[i]]
+              << " time: " << track_time[part.track[i]]
+              << " px: " << track_px[part.track[i]]
+              << " py: " << track_py[part.track[i]]
+              << " pz: " << track_pz[part.track[i]] << endl;
+         cout << "     |- At ECal: " << " x: " << track_x_at_ecal[part.track[i]]
+              << " y: " << track_y_at_ecal[part.track[i]]
+              << " z: " << track_z_at_ecal[part.track[i]] << endl;
+      }
+   }
+}

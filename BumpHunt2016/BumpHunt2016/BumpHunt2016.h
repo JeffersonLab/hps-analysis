@@ -8,6 +8,7 @@
 #include "TObject.h"
 #include "TChain.h"
 #include "TROOT.h"
+#include "TStopwatch.h"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"
 #include "ROOT/RDF/RInterface.hxx"

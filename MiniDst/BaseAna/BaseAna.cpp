@@ -97,7 +97,7 @@ void BaseAna::Init(TTree *tree)
     // Determine the type of Chain, and if it is within Proof, since
     // unfortunately, the behavior of GetEntry() must depend on the type of chain.
     //
-    if(gROOT->IsProofServ()){
+    if(false ){ // gROOT->IsProofServ()
       fChain_type = kIs_TProof;
       if(fDebug & kDebug_L1)   cout << "            -- PROOF type chain. \n";
     }else{

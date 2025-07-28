@@ -20,6 +20,7 @@
 #include "TObject.h"
 #include "TChain.h"
 #include "TROOT.h"
+#include "TStopwatch.h"
 #include "TLorentzVector.h"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"

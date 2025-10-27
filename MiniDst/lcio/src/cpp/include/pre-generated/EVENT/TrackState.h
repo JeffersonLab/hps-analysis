@@ -35,11 +35,13 @@ public:
 
 
     static const int AtOther = 0 ; // any location other than the ones defined below	     
-    static const int AtIP = 1 ;							    
-    static const int AtFirstHit = 2 ; 							    
-    static const int AtLastHit = 3 ;							    
-    static const int AtCalorimeter = 4 ;						    
-    static const int AtVertex = 5 ;     
+    static const int AtPerigee = 1 ;							    
+    static const int AtIP = 2 ;							    
+    static const int AtTarget = 2 ;							    
+    static const int AtFirstHit = 3 ; 							    
+    static const int AtLastHit = 4 ;							    
+    static const int AtCalorimeter = 5 ;						    
+    static const int AtVertex = 6 ;     
     static const int LastLocation = AtVertex  ;     
     
      /** The location of the track state.
@@ -71,6 +73,11 @@ public:
      * @see getReferencePoint
      */
     virtual float getTanLambda() const = 0;
+
+      /** B-field at the reference point. 
+     * @see getReferencePoint
+     */
+    virtual float getBLocal() const = 0;
 
     /** Covariance matrix of the track parameters. Stored as lower triangle matrix where
      * the order of parameters is:   d0, phi, omega, z0, tan(lambda).

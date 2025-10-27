@@ -11,7 +11,10 @@ namespace IMPL {
 
   /** Helper class to sort ParticleIDs wrt. their likelihood.
    */
-  class PIDSort : public std::binary_function<EVENT::ParticleID*,EVENT::ParticleID*,bool>{
+   // Was:
+   // class PIDSort : public std::binary_function<const EVENT::ParticleID*, const EVENT::ParticleID*, bool> {
+   //This is not needed extra verbiage that uses deprecated std::binary_function.
+  class PIDSort {
   public:
     bool operator()(const EVENT::ParticleID* p1, const EVENT::ParticleID* p2){
       return p1->getLikelihood() > p2->getLikelihood() ;

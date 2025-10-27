@@ -133,7 +133,7 @@ namespace IMPL {
      *
      * @throws ReadOnlyException
      */
-    virtual void removeElementAt(int i);
+    virtual void removeElementAt(int i) ;
     
     /** Parameters defined for this run.
      */

@@ -56,7 +56,7 @@ namespace UTIL{
 
     /** Reads the next stdhep event and adds a new MCParticle collection to the
      *  the event with default name 'MCParticle'
-     * @throw IO::EndOfDataException if no event in stdhep file
+     * @throw EndOfDataException if no event in stdhep file
      */
     void updateNextEvent( IMPL::LCEventImpl* evt , const char* colName=EVENT::LCIO::MCPARTICLE ) ;
 

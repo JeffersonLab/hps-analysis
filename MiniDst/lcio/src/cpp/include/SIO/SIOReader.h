@@ -49,24 +49,30 @@ class SIOEventHandler ;
      * read operations will operate on the list, i.e. if an EOF is encountered
      * the next file in the list will be opened and read transparently to the
      * user.
+     * Throws exception if one of the files doesn't exist.
+     * 
      * @throws IOException
      */
     virtual void open(const std::vector<std::string>& filenames);
 
 
     /** Opens a file for reading (read-only).
+     * Throws exception if file doesn't exist.
+     * 
      * @throws IOException
      */
     virtual void open(const std::string & filename);
     
-    /** Reads the next run header from the file. 
+    /** Reads the next run header from the file.
+     * Throws exception if file is not open.
      *
      * @throws IOException
      */
     virtual EVENT::LCRunHeader * readNextRunHeader();
 
     /** Same as readNextRunHeader() but allows to set the access mode 
-     *  LCIO::READ_ONLY (default) or LCIO::Update. 
+     * LCIO::READ_ONLY (default) or LCIO::Update.
+     * Throws exception if file is not open.
      *
      * @throws IOException
      */
@@ -74,14 +80,16 @@ class SIOEventHandler ;
 
 
     /** Reads the next event from the file. 
-     *
+     * Throws exception if file is not open.
+     * 
      * @throws IOException
      */
-    virtual EVENT::LCEvent* readNextEvent();
+    virtual EVENT::LCEvent* readNextEvent() ;
     
 
     /** Same as readNextRunHeader() but allows to set the access mode 
      *  LCIO::READ_ONLY (default) or LCIO::Update
+     * Throws exception if file is not open.
      *
      * @throws IOException
      */
@@ -133,13 +141,15 @@ class SIOEventHandler ;
 
     /** Reads the specified runHeader from file. Returns NULL if
      *  the specified runHeader hasn't been found in the file.
-     *
+     * Throws exception if stream can't be seeked to the specified position.
+     * 
      * @throws IOException
      */
     virtual EVENT::LCRunHeader * readRunHeader(int runNumber );
 
     /** Same as LCEvent* readRunHeader(int runNumber) 
      *  allowing to set the access mode LCIO::READ_ONLY (default) or LCIO::Update.
+     * Throws exception if stream can't be seeked to the specified position.
      *
      * @throws IOException
      */
@@ -147,6 +157,7 @@ class SIOEventHandler ;
 
     /** Reads the specified event from file. Returns NULL if
      *  the specified event hasn't been found in the file.
+     * Throws exception if stream can't be seeked to the specified position.
      *
      * @throws IOException
      */
@@ -155,13 +166,15 @@ class SIOEventHandler ;
 
     /** Same as LCEvent* readEvent(int runNumber, int evtNumber 
      *  allowing to set the access mode LCIO::READ_ONLY (default) or LCIO::Update.
+     *  Throws exception if stream can't be seeked to the specified position.
      *
      * @throws IOException
      */
     virtual EVENT::LCEvent * readEvent(int runNumber, int evtNumber, int accessMode);
     
     /** Closes the output file/stream etc.
-     *
+     * Throws exception if stream could not be removed.
+     * 
      * @throws IOException
      */
     virtual void close();
@@ -186,19 +199,18 @@ class SIOEventHandler ;
 
     /** Reads the input stream and notifies registered 
      * listeners according to the object type 
-     * found in the stream. 
+     * found in the stream.
      *
-     * @throws IOException
-     * @throws EndOfException
+     * @throws IOException  if there is an error in the stream
+     * @throws EndOfDataException if less than maxRecord records are found in the stream.
      */
     virtual void readStream();
 
     /** Reads maxRecord from the input stream and notifies registered 
-     * listeners according to the object type found in the stream. 
-     * Throws EndOfException if less than maxRecord records are found in the stream. 
+     * listeners according to the object type found in the stream.
      *
-     * @throws IOException
-     * @throws EndOfException
+     * @throws IOException if there is an error in the stream
+     * @throws EndOfDataException if less than maxRecord records are found in the stream.
      */
     virtual void readStream(int maxRecord);
 

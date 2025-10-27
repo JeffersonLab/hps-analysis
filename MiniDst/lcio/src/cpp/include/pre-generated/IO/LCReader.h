@@ -52,7 +52,7 @@ public:
      *
      * @throws IOException
      */
-    virtual void open(const std::vector<std::string>  & filenames)  = 0;
+    virtual void open(const std::vector<std::string>  & filenames) = 0;
 
     /** Reads the next run header from the file. Returns NULL if
      * 'EOF' read. 
@@ -66,7 +66,7 @@ public:
      *
      * @throws IOException
      */
-    virtual EVENT::LCRunHeader * readNextRunHeader(int accessMode)  = 0;
+    virtual EVENT::LCRunHeader * readNextRunHeader(int accessMode) = 0;
 
     /** Reads the next event from the file. Returns NULL if
      * 'EOF' read. 
@@ -80,19 +80,19 @@ public:
      *
      * @throws IOException
      */
-    virtual EVENT::LCEvent * readNextEvent(int accessMode)= 0;
+    virtual EVENT::LCEvent * readNextEvent(int accessMode) = 0;
 
     /** Return the number of events in the file - the file has to be open. In
      *  case several input files are specified in the open() method - 
      *  the number of events in the file that is currently open is returned. 
      */
-    virtual int getNumberOfEvents()  = 0;
+    virtual int getNumberOfEvents() = 0;
 
     /** Return the number of runs (run headers) in the file - the file has to be open. In
      *  case several input files are specified in the open() method - 
      *  the number of runs (run headers) in the file that is currently open is returned. 
      */
-    virtual int getNumberOfRuns()  = 0;
+    virtual int getNumberOfRuns() = 0;
 
     /** Return the run numbers of the runs (run headers) in the file - the file has to be open. In
      *  case several input files are specified in the open() method - 
@@ -131,27 +131,27 @@ public:
      *
      * @throws IOException
      */
-    virtual EVENT::LCRunHeader * readRunHeader(int runNumber, int accessMode)= 0;
+    virtual EVENT::LCRunHeader * readRunHeader(int runNumber, int accessMode) = 0;
 
     /** Reads the specified event from file. Returns NULL if
      *  the specified event hasn't been found in the file.
      *
      * @throws IOException
      */
-    virtual EVENT::LCEvent * readEvent(int runNumber, int evtNumber)= 0;
+    virtual EVENT::LCEvent * readEvent(int runNumber, int evtNumber) = 0;
 
     /** Same as LCEvent* readEvent(int runNumber, int evtNumber) 
      *  allowing to set the access mode LCIO::READ_ONLY (default) or LCIO::Update.
      *
      * @throws IOException
      */
-    virtual EVENT::LCEvent * readEvent(int runNumber, int evtNumber, int accessMode)= 0;
+    virtual EVENT::LCEvent * readEvent(int runNumber, int evtNumber, int accessMode) = 0;
 
     /** Closes the output file/stream etc.
      *
      * @throws IOException
      */
-    virtual void close()  = 0;
+    virtual void close() = 0;
 
     /** Registers a listener for reading LCEvents from a stream.
      */ 
@@ -175,7 +175,7 @@ public:
      *
      * @throws IOException
      */
-    virtual void readStream()  = 0;
+    virtual void readStream() = 0;
 
     /** Reads maxRecord from the input stream and notifies registered 
      * listeners according to the object type found in the stream.

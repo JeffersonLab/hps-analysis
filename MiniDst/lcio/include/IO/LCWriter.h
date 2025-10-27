@@ -67,7 +67,7 @@ public:
      *
      *@throws IOException
      */
-    virtual void writeRunHeader(const EVENT::LCRunHeader * hdr)  = 0;
+    virtual void writeRunHeader(const EVENT::LCRunHeader * hdr) = 0;
 
     /** Writes the given event to file.
      *
@@ -85,7 +85,7 @@ public:
      *
      *@throws IOException
      */
-    virtual void flush()  = 0;
+    virtual void flush() = 0;
 }; // class
 } // namespace IO
 #endif /* ifndef IO_LCWRITER_H */

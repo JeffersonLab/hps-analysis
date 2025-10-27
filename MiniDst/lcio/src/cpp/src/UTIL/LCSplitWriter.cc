@@ -28,18 +28,18 @@ namespace UTIL{
 
 
 
-  void LCSplitWriter::open(const std::string & filename) {
+  void LCSplitWriter::open(const std::string & filename){
     _count = 0 ;
     setBaseFilename( filename ) ;
     _wrt->open( getFilename() ) ;
   }
   
-  void LCSplitWriter::open(const std::string & , int ) {
+  void LCSplitWriter::open(const std::string & , int ){
       throw Exception(" LCSplitWriter doesn't support  NEW and APPEND mode ! "
 		      " Please remove your old file(s) and use the default mode." ) ;
   }
   
-  void LCSplitWriter::writeRunHeader(const EVENT::LCRunHeader * hdr) {
+  void LCSplitWriter::writeRunHeader(const EVENT::LCRunHeader * hdr){
 
     _wrt->flush() ;
     if( fileSize() > _maxBytes ) {
@@ -51,7 +51,7 @@ namespace UTIL{
     _wrt->writeRunHeader( hdr ) ;
   }
 
-  void LCSplitWriter::writeEvent(const EVENT::LCEvent * evt) {
+  void LCSplitWriter::writeEvent(const EVENT::LCEvent * evt){
 
     _wrt->flush() ;
 
@@ -70,7 +70,7 @@ namespace UTIL{
     _wrt->writeEvent( evt ) ;
    }
   
-  void LCSplitWriter::close() {
+  void LCSplitWriter::close(){
     _wrt->close() ;
    }
 

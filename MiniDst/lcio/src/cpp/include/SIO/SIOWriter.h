@@ -47,10 +47,9 @@ namespace SIO {
      */
     virtual ~SIOWriter() ;
 
-    /** Opens a file for writing. If file with given name exists, 
-     * an exception is thrown. Use append or new mode instead.
+    /** Opens a file for writing. Use append or new mode instead.
      *
-     *@throws IOException
+     *@throws IOException if the file exists
      */
     virtual void open(const std::string & filename);
 
@@ -58,7 +57,7 @@ namespace SIO {
      * Possible write modes are: LCIO::WRITE_NEW
      * (existing files are replaced) and LCIO::WRITE_APPEND. 
      *
-     *@throws IOException
+     *@throws IOException if the file exists and write mode is WRITE_NEW
      */
     virtual void open(const std::string & filename, int writeMode);
     
@@ -80,27 +79,27 @@ namespace SIO {
 
     /** Writes the given run header to file.
      *
-     *@throws IOException
+     *@throws IOException if the file is not open
      */
     virtual void writeRunHeader(const EVENT::LCRunHeader * hdr);
 
     /** Writes the given event to file.
      *
-     *@throws IOException
+     *@throws IOException if the file is not open
      */
-    virtual void writeEvent(const EVENT::LCEvent * evt);
+    virtual void writeEvent(const EVENT::LCEvent * evt) ;
 
     /** Closes the output file/stream etc.
      *
-     *@throws IOException
+     *@throws IOException if stream could not be closed
      */
-    virtual void close();
+    virtual void close() ;
     
     /** Flushes the output file/stream etc.
      *
-     *@throws IOException
+     *@throws IOException if stream could not be flushed
      */
-    virtual void flush();
+    virtual void flush() ;
 
 
   protected:

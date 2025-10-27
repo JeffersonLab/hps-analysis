@@ -66,10 +66,11 @@ namespace IMPL{
     virtual const std::vector<std::string>  * getCollectionNames() const;
     
     /** Returns the collection for the given name.
+     * Throws an exception if the collection is not in the event.
      *
      * @throws DataNotAvailableException
      */
-    virtual EVENT::LCCollection * getCollection(const std::string & name) const;
+    virtual EVENT::LCCollection * getCollection(const std::string & name) const; 
 
     /** Returns the collection for the given name and transfers the ownership of the collection
      *  to the caller. The caller is responsible for deleting the collection _after_ the Event is 
@@ -77,9 +78,12 @@ namespace IMPL{
      *  after the call returns.<br>
      *  This is usefull when you want to keep the collection for the next events.<br>
      *  Use with care!
+     * Throws an exception if the collection is not in the event.
+     * 
      * @throws DataNotAvailableException
      */
-    virtual EVENT::LCCollection * takeCollection(const std::string & name) const;
+
+    virtual EVENT::LCCollection * takeCollection(const std::string & name) const; 
 
     /** Adds a collection with the given name (has to be a valid C/C++ variable name). 
      *	Throws an exception if the name already
@@ -88,7 +92,8 @@ namespace IMPL{
      *@see validateCollectionName
      *@throws EventException
      */ 
-    virtual void addCollection(EVENT::LCCollection * col, const std::string & name);
+
+    virtual void addCollection(EVENT::LCCollection * col, const std::string & name); 
     
     /** Removes (and deletes) the collection with name (if it exists in the event). 
      * Throws an exception if the event is 'read only' as defined by the read mode in LCReader.

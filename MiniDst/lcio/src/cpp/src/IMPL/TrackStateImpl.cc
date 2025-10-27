@@ -5,7 +5,9 @@ namespace EVENT{
   // the standard requires static const ints to be defined aoutside the class declaration
   // so we do this here :
   const int TrackState::AtOther  ; 
+  const int TrackState::AtPerigee  ;							    
   const int TrackState::AtIP  ;							    
+  const int TrackState::AtTarget  ;							    
   const int TrackState::AtFirstHit  ; 							    
   const int TrackState::AtLastHit  ;							    
   const int TrackState::AtCalorimeter  ;						    
@@ -24,7 +26,8 @@ namespace IMPL {
         _phi(0),
         _omega(0),
         _z0(0),
-        _tanLambda(0)
+        _tanLambda(0),
+	_bLocal(666)
     {
 
         for(int i=0 ; i < TRKSTATENCOVMATRIX ; i++ ) {
@@ -34,7 +37,6 @@ namespace IMPL {
         for(int i=0 ; i < TRKSTATENREFSIZE ; i++ ) {
             _reference[i] = 0.0 ;
         }
-
     }
 
     TrackStateImpl::TrackStateImpl(int location, float d0, float phi, float omega, float z0, float tanLambda, const float* covMatrix, const float* reference) :
@@ -54,7 +56,24 @@ namespace IMPL {
 
         setReferencePoint(reference);
     }
+  TrackStateImpl::TrackStateImpl(int location, float d0, float phi, float omega, float z0, float tanLambda, float bLocal, const float* covMatrix, const float* reference) :
+        //_location(location),
+        _d0(d0),
+        _phi(phi),
+        _omega(omega),
+        _z0(z0),
+        _tanLambda(tanLambda),
+	_bLocal(bLocal)
+  {
 
+        setLocation( location );
+
+        for(int i=0 ; i < TRKSTATENCOVMATRIX ; i++ ) {
+            _covMatrix.push_back( covMatrix[i] ) ; 
+        }
+
+        setReferencePoint(reference);
+    }
 
     TrackStateImpl::TrackStateImpl(int location, float d0, float phi, float omega, float z0, float tanLambda, const FloatVec& covMatrix, const float* reference) :
         //_location(location),
@@ -71,6 +90,23 @@ namespace IMPL {
         setReferencePoint(reference);
     }
 
+  
+  TrackStateImpl::TrackStateImpl(int location, float d0, float phi, float omega, float z0, float tanLambda, float bLocal, const FloatVec& covMatrix, const float* reference) :
+        //_location(location),
+        _d0(d0),
+        _phi(phi),
+        _omega(omega),
+        _z0(z0),
+        _tanLambda(tanLambda),
+	_bLocal(bLocal),
+        _covMatrix(covMatrix)
+    {
+
+        setLocation( location );
+
+        setReferencePoint(reference);
+    }
+
     TrackStateImpl::TrackStateImpl( const EVENT::TrackState &p ) :
         //_location(p->getLocation()),
         _d0(p.getD0()),
@@ -78,6 +114,7 @@ namespace IMPL {
         _omega(p.getOmega()),
         _z0(p.getZ0()),
         _tanLambda(p.getTanLambda()),
+	_bLocal(p.getBLocal()),
         _covMatrix(p.getCovMatrix())
     {
 
@@ -97,6 +134,7 @@ namespace IMPL {
     float TrackStateImpl::getOmega() const { return _omega ; }
     float TrackStateImpl::getZ0() const { return _z0 ;}
     float TrackStateImpl::getTanLambda() const { return _tanLambda ;}
+    float TrackStateImpl::getBLocal() const { return _bLocal ;}
 
     const FloatVec& TrackStateImpl::getCovMatrix() const { return _covMatrix ; }
     const float* TrackStateImpl::getReferencePoint() const { return _reference ; }
@@ -130,6 +168,10 @@ namespace IMPL {
     void  TrackStateImpl::setTanLambda( float tanLambda ){
         checkAccess("TrackStateImpl::setTanLambda") ;
         _tanLambda = tanLambda ; 
+    }
+    void  TrackStateImpl::setBLocal( float bLocal ){
+        checkAccess("TrackStateImpl::setBLocal") ;
+        _bLocal = bLocal; 
     } 
     void  TrackStateImpl::setCovMatrix( const float* cov ){ 
         checkAccess("TrackStateImpl::setCovMatrix") ;
@@ -150,7 +192,6 @@ namespace IMPL {
             _reference[i] = rPnt[i]  ; 
         }
     } 
-
 } // namespace IMPL
 
 

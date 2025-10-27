@@ -60,6 +60,7 @@ public:
     virtual const std::vector<std::string>  * getCollectionNames() const = 0;
 
     /** Returns the collection for the given name.
+     * Throws an exception if the collection is not in the event.
      *
      * @throws DataNotAvailableException
      */
@@ -71,6 +72,8 @@ public:
      *  after the call returns.<br>
      *  This is usefull when you want to keep the collection for the next events.<br>
      *  Use with care!
+     * Throws an exception if the collection is not in the event.
+     * 
      * @throws DataNotAvailableException
      */
     virtual LCCollection * takeCollection(const std::string & name) const = 0;

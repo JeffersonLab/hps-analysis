@@ -97,7 +97,7 @@ const std::vector<std::string>* LCEventImpl::getCollectionNames() const {
 
     
 
-LCCollection * LCEventImpl::getCollection(const std::string & name) const{
+LCCollection * LCEventImpl::getCollection(const std::string & name) const {
 
   LCCollectionMap::iterator it = _colMap.find( name )  ;
 
@@ -117,7 +117,7 @@ LCCollection * LCEventImpl::getCollection(const std::string & name) const{
 }
 
 
-LCCollection * LCEventImpl::takeCollection(const std::string & name) const{
+LCCollection * LCEventImpl::takeCollection(const std::string & name) const { 
 
   LCCollectionVec* col = dynamic_cast<LCCollectionVec*> ( getCollection( name ) ) ;
 
@@ -131,7 +131,7 @@ LCCollection * LCEventImpl::takeCollection(const std::string & name) const{
 
     
 
-void  LCEventImpl::addCollection(LCCollection * col, const std::string & name){
+void  LCEventImpl::addCollection(LCCollection * col, const std::string & name) { 
 
   
   if( ! validateCollectionName(name.c_str()) ){

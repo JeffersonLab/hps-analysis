@@ -64,18 +64,18 @@ int main(int argc, char** argv ){
 	    std::string bla("") ;
 	    bla.resize(17) ;
 	    
-	    int status = fread( &bla[0] , sizeof(char) , 16 , f ) ;
+	    //int status = fread( &bla[0] , sizeof(char) , 16 , f ) ;
 	    
 	    //	    std::cout << "  ====== read : [" << bla << "]" << std::endl ; 
 	    
 	    if( !strcmp( bla.c_str() , "LCIORandomAccess")  ){ 
 	      
 	      
-	      status = fseek( f ,  -(16) , SEEK_CUR ) ;
+	      //status = fseek( f ,  -(16) , SEEK_CUR ) ;
 	      
 	      bla = "LCIORandomIGNORE" ;
 	      
-	      status = fwrite( &bla[0] , 1 , 16 , f ) ;
+	      //status = fwrite( &bla[0] , 1 , 16 , f ) ;
 	      
 	      //	      std::cout << "  --------- wrote " << bla << " to file - bytes written " << status << std::endl; 
 	    } 

@@ -129,7 +129,7 @@ namespace SIO {
     open( _myFilenames[ ++_currentFileIndex ]  ) ;
   }
 
-  void SIOReader::open(const std::string& filename){
+  void SIOReader::open(const std::string& filename) {
 
 
     std::string sioFilename ;  
@@ -185,7 +185,7 @@ namespace SIO {
     
   }
 
-  int SIOReader::getNumberOfRuns(){
+  int SIOReader::getNumberOfRuns() {
 
     // create the event map if needed (i.e. not opened in direct access mode)
     if( ! _readEventMap ){  
@@ -252,7 +252,7 @@ namespace SIO {
 
   //-------------------------------------------------------------------------------------------
 
-  void SIOReader::readRecord(){
+  void SIOReader::readRecord() {
 
     SIO_blockManager::remove(  LCSIO_RUNBLOCKNAME ) ;
     SIO_blockManager::add( _runHandler ) ;
@@ -299,11 +299,11 @@ namespace SIO {
   }
   
 
-  LCRunHeader* SIOReader::readNextRunHeader(){
+  LCRunHeader* SIOReader::readNextRunHeader() {
     return readNextRunHeader( LCIO::READ_ONLY ) ;
   }
 
-  LCRunHeader* SIOReader::readNextRunHeader(int accessMode){
+  LCRunHeader* SIOReader::readNextRunHeader(int accessMode)  {
 
     // set the _runRecord to unpack for this scope
     //SIOUnpack runUnp( SIOUnpack::RUN ) ;
@@ -375,13 +375,13 @@ namespace SIO {
   }
   
 
-  LCEvent* SIOReader::readNextEvent(){
+  LCEvent* SIOReader::readNextEvent() {
 
     return readNextEvent( LCIO::READ_ONLY ) ;
 
   }
 
-  LCEvent* SIOReader::readNextEvent(int accessMode){
+  LCEvent* SIOReader::readNextEvent(int accessMode)  {
     
 
     // first, we need to read the event header 
@@ -436,7 +436,7 @@ namespace SIO {
     }
   }
   
-  void SIOReader::skipNEvents(int n){
+  void SIOReader::skipNEvents(int n) {
      
     if( n < 1 )  // nothing to skip
       return ;  
@@ -649,12 +649,12 @@ namespace SIO {
     _runListeners.erase( _runListeners.find( ls ) );
  }
 
-  void SIOReader::readStream(){
+  void SIOReader::readStream() {
 
     int maxInt = INT_MAX ; // numeric_limits<int>::max() ;
     readStream( maxInt ) ;
   }
-  void SIOReader::readStream(int maxRecord){
+  void SIOReader::readStream(int maxRecord) {
     
 
     bool readUntilEOF = false ;

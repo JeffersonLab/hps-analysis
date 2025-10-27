@@ -29,6 +29,8 @@ namespace IMPL {
     TrackStateImpl() ;
     TrackStateImpl(int location, float d0, float phi, float omega, float z0, float tanLambda, const float* covMatrix, const float* reference) ;
     TrackStateImpl(int location, float d0, float phi, float omega, float z0, float tanLambda, const EVENT::FloatVec& covMatrix, const float* reference) ;
+    TrackStateImpl(int location, float d0, float phi, float omega, float z0, float tanLambda, const float bLocal, const float* covMatrix, const float* reference) ;
+    TrackStateImpl(int location, float d0, float phi, float omega, float z0, float tanLambda, const float bLocal, const EVENT::FloatVec& covMatrix, const float* reference) ;
     /** Copy constructor which takes as an argument an EVENT::TrackState reference */
     TrackStateImpl(const EVENT::TrackState &p );
 
@@ -69,6 +71,12 @@ namespace IMPL {
      */
     virtual float getTanLambda() const ;
 
+    /** The b-field at the reference point
+     *  
+     */
+    virtual float getBLocal() const ;
+
+    
     /** Covariance matrix of the track parameters. Stored as lower triangle matrix where
      * the order of parameters is:   d0, phi, omega, z0, tan(lambda).
      * So we have cov(d0,d0), cov( phi, d0 ), cov( phi, phi), ...
@@ -79,7 +87,7 @@ namespace IMPL {
      *  of the first/last hits or the entry point into the calorimeter.
      */
     virtual const float* getReferencePoint() const ;
-   
+    
 
     // setters 
     virtual void  setLocation( int location ) ;
@@ -88,11 +96,13 @@ namespace IMPL {
     virtual void  setOmega( float omega ) ;
     virtual void  setZ0( float z0 ) ;
     virtual void  setTanLambda( float tanLambda ) ;
+    virtual void  setBLocal( float bLocal ) ;
 
     virtual void  setCovMatrix( const float* cov ) ;
     virtual void  setCovMatrix( const EVENT::FloatVec& cov ) ;
 
     virtual void  setReferencePoint( const float* rPnt) ;
+    
 
 
   protected:
@@ -103,7 +113,7 @@ namespace IMPL {
     float _omega ;
     float _z0 ;
     float _tanLambda ;
-
+    float _bLocal ; 
     EVENT::FloatVec _covMatrix ;
     float  _reference[TRKSTATENREFSIZE] ;
 

@@ -2,7 +2,7 @@
 # cmake file for building LCIO
 # @author Frank Gaede, DESY
 # @author Jan Engels, DESY
-CMAKE_MINIMUM_REQUIRED( VERSION 2.8 FATAL_ERROR )
+CMAKE_MINIMUM_REQUIRED( VERSION 3.5 FATAL_ERROR )
 ########################################################
 
 
@@ -16,9 +16,9 @@ SET( LCIO_VERSION_MAJOR 2 )
 SET( LCIO_VERSION_MINOR 7 )
 SET( LCIO_VERSION_PATCH 5 )
 
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 
 ### DEPENDENCIES ############################################################
 
@@ -59,10 +59,10 @@ endif()
 
 
 # ROOT
-#OPTION( BUILD_ROOTDICT "Set to ON to build ROOT dictionary" OFF )
-#IF( BUILD_ROOTDICT )
-#    FIND_PACKAGE( ROOT 6.04 REQUIRED ) # look for ROOT versions >= 5.27.06
-#ENDIF()
+OPTION( BUILD_ROOTDICT "Set to ON to build ROOT dictionary" OFF )
+IF( BUILD_ROOTDICT )
+    FIND_PACKAGE( ROOT 6.04 REQUIRED ) # look for ROOT versions >= 5.27.06
+ENDIF()
 
 
 # DCAP

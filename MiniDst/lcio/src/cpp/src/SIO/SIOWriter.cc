@@ -75,8 +75,6 @@ namespace SIO {
     
   }
 
-
-
   void SIOWriter::open(const std::string & filename){
 
     std::string sioFilename ;  
@@ -113,7 +111,7 @@ namespace SIO {
       sioFilename = filename ;    
   } 
 
-  void SIOWriter::open(const std::string& filename, int writeMode){
+  void SIOWriter::open(const std::string& filename, int writeMode) {
 
     
     // make sure filename has the proper extension (.slcio) 
@@ -184,7 +182,7 @@ namespace SIO {
   }
 
 
-  void SIOWriter::writeRunHeader(const EVENT::LCRunHeader * hdr){
+  void SIOWriter::writeRunHeader(const EVENT::LCRunHeader * hdr) {
 
 
     SIO_record* runRecord = LCSIO::records()[ SIORecords::Run ] ;
@@ -266,7 +264,7 @@ namespace SIO {
     } 
   }
 
-  void SIOWriter::writeEvent(const LCEvent* evt){
+  void SIOWriter::writeEvent(const LCEvent* evt) {
 
     
     //here we set up the collection handlers 
@@ -316,7 +314,7 @@ namespace SIO {
   }
 
 
-  void SIOWriter::close(){
+  void SIOWriter::close() {
   
     
     _raMgr.writeRandomAccessRecords( _stream ) ;
@@ -334,7 +332,7 @@ namespace SIO {
 
   }
 
-  void SIOWriter::flush(){
+  void SIOWriter::flush()  {
   
     const std::string* streamName  = _stream->getName() ;
 

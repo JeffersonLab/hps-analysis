@@ -86,19 +86,19 @@ public:
      */
     virtual bool isSubset() const = 0;
 
-    /** Adds the given element to (end of) the collection. Throws an exception 
-     * if the collection (event) is 'read only'.
+    /** Adds the given element to (end of) the collection.
+     * Throws an exception if the collection (event) is 'read only'.
      *
      * @throws ReadOnlyException
      */
     virtual void addElement(LCObject * obj) = 0;
 
-    /** Removes the i-th element from the collection. Throws an exception 
-     * if the collection (event) is 'read only'.
+    /** Removes the i-th element from the collection.
+     * Throws an exception if the collection (event) is 'read only'.
      *
      * @throws ReadOnlyException
      */
-    virtual void removeElementAt(int i)  = 0;
+    virtual void removeElementAt(int i) = 0;
 
     /** Set the flag word. This is allowed in 'read only' mode.
      */

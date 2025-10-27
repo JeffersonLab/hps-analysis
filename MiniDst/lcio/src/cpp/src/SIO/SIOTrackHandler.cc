@@ -46,7 +46,6 @@ namespace SIO{
     // read TrackStates
     int nTrackStates = 1 ; // set to 1 per default for backwards compatibility
     
-
     if( _vers >= SIO_VERSION_ENCODE( 2, 0)   ) {
         SIO_DATA( stream ,  &nTrackStates  , 1 ) ;
     }
@@ -66,6 +65,9 @@ namespace SIO{
         SIO_DATA( stream ,  &(trackstate->_omega)  , 1 ) ;
         SIO_DATA( stream ,  &(trackstate->_z0)  , 1 ) ;
         SIO_DATA( stream ,  &(trackstate->_tanLambda)  , 1 ) ;
+
+	if( _vers >= SIO_VERSION_ENCODE( 3, 0)   ) 
+	  SIO_DATA( stream ,  &(trackstate->_bLocal)  , 1 ) ;
 
         float cov[15] ;
         SIO_DATA( stream ,  cov  ,  15 ) ;
@@ -191,6 +193,7 @@ namespace SIO{
         LCSIO_WRITE( stream, trk->getTrackStates()[i]->getOmega()  ) ;
         LCSIO_WRITE( stream, trk->getTrackStates()[i]->getZ0()  ) ;
         LCSIO_WRITE( stream, trk->getTrackStates()[i]->getTanLambda()  ) ;
+        LCSIO_WRITE( stream, trk->getTrackStates()[i]->getBLocal()  ) ;
 
         const FloatVec& cov = trk->getTrackStates()[i]->getCovMatrix() ;
         for(unsigned int j=0; j<cov.size() ; j++ ){

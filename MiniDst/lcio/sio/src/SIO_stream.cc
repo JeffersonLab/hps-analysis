@@ -303,7 +303,7 @@ if( dmpend > bufmax )
 //
 // Buffer characteristics.
 //
- printf("   Start address: %8ld  (%p)\n", (long int)bufloc, (void*) bufloc );
+printf("   Start address: %8ld  (%p)\n", (long int)bufloc, (void*) bufloc );
 count = buffer - bufloc;
 printf(" Current address: %8ld  (%p)    Offset: %8d  (0x%08x)\n", 
         (long int)buffer, (void*) buffer, count, count );
@@ -325,8 +325,8 @@ printf(  "    -ASCII----------\n");
 // Scan down the buffer, printing a dump record every 16 bytes.
 //
 memset(  &outbuf[ 0], ' ', sizeof( outbuf ) );
-sprintf( &outbuf[ 1], "%8d",  offset );
-sprintf( &outbuf[10], "%p",  (void*) dmpbeg );
+snprintf( &outbuf[ 1], 9 ,"%8d",  offset );
+snprintf( &outbuf[10], 77-11,"%p",  (void*) dmpbeg );
 outbuf[ 9] = ':';
 outbuf[18] = ' ';
 outbuf[76] = '\0';
@@ -353,8 +353,8 @@ while( dmpbeg < dmpend )
         printf( "%s\n", outbuf );
 
         memset(  &outbuf[ 0], ' ', sizeof( outbuf ) );
-        sprintf( &outbuf[ 1], "%8d",  offset );
-        sprintf( &outbuf[10], "%p",  (void*) dmpbeg );
+        snprintf( &outbuf[ 1], 9 , "%8d",  offset );
+        snprintf( &outbuf[10], 77-11, "%p",  (void*) dmpbeg );
         outbuf[ 9] = ':';
         outbuf[18] = ' ';
         outbuf[76] = '\0';

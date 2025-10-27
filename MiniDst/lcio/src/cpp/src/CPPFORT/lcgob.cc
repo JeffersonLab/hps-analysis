@@ -87,12 +87,21 @@ using namespace lcio ;
 
  char* lcgobgettypename( PTRTYPE genericobject ){
    LCGenericObjectImpl* object = reinterpret_cast<LCGenericObjectImpl*>( genericobject ) ;
-   return const_cast<char*>( object->getTypeName().c_str() ) ;
+   // The following return from the original code has the problem that it returns a pointer to a temporary object,
+   // which may or may not be around when the caller tries to use it.  The following code is a workaround.
+   //return const_cast<char*>( object->getTypeName().c_str() ) ;
+   static char out_string[100];
+   strncpy(out_string, object->getTypeName().c_str(), 100);
+    return const_cast<char*>( out_string ) ;
  }
 
  char* lcgobgetdatadescription( PTRTYPE genericobject ){
    LCGenericObjectImpl* object = reinterpret_cast<LCGenericObjectImpl*>( genericobject ) ;
-   return const_cast<char*>( object->getDataDescription().c_str() ) ;
+   // Same error as above.
+   // return const_cast<char*>( object->getDataDescription().c_str() ) ;
+   static char out_string[100];
+   strncpy(out_string, object->getDataDescription().c_str(), 100);
+   return const_cast<char*>( out_string ) ;
  }
 
 

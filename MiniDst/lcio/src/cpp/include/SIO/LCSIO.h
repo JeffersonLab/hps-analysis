@@ -119,6 +119,8 @@ namespace SIO {
 
 
     /**Checks the version of the file - oldefile (version < v00-08) are no longer supported
+     * 
+     * @throws IOException if the version is not supported
      */
     static void checkVersion(int versionID ) ;
 
@@ -173,6 +175,8 @@ namespace SIO {
 
 
     /**Seek stream to the given absolute position - if pos<0 from end of file.
+     * Throws IOException if stream is not open or seek fails.
+     * 
      * @throw IOException
      */
     static void seekStream( SIO_stream* stream , EVENT::long64 pos) ;

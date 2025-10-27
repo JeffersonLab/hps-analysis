@@ -19,6 +19,10 @@ public class ITrackState extends ILCObject implements TrackState
    protected float[] referencePoint = null3;
    protected float tanLambda;
    protected float z0;
+   protected float blocal;
+
+    protected float[] momentum = null3; 
+  
    
    public float[] getCovMatrix()
    {
@@ -49,7 +53,10 @@ public class ITrackState extends ILCObject implements TrackState
    {
       return z0;
    }
-   
+    public float getBLocal()
+   {
+      return blocal;
+   }
    public float getOmega()
    {
       return omega;
@@ -59,7 +66,10 @@ public class ITrackState extends ILCObject implements TrackState
    {
       return tanLambda;
    }
- 
+
+   public float[] getMomentum(){
+      return momentum; 
+   }
    public void setCovMatrix(float[] covMatrix)
    {
       checkAccess();
@@ -91,13 +101,21 @@ public class ITrackState extends ILCObject implements TrackState
       if (referencePoint.length != 3) throw new IllegalArgumentException("referencePoint.lenhgth != 3");
       this.referencePoint = referencePoint;
    }
-   
+    public void setMomentum(float[] momentum){
+	checkAccess();
+	if (momentum.length != 3) throw new IllegalArgumentException("momentum.length != 3");
+	this.momentum = momentum;
+    }
    public void setZ0(float z0)
    {
       checkAccess();
       this.z0 = z0;
    }
-  
+   public void setBLocal(float blocal)
+   {
+      checkAccess();
+      this.blocal = blocal;
+   }
    public void setOmega(float f)
    {
       checkAccess();

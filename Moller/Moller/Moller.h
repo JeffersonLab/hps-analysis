@@ -15,7 +15,7 @@
 #ifndef MOLLER_MOLLER_H
 #define MOLLER_MOLLER_H
 
-#define __MOLLER_VERSION__ "1.0"
+#define __MOLLER_VERSION__ "1.1"
 
 #include "TObject.h"
 #include "TChain.h"
@@ -23,6 +23,7 @@
 #include "TStopwatch.h"
 #include "TLorentzVector.h"
 #include "ROOT/RDataFrame.hxx"
+#include "ROOT/RVec.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"
 #include "ROOT/RDF/RInterface.hxx"
 #include "ROOT/RDF/HistoModels.hxx"
@@ -43,7 +44,7 @@ public:
    double four_vector_rotation{-0.0302};
 
 
-   Moller(std::string files = "");
+   Moller() = default;
 
    void Setup();
    void Process();
@@ -159,8 +160,6 @@ public:
    };
 
 public:
-   TChain ch{TChain("MiniDST")};
-   RDataFrame dataframe{RDataFrame(ch)};
 
 };
 

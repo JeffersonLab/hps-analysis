@@ -4,13 +4,6 @@
 
 #include "Moller.h"
 
-Moller::Moller(std::string files) {
-    if (!files.empty()) {
-        ch.Add(files.c_str());
-    } else {
-        return;
-    }
-}
 
 void Moller::Setup() {
     ///
@@ -38,8 +31,8 @@ RNode Moller::Add_Four_Vectors(RNode in, double y_rotation, std::string pair_nam
                                std::string out_name_prefix) {
    // Add two four-vectors and related variables to the dataframe.
 
-   auto add_4vector_first = [y_rotation](RVec<std::pair<int,int> > pairs, RVec<double> px, RVec<double> py, RVec<double> pz){
-      RVec<TLorentzVector> out;
+   auto add_4vector_first = [y_rotation](ROOT::RVec<std::pair<int,int> > pairs, ROOT::RVec<double> px, ROOT::RVec<double> py, ROOT::RVec<double> pz){
+      ROOT::RVec<TLorentzVector> out;
       for(int i=0; i<pairs.size(); ++i) {
          TLorentzVector v4;
          int item = pairs[i].first;
@@ -50,8 +43,8 @@ RNode Moller::Add_Four_Vectors(RNode in, double y_rotation, std::string pair_nam
       return out;
    };
 
-   auto add_4vector_second = [y_rotation](RVec<std::pair<int,int> > pairs, RVec<double> px, RVec<double> py, RVec<double> pz){
-      RVec<TLorentzVector> out;
+   auto add_4vector_second = [y_rotation](ROOT::RVec<std::pair<int,int> > pairs, ROOT::RVec<double> px, ROOT::RVec<double> py, ROOT::RVec<double> pz){
+      ROOT::RVec<TLorentzVector> out;
       for(int i=0; i<pairs.size(); ++i) {
          TLorentzVector v4;
          int item = pairs[i].second;
@@ -63,18 +56,18 @@ RNode Moller::Add_Four_Vectors(RNode in, double y_rotation, std::string pair_nam
    };
 
 
-   auto add_minv = [](RVec<TLorentzVector> v1, RVec<TLorentzVector> v2){
+   auto add_minv = [](ROOT::RVec<TLorentzVector> v1, ROOT::RVec<TLorentzVector> v2){
       assert(v1.size() == v2.size());
-      RVec<double> out;
+      ROOT::RVec<double> out;
       for(int i=0; i< v1.size(); ++i) {
          out.push_back((v1[i] + v2[i]).M());
       }
       return out;
    };
 
-   auto add_psum = [](RVec<TLorentzVector> v1, RVec<TLorentzVector> v2){
+   auto add_psum = [](ROOT::RVec<TLorentzVector> v1, ROOT::RVec<TLorentzVector> v2){
       assert(v1.size() == v2.size());
-      RVec<double> out;
+      ROOT::RVec<double> out;
       for(int i=0; i< v1.size(); ++i) {
          out.push_back( (v1[i].Vect() + v2[i].Vect()).Mag());
       }
@@ -82,25 +75,25 @@ RNode Moller::Add_Four_Vectors(RNode in, double y_rotation, std::string pair_nam
    };
 
 
-   auto add_theta = [](RVec<TLorentzVector> v1){
-      RVec<double> out;
+   auto add_theta = [](ROOT::RVec<TLorentzVector> v1){
+      ROOT::RVec<double> out;
       for(int i=0; i< v1.size(); ++i) {
          out.push_back(v1[i].Theta());
       }
       return out;
    };
 
-   auto add_energy = [](RVec<TLorentzVector> v1){
-      RVec<double> out;
+   auto add_energy = [](ROOT::RVec<TLorentzVector> v1){
+      ROOT::RVec<double> out;
       for(int i=0; i< v1.size(); ++i) {
          out.push_back(v1[i].E());
       }
       return out;
    };
 
-   auto add_beam_theta_x = [](RVec<TLorentzVector> v1, RVec<TLorentzVector> v2){
+   auto add_beam_theta_x = [](ROOT::RVec<TLorentzVector> v1, ROOT::RVec<TLorentzVector> v2){
       assert(v1.size() == v2.size());
-      RVec<double> out;
+      ROOT::RVec<double> out;
       for(int i=0; i< v1.size(); ++i) {
          out.push_back( atan2((v1[i]+v2[i]).X(), (v1[i]+v2[i]).Z()));
       }
@@ -127,7 +120,7 @@ RNode Moller::Cut_2_electrons(RNode in, bool exact) {
    // Parameters:  in     - Input RNode (RDateFrame)
    //              exact  - If true select exactly 2 electrons.
 
-   auto cut_two_electrons = [exact](const RVec<int> &part_pdg)->bool {
+   auto cut_two_electrons = [exact](const ROOT::RVec<int> &part_pdg)->bool {
       int n=0;
       for(int i=0;i<part_pdg.size();++i){
          if(part_pdg[i]==11) n++;
@@ -144,8 +137,8 @@ RNode Moller::Select_El_Pairs(RNode in, double time_cut_min, double time_cut_max
    // Return the RDataFrame with an "electron_pairs" variable that are pair<int,int> type which are indexes to the part banks.
 
    auto select_el_pairs = [time_cut_min, time_cut_max]
-         (const RVec<int> &part_pdg, const RVec<int> &part_track, const RVec<double> &track_time)-> RVec< std::pair<int,int>> {
-      RVec< std::pair<int,int> > out;
+         (const ROOT::RVec<int> &part_pdg, const ROOT::RVec<int> &part_track, const ROOT::RVec<double> &track_time)-> ROOT::RVec< std::pair<int,int>> {
+      ROOT::RVec< std::pair<int,int> > out;
       for(int i=0; i<part_pdg.size(); ++i)
          for(int j=i+1; j< part_pdg.size(); ++j){
             if(part_pdg[i] == 11 && part_pdg[j] == 11){
@@ -161,7 +154,7 @@ RNode Moller::Select_El_Pairs(RNode in, double time_cut_min, double time_cut_max
 
    // Note that without cuts, the index is just a dummy!
    return in.Define(out_name, select_el_pairs, {"part_pdg", "part_track", "track_time"})
-      .Define(out_name+"_idx","RVec<int> out;for(int i=0; i< "+out_name+".size(); ++i) out.push_back(i);return out;");
+      .Define(out_name+"_idx","ROOT::RVec<int> out;for(int i=0; i< "+out_name+".size(); ++i) out.push_back(i);return out;");
 }
 
 RNode Moller::Select_v0(RNode in, int type, double time_cut_min, double time_cut_max, std::string out_name){
@@ -172,8 +165,8 @@ RNode Moller::Select_v0(RNode in, int type, double time_cut_min, double time_cut
    // compatible with the select_ele_pairs function.
    // The "out_name_idx" variable that are the indexes of the selected v0_xxxx variables that we want.
 
-   auto add_electron_pairs = [](RVec<int> v0_em_part, RVec<int> v0_ep_part){
-      RVec< std::pair<int,int> > out;
+   auto add_electron_pairs = [](ROOT::RVec<int> v0_em_part, ROOT::RVec<int> v0_ep_part){
+      ROOT::RVec< std::pair<int,int> > out;
       for(int i=0; i<v0_em_part.size(); ++i){
          out.emplace_back( std::make_pair(v0_em_part[i], v0_ep_part[i]));
       }
@@ -181,9 +174,9 @@ RNode Moller::Select_v0(RNode in, int type, double time_cut_min, double time_cut
    };
 
    auto select_v0 = [type, time_cut_min, time_cut_max]
-         (RVec<int> v0_type, const RVec<int>& v0_em_track, const RVec<int>& v0_ep_track,
-               const RVec<double>& track_time)-> RVec<int> {
-      RVec<int> out;
+         (ROOT::RVec<int> v0_type, const ROOT::RVec<int>& v0_em_track, const ROOT::RVec<int>& v0_ep_track,
+               const ROOT::RVec<double>& track_time)-> ROOT::RVec<int> {
+      ROOT::RVec<int> out;
       for(int i=0; i<v0_type.size(); ++i)
          if(v0_type[i] == type){
             int ii = v0_em_track[i];
@@ -204,8 +197,8 @@ RNode Moller::Select_El_Pairs_MC(RNode in, double time_cut_min, double time_cut_
    // Select all pairs of electrons from the MCPartcile collection that are primary electrons and
    // have mc_part_time within time_cut_min <= time_diff <= time_cut_max.
 
-   auto select_el_pairs_mc = [time_cut_min, time_cut_max, z_cut](RVec<int> pdg, RVec<double> time, RVec<double> z)-> RVec< std::pair<int,int>> {
-      RVec< std::pair<int,int> > out;
+   auto select_el_pairs_mc = [time_cut_min, time_cut_max, z_cut](ROOT::RVec<int> pdg, ROOT::RVec<double> time, ROOT::RVec<double> z)-> ROOT::RVec< std::pair<int,int>> {
+      ROOT::RVec< std::pair<int,int> > out;
       for(int i=0; i<pdg.size(); ++i)
          for(int j=i+1; j< pdg.size(); ++j){
             if(pdg[i] == 11 && pdg[j] == 11 && z[i] < z_cut && z[j] < z_cut){
@@ -224,8 +217,8 @@ RNode Moller::Select_El_Pairs_MC(RNode in, double time_cut_min, double time_cut_
 //RNode Moller::Add_Momentum_Sum(RNode in, std::string in_name, std::string out_name){
 //   // Add the momentum sum (p1 + p2).Mag() for each pair in in_name as out_name
 //
-//   auto add_psum = [](RVec< std::pair<int, int> > pairs, RVec<double> part_px, RVec<double> part_py, RVec<double> part_pz ){
-//      RVec<double> out;
+//   auto add_psum = [](ROOT::RVec< std::pair<int, int> > pairs, ROOT::RVec<double> part_px, ROOT::RVec<double> part_py, ROOT::RVec<double> part_pz ){
+//      ROOT::RVec<double> out;
 //      for(auto p: pairs){
 //         TVector3 p1(part_px[p.first], part_py[p.first], part_pz[p.first]);
 //         TVector3 p2(part_px[p.second], part_py[p.second], part_pz[p.second]);
@@ -242,8 +235,8 @@ RNode Moller::Refine_El_Pairs_1(RNode in, double pcut, double pmin, double pmax,
                                 std::string pairs_name, std::string in_name_idx, std::string out_name_idx){
    // Momentum ( p_{1,2} > pcut) and momentum sum cut (pmin < p1+p2 < pmax) for the electron pairs found in "in_name" index
    // Creates a new index "out_name" with the indexes pointing to the refined selection.
-   auto mom_sum_cut = [pcut, pmin, pmax](RVec< std::pair<int, int> > pairs, RVec<int> in_idx, RVec<double> part_px, RVec<double> part_py, RVec<double> part_pz ){
-      RVec<int> out;
+   auto mom_sum_cut = [pcut, pmin, pmax](ROOT::RVec< std::pair<int, int> > pairs, ROOT::RVec<int> in_idx, ROOT::RVec<double> part_px, ROOT::RVec<double> part_py, ROOT::RVec<double> part_pz ){
+      ROOT::RVec<int> out;
       for(int idx: in_idx){
          int i_first = pairs[idx].first;
          int i_second = pairs[idx].second;
@@ -264,8 +257,8 @@ RNode Moller::Refine_El_Pairs_2(RNode in, std::string pairs_name, std::string in
    // Cut on the electron pairs, requiring one in the top and one in the bottom volume of HPS:
    // tan_lambda_1 * tan_lambra_2 < 0 => part_py_1 * part_py_2 < 0
 
-   auto track_tan_lambda_cut = [](RVec< std::pair<int, int> > pairs, RVec<int> in_idx, RVec<double> part_py){
-      RVec<int> out;
+   auto track_tan_lambda_cut = [](ROOT::RVec< std::pair<int, int> > pairs, ROOT::RVec<int> in_idx, ROOT::RVec<double> part_py){
+      ROOT::RVec<int> out;
       for(int idx: in_idx){
          if( part_py[pairs[idx].first]*part_py[pairs[idx].second] < 0 ){
             out.push_back(idx);
@@ -281,8 +274,8 @@ RNode Moller::Refine_El_Pairs_2(RNode in, double phi_cut, std::string pairs_name
    // Cut on the electron pairs requiring the tracks to be co-planar to better than phi_cut:  abs( t1.Phi() - t2.Phi() ) < phi_cut.
    // The p4_prefix is the TLorentzVectors collection for *all* the electron_pairs. The in_idx_name is the input indexes to the pairs.
 
-   auto track_tan_lambda_cut = [phi_cut](RVec<std::pair<int,int> > pairs, RVec<int> in_idx, RVec<TLorentzVector> p4v1, RVec<TLorentzVector> p4v2){
-      RVec<int> out;
+   auto track_tan_lambda_cut = [phi_cut](ROOT::RVec<std::pair<int,int> > pairs, ROOT::RVec<int> in_idx, ROOT::RVec<TLorentzVector> p4v1, ROOT::RVec<TLorentzVector> p4v2){
+      ROOT::RVec<int> out;
       for(int idx: in_idx){
          double phi_diff = p4v1[idx].Phi()-p4v2[idx].Phi();
          phi_diff = phi_diff< -TMath::Pi()?phi_diff + 2*TMath::Pi(): phi_diff;
@@ -297,8 +290,8 @@ RNode Moller::Refine_El_Pairs_2(RNode in, double phi_cut, std::string pairs_name
 RNode Moller::Refine_El_Pairs_3(RNode in, double theta_cut, std::string in_idx_name, std::string p4_prefix, std::string out_idx_name) {
    // Make a cut on the calculated beam direction, beam.Theta() = (p4v1+p4v2).Theta(). Note: this is different from theta_x.
 
-   auto beam_theta_cut = [theta_cut](RVec<int> in_idx, RVec<TLorentzVector> p4v1, RVec<TLorentzVector> p4v2){
-      RVec<int> out;
+   auto beam_theta_cut = [theta_cut](ROOT::RVec<int> in_idx, ROOT::RVec<TLorentzVector> p4v1, ROOT::RVec<TLorentzVector> p4v2){
+      ROOT::RVec<int> out;
       for(int idx: in_idx){
          if( (p4v1[idx].Vect()+p4v2[idx].Vect()).Theta() < theta_cut ){
             out.push_back(idx);
@@ -315,8 +308,8 @@ RNode Moller::Refine_El_Pairs_X(RNode in, double min_theta, double max_theta, st
    // Cut on the sum of the theta angle for the tracks between min_theta and max_theta, see Bradley's thesis.
    // This is probably a cut WE SHOULD NOT DO, since it will also select on invariant mass indirectly.
 
-   auto track_theta_cut = [min_theta, max_theta](RVec<int> in_idx, RVec<double> p4tht1, RVec<double> p4tht2){
-      RVec<int> out;
+   auto track_theta_cut = [min_theta, max_theta](ROOT::RVec<int> in_idx, ROOT::RVec<double> p4tht1, ROOT::RVec<double> p4tht2){
+      ROOT::RVec<int> out;
       for(int ind: in_idx){
          double angle_sum = p4tht1[ind] + p4tht2[ind];
          if( min_theta < angle_sum && angle_sum < max_theta){
@@ -363,8 +356,8 @@ RNode Moller::Refine_El_Pairs_X2(RNode in, std::string pairs_name, std::string i
       return fiducial;
    };
 
-   auto TracksFiducialTest = [TrackIsFiducial]( RVec<std::pair<int,int> > pairs, RVec<int> in_idx, RVec<double> track_x_at_ecal , RVec<double> track_y_at_ecal) {
-      RVec<int> out;
+   auto TracksFiducialTest = [TrackIsFiducial]( ROOT::RVec<std::pair<int,int> > pairs, ROOT::RVec<int> in_idx, ROOT::RVec<double> track_x_at_ecal , ROOT::RVec<double> track_y_at_ecal) {
+      ROOT::RVec<int> out;
       for(int ind: in_idx){
          int first = pairs[ind].first;
          int second = pairs[ind].second;
@@ -382,8 +375,8 @@ RNode Moller::Refine_El_Pairs_X2(RNode in, std::string pairs_name, std::string i
 RNode Moller::Refine_El_Pairs_chi2(RNode in, double chi2_cut, std::string pairs_name, std::string in_idx_name, std::string out_idx_name){
 // Cut the electron pairs on the chi2 of each track.
 
-      auto track_chi2_cut = [chi2_cut](RVec< std::pair<int, int> > pairs, RVec<int> in_indx, RVec<double> part_track_chi2){
-         RVec<int> out;
+      auto track_chi2_cut = [chi2_cut](ROOT::RVec< std::pair<int, int> > pairs, ROOT::RVec<int> in_indx, ROOT::RVec<double> part_track_chi2){
+         ROOT::RVec<int> out;
          for(int ind: in_indx){
             if( part_track_chi2[pairs[ind].first] < chi2_cut && part_track_chi2[pairs[ind].second] < chi2_cut){
                out.push_back(ind);
@@ -396,8 +389,8 @@ RNode Moller::Refine_El_Pairs_chi2(RNode in, double chi2_cut, std::string pairs_
 
 RNode Moller::Refine_El_Pairs_nhit(RNode in, int nhit_cut, std::string in_idx_name, std::string out_idx_name){
 // Cut the electron pairs on the number of hits in each track.
-   auto track_nhit_cut = [nhit_cut](RVec< std::pair<int, int> > pairs, RVec<int> in_indx, RVec<int> track_nhits, RVec<int> part_track){
-      RVec<int> out;
+   auto track_nhit_cut = [nhit_cut](ROOT::RVec< std::pair<int, int> > pairs, ROOT::RVec<int> in_indx, ROOT::RVec<int> track_nhits, ROOT::RVec<int> part_track){
+      ROOT::RVec<int> out;
       for(int ind: in_indx){
          if( track_nhits[part_track[pairs[ind].first]] > nhit_cut && track_nhits[part_track[pairs[ind].second]] > nhit_cut){
             out.push_back(ind);
@@ -414,8 +407,8 @@ RNode Moller::Refine_El_Pairs_nhit(RNode in, int nhit_cut, std::string in_idx_na
 //   // Add the invariant mass for the two electrons in the event.
 //   // If there are more than two pairs, all combinatorics are used to compute the invariant mass.
 //
-//   auto compute_invariant_mass = [pair_name](RVec<std::pair<int,int> > &ele_pairs, RVec<double> &px, RVec<double> &py, RVec<double> &pz){
-//      RVec<double> mass_out;
+//   auto compute_invariant_mass = [pair_name](ROOT::RVec<std::pair<int,int> > &ele_pairs, ROOT::RVec<double> &px, ROOT::RVec<double> &py, ROOT::RVec<double> &pz){
+//      ROOT::RVec<double> mass_out;
 //      for(const std::pair<int, int> &p: ele_pairs){
 //               TLorentzVector p1, p2;
 //               p1.SetXYZM(px[p.first],py[p.first],pz[p.first],0.0005109989499961642);

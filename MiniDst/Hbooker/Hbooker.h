@@ -10,6 +10,7 @@
 #include <variant>
 #include <chrono>
 #include "TObject.h"
+#include "TChain.h"
 #include "MiniDst.h"
 
 #include <stdlib.h>

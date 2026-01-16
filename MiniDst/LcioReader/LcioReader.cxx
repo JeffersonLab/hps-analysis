@@ -924,6 +924,15 @@ bool LcioReader::Process(Long64_t entry){
       //        make_shared<UTIL::LCRelationNavigator>(track_data_kf_rel);
       // UTIL::LCRelationNavigator *track_data_kf_nav = new UTIL::LCRelationNavigator(track_data_kf_rel);
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// There has been a fair bit of changes to the content of TrackData and related to this how
+/// we compute the track momentum. It should still be the case that the momentum is stored in
+/// the generic object associated with the track, in the floats at index 1,2,3 (px,py,pz).
+/// In the +2025 data processing we only store the KF tracks and the magnetic field value is
+/// added to the TrackState object. This allows for correctly computing the (px,py,pz) from the
+/// helix parameters. This is done in the updated hpstr code, and will be done here as well.
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
       for (int track_number = 0; track_number < n_total_tracks; ++track_number) {
          bool track_is_kf = false;
          bool track_is_gbl = false;
@@ -953,15 +962,170 @@ bool LcioReader::Process(Long64_t entry){
          any_track_to_index_map[lcio_track] = track_number;
          track_particle.push_back(-99); // Pointer to particle is resolved *way* later.
 
-         track_d0.push_back(lcio_track->getD0());
-         track_chi2.push_back(lcio_track->getChi2());
-         track_omega.push_back(lcio_track->getOmega());
-         track_phi0.push_back(lcio_track->getPhi());
-         track_tan_lambda.push_back(lcio_track->getTanLambda());
-         track_z0.push_back(lcio_track->getZ0());
-         track_type.push_back(lcio_track->getType());
+         // std::vector<EVENT::TrackState*> TrackStateVec = lcio_track->getTrackStates();
 
-         std::vector<EVENT::TrackState*> TrackStateVec = lcio_track->getTrackStates();
+         // See the changes in hpstr by Matt Graham. This determines the version of the LCIO file by checking
+         // the value of the bfield.
+         // https://github.com/JeffersonLab/hpstr/blame/b4a52385db254d623bcbbe5b8879241c242346c8/processors/src/utilities.cxx#L217
+         double bTmp = lcio_track->getTrackState(1)->getBLocal();
+         bool is_2025_processing = ( abs(bTmp)<10.);
+
+         const EVENT::TrackState *ts_target
+               = lcio_track->getTrackState(EVENT::TrackState::AtTarget);
+         double bfield = ts_target->getBLocal();
+#ifdef DEBUG
+         track_bfield_at_target.push_back(bfield);
+#endif
+         if(is_2025_processing){
+            // In 2025 processing the B field is stored in the TrackState object.
+
+            track_d0.push_back(ts_target->getD0());
+            track_chi2.push_back(lcio_track->getChi2());
+            track_omega.push_back(ts_target->getOmega());
+            track_phi0.push_back(ts_target->getPhi());
+            track_tan_lambda.push_back(ts_target->getTanLambda());
+            track_z0.push_back(ts_target->getZ0());
+            track_type.push_back(lcio_track->getType());
+
+            // Now compute the momentum from helix parameters and B field.
+            double omega = ts_target->getOmega();
+            if( abs(omega) < 1E-7) omega = 1E-7;
+            double pt = 2.99792458e-04 * bfield / fabs(omega); // GeV/c
+            double py = pt * lcio_track->getTanLambda();
+            double px = pt * sin(lcio_track->getPhi());
+            double pz = pt * cos(lcio_track->getPhi());
+            double p = sqrt(pt * pt + py * py);
+            track_px.push_back(px);
+            track_py.push_back(py);
+            track_pz.push_back(pz);
+            //track_p.push_back(p);
+         }else {
+            // This is the old way, which works okay and is best for the pre-2025 data.
+            track_d0.push_back(lcio_track->getD0());
+            track_chi2.push_back(lcio_track->getChi2());
+            track_omega.push_back(lcio_track->getOmega());
+            track_phi0.push_back(lcio_track->getPhi());
+            track_tan_lambda.push_back(lcio_track->getTanLambda());
+            track_z0.push_back(lcio_track->getZ0());
+            track_type.push_back(lcio_track->getType());
+         }
+
+
+         EVENT::LCObjectVec track_data_list;
+         if(track_is_kf){
+            track_data_list = track_data_kf_nav->getRelatedFromObjects(lcio_track);
+         }else if(track_is_gbl) {
+            track_data_list = track_data_gbl_nav->getRelatedFromObjects(lcio_track);
+         }
+
+         vector<double> iso_values(14, -99.);
+
+         if (track_data_list.size() == 1) {
+            // There should always be one and only one for GBL tracks, 0 for matched tracks.
+            IMPL::LCGenericObjectImpl *track_info =
+                  static_cast<IMPL::LCGenericObjectImpl *>(track_data_list.at(0));
+
+//            track_state
+//                  = lcio_track->getTrackState(EVENT::TrackState::AtIP);
+
+            double px{-999.}, py{-999.}, pz{-999.};
+
+            // Sanity check... If this is really old data.
+            if (!is_2025_processing && (track_is_gbl && (track_info->getNDouble() < 12 || track_info->getNDouble() > 14 ||  /* 2016 or 2019 */
+                                 track_info->getNFloat() < 4   || track_info->getNInt() < 1) ||
+                track_is_kf &&  (track_info->getNFloat() < 4 || track_info->getNInt() < 1) )){
+               static int n_warning{0};
+
+               if(n_warning < 2) {  // Only show this warning twice.
+                  if(md_Debug & kDebug_Warning) {
+                     std::cout << "Dude! This looks like an old SLCIO file. track_info->getNFloat() = "
+                               << track_info->getNFloat() << "\n";
+                     std::cout << "Using magnetic field strength of " << magnetic_field << " to calculate px,py,pz "
+                               << std::endl;
+                  }
+                  n_warning++;
+               }
+               // Compute the px, py, pz component from the magnetic field and the tracking parameters. See hps-java TrackUtils.java
+               double omega = lcio_track->getOmega();
+               if (abs(omega) < 0.0000001) {
+                  omega = 0.0000001;
+               }
+               double Pt = abs((1. / omega) * magnetic_field * 2.99792458E-4);
+               // Get px, py, pz already taking into account the tracking coordinate to detector coordinate conversion.
+               pz = Pt * cos(lcio_track->getPhi());
+               px = Pt * sin(lcio_track->getPhi());
+               py = Pt * lcio_track->getTanLambda();
+            }
+
+            for (int i_iso = 0; i_iso < track_info->getNDouble(); ++i_iso) {
+               iso_values[i_iso] = track_info->getDoubleVal(i_iso);
+            }
+
+            track_time.push_back(track_info->getFloatVal(0));
+            if(track_info->getNFloat() >= 4) {
+               px = track_info->getFloatVal(1);
+               py = track_info->getFloatVal(2);
+               pz = track_info->getFloatVal(3);
+            }
+            if(!is_2025_processing) {
+               track_px.push_back(px);
+               track_py.push_back(py);
+               track_pz.push_back(pz);
+            }
+#ifdef DEBUG
+            else{
+               // In 2025 processing we already computed and stored the momentum above.
+               track_px_old.push_back(px);
+               track_py_old.push_back(py);
+               track_pz_old.push_back(pz);
+               track_bfield_alt.push_back(track_info->getFloatVal(5)); // This is the B field stored in TrackData.
+               track_omega_old.push_back(lcio_track->getOmega());
+               double px_stored = track_px.back();
+               double py_stored = track_py.back();
+               double pz_stored = track_pz.back();
+//               if( abs(px - px_stored) > 0.001 ||
+//                   abs(py - py_stored) > 0.001 ||
+//                   abs(pz - pz_stored) > 0.001 ) {
+//                  cout << "Discrepancy in computed momentum for 2025 processing track: \n "
+//                       << " px: " << px << " vs " << px_stored << " (" << (100*(px - px_stored)/px_stored) << " %)\n"
+//                       << ", py: " << py << " vs " << py_stored << " (" << (100*(py - py_stored)/py_stored)<< " %)\n"
+//                       << ", pz: " << pz << " vs " << pz_stored << " (" << (100*(pz - pz_stored)/pz_stored) << " %)\n";
+//                  cout << "Bfield: " << bfield << endl;
+//
+//               }
+            }
+#endif
+         } else {
+            if(track_is_gbl) cout << "Track without TrackData for type GBL\n";
+            if(track_is_kf) cout << "Track without KFTrackData for type KF\n";
+            track_time.push_back(-999.);
+            track_volume.push_back(-1);
+            if(!is_2025_processing) {
+               track_px.push_back(-999.);
+               track_py.push_back(-999.);
+               track_pz.push_back(-999.);
+            }
+         }
+
+         track_isolation.push_back(iso_values);
+
+         EVENT::TrackerHitVec tracker_hits = lcio_track->getTrackerHits();
+         track_n_hits.push_back(tracker_hits.size());
+
+
+         const EVENT::TrackState *track_state
+               // = lcio_track->getTrackState(EVENT::TrackState::LastLocation);
+               = lcio_track->getTrackState(EVENT::TrackState::AtCalorimeter);
+         if (track_state) {
+            const float *ecal_pos = track_state->getReferencePoint();
+            track_x_at_ecal.push_back(ecal_pos[1]);  // Note: Un-rotate from tracking coordinate system.
+            track_y_at_ecal.push_back(ecal_pos[2]);
+            track_z_at_ecal.push_back(ecal_pos[0]);
+         } else {
+            track_x_at_ecal.push_back(-9999.);
+            track_y_at_ecal.push_back(-9999.);
+            track_z_at_ecal.push_back(-9999.);
+         }
 
          if(use_extra_tracks) {
             const EVENT::TrackState *track_state
@@ -1000,95 +1164,6 @@ bool LcioReader::Process(Long64_t entry){
                track_d0_at_lasthit.push_back(-9999.);
             }
          }
-
-         const EVENT::TrackState *track_state
-              // = lcio_track->getTrackState(EVENT::TrackState::LastLocation);
-              = lcio_track->getTrackState(EVENT::TrackState::AtCalorimeter);
-         if (track_state) {
-            const float *ecal_pos = track_state->getReferencePoint();
-            track_x_at_ecal.push_back(ecal_pos[1]);  // Note: Un-rotate from tracking coordinate system.
-            track_y_at_ecal.push_back(ecal_pos[2]);
-            track_z_at_ecal.push_back(ecal_pos[0]);
-         } else {
-            track_x_at_ecal.push_back(-9999.);
-            track_y_at_ecal.push_back(-9999.);
-            track_z_at_ecal.push_back(-9999.);
-         }
-
-         EVENT::LCObjectVec track_data_list;
-         if(track_is_kf){
-            track_data_list = track_data_kf_nav->getRelatedFromObjects(lcio_track);
-         }else if(track_is_gbl) {
-            track_data_list = track_data_gbl_nav->getRelatedFromObjects(lcio_track);
-         }
-
-         vector<double> iso_values(14, -99.);
-         if (track_data_list.size() == 1) {
-            // There should always be one and only one for GBL tracks, 0 for matched tracks.
-            IMPL::LCGenericObjectImpl *track_info =
-                  static_cast<IMPL::LCGenericObjectImpl *>(track_data_list.at(0));
-
-//            track_state
-//                  = lcio_track->getTrackState(EVENT::TrackState::AtIP);
-
-            double px{-999.}, py{-999.}, pz{-999.};
-
-            // Sanity check...
-            if (track_is_gbl && (track_info->getNDouble() < 12 || track_info->getNDouble() > 14 ||  /* 2016 or 2019 */
-                                 track_info->getNFloat() < 4   || track_info->getNInt() < 1) ||
-                track_is_kf &&  (track_info->getNFloat() < 4 || track_info->getNInt() < 1) ){
-               static int n_warning{0};
-
-               if(n_warning < 2) {  // Only show this warning twice.
-                  if(md_Debug & kDebug_Warning) {
-                     std::cout << "Dude! This looks like an old SLCIO file. track_info->getNFloat() = "
-                               << track_info->getNFloat() << "\n";
-                     std::cout << "Using magnetic field strength of " << magnetic_field << " to calculate px,py,pz "
-                               << std::endl;
-                  }
-                  n_warning++;
-               }
-               // Compute the px, py, pz component from the magnetic field and the tracking parameters. See hps-java TrackUtils.java
-               double omega = lcio_track->getOmega();
-               if (abs(omega) < 0.0000001) {
-                  omega = 0.0000001;
-               }
-               double Pt = abs((1. / omega) * magnetic_field * 2.99792458E-4);
-               // Get px, py, pz already taking into account the tracking coordinate to detector coordinate conversion.
-               pz = Pt * cos(lcio_track->getPhi());
-               px = Pt * sin(lcio_track->getPhi());
-               py = Pt * lcio_track->getTanLambda();
-            }
-
-            for (int i_iso = 0; i_iso < track_info->getNDouble(); ++i_iso) {
-               iso_values[i_iso] = track_info->getDoubleVal(i_iso);
-            }
-            track_time.push_back(track_info->getFloatVal(0));
-            track_volume.push_back(track_info->getIntVal(0));
-
-            if(track_info->getNFloat() >= 4) {
-               px = track_info->getFloatVal(1);
-               py = track_info->getFloatVal(2);
-               pz = track_info->getFloatVal(3);
-            }
-            track_px.push_back(px);
-            track_py.push_back(py);
-            track_pz.push_back(pz);
-
-
-         } else {
-            if(track_is_gbl) cout << "Track without TrackData for type GBL\n";
-            if(track_is_kf) cout << "Track without KFTrackData for type KF\n";
-            track_time.push_back(-999.);
-            track_volume.push_back(-1);
-            track_px.push_back(-999.);
-            track_py.push_back(-999.);
-            track_pz.push_back(-999.);
-         }
-         track_isolation.push_back(iso_values);
-
-         EVENT::TrackerHitVec tracker_hits = lcio_track->getTrackerHits();
-         track_n_hits.push_back(tracker_hits.size());
 
          if(use_svt_hits ) {
             // Get the collection of 3D hits associated with a LCIO Track

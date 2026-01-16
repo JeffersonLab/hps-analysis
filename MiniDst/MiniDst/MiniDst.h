@@ -22,7 +22,7 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"
 
-#define MiniDst_Version_ "1.3.0"
+#define MiniDst_Version_ "1.4.0"
 //
 // The following construction defines a "Variant", a type in C++17 and later that can contain different kinds of object.
 // In our case the variant contains each of the possible types that we have in the output tree.
@@ -384,12 +384,21 @@ public:
    vector<double> track_px;
    vector<double> track_py;
    vector<double> track_pz;
+#ifdef DEBUG
+   vector<double> track_px_old;
+   vector<double> track_py_old;
+   vector<double> track_pz_old;
+   vector<double> track_bfield_at_target;
+   vector<double> track_bfield_alt;
+   vector<double> track_omega_old;
+#endif
+
    vector<double> track_x_at_lasthit; /** The x position of the extrapolated track at last hit */
    vector<double> track_y_at_lasthit; /** The y position of the extrapolated track at last hit */
    vector<double> track_z_at_lasthit; /** The z position of the extrapolated track at last hit */
-   //vector<double> track_px_at_lasthit; /** 3 momentum at last hit obtained from the reference point. **/
-   //vector<double> track_py_at_lasthit; /** This requires a hack on hps-java **/
-   //vector<double> track_pz_at_lasthit;
+   vector<double> track_px_at_lasthit; /** 3 momentum at last hit obtained from the reference point. **/
+   vector<double> track_py_at_lasthit;
+   vector<double> track_pz_at_lasthit;
 
    vector<double> track_omega_at_lasthit;
    vector<double> track_tan_lambda_at_lasthit;
@@ -399,6 +408,9 @@ public:
    vector<double> track_x_at_ecal; /** The x position of the extrapolated track at the Ecal face. */
    vector<double> track_y_at_ecal; /** The y position of the extrapolated track at the Ecal face. */
    vector<double> track_z_at_ecal; /** The z position of the extrapolated track at the Ecal face. */
+   vector<double> track_px_at_ecal; /** The x position of the extrapolated track at the Ecal face. */
+   vector<double> track_py_at_ecal; /** The y position of the extrapolated track at the Ecal face. */
+   vector<double> track_pz_at_ecal; /** The z position of the extrapolated track at the Ecal face. */
    vector<vector<double> > track_isolation; /** Array used to store the isolation variables for each of the sensor layers. */
    vector<vector<double> > track_covmatrix;   /** The 1/2 Covariant Matrix. This is the lower 1/2. **/
    vector<vector<double> > track_lambda_kinks; /** the lambda kinks for each of the sensor layers.  Empty for non-GBL tracks **/

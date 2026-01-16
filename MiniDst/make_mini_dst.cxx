@@ -15,6 +15,8 @@ using namespace std;
 int main(int argc, char **argv){
 
    setlocale(LC_NUMERIC, "");
+//   gInterpreter->SetClassAutoLoading(false);
+   gROOT->SetBatch(true);
 
    // This is a nicer way to do options in C++. See cxxopts.hpp file.
    string help_string = string("Write a ROOT MiniDst for HPS data.\n") +

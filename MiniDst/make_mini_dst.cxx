@@ -122,7 +122,7 @@ int main(int argc, char **argv){
       int debug_code = 0;
       if( debug <= 0) debug_code = 0;
       if (debug == 1) debug_code = MiniDst::kDebug_Error + MiniDst::kDebug_Warning;
-      if (debug >= 2) debug_code += MiniDst::kDebug_Error + MiniDst::kDebug_Warning + MiniDst::kDebug_Info;
+      if (debug >= 2) debug_code = MiniDst::kDebug_Error + MiniDst::kDebug_Warning + MiniDst::kDebug_Info;
       if (debug >= 3) debug_code += MiniDst::kDebug_L1;
       if (debug >= 4) debug_code += MiniDst::kDebug_L2;
       if (debug >= 5) debug_code += MiniDst::kDebug_L3;

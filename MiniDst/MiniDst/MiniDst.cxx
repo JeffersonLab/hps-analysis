@@ -6,7 +6,15 @@
 
 void MiniDst::Start() {
    DefineBranchMap();
-   SetBranchMap();
+   SetBranchMap();    // Opens output file and sets the branches.
+   WriteStateToFile();
+}
+
+void MiniDst::WriteStateToFile() {
+   /// Write the relevant state information into the ROOT file so you can later
+   /// know how the file was written.
+   /// Must be called *after* SetBranchMap so the output file is open.
+   /// Implement this in the derived classes for it to actually do anything!
 }
 
 std::vector<std::string> MiniDst::GetBranchNames() {

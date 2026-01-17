@@ -5,7 +5,7 @@ ROOT_GENERATE_DICTIONARY(MiniDstDict MiniDst.h MODULE ${PROJECT_NAME} LINKDEF Mi
 
 add_library(${PROJECT_NAME} SHARED MiniDst.cxx MiniDstDict.cxx)
 target_include_directories(${PROJECT_NAME} BEFORE PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${ROOT_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${ROOT_LIBRARIES} nlohmann_json::nlohmann_json)
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "MiniDst.h")
 # Selective linking:
 #target_link_libraries(Dst2016 PUBLIC BaseAna ROOT::Core ROOT::Hist ROOT::Tree ROOT::Physics )

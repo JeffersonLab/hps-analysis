@@ -22,7 +22,7 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"
 
-#define MiniDst_Version_ "1.4.0"
+#define __MiniDst_Version__ "1.5.0"
 //
 // The following construction defines a "Variant", a type in C++17 and later that can contain different kinds of object.
 // In our case the variant contains each of the possible types that we have in the output tree.
@@ -76,7 +76,7 @@ using TriggerBits_int_t = union{
 class MiniDst : public TObject {
 
 public:
-   static string _version_(){return(MiniDst_Version_);};
+   static string _version_(){return(__MiniDst_Version__);};
    MiniDst(): md_output_file_name("minidst.root"){};
    explicit MiniDst(string output_file_name): md_output_file_name(output_file_name){};
    ~MiniDst() override = default;
@@ -85,6 +85,7 @@ public:
    virtual void DefineBranchMap(bool use_all=false); /// Setup the branch_map and branch_map_active
    virtual void SetBranchMap();    /// Use the branch_map to set the branches in the TTree that are active.
    virtual void SetBranchAddressesOnTree(TTree *); /// Connect the variables/vectors to the TTree for *reading* the tree.
+   virtual void WriteStateToFile();
    virtual long Run(int nevt);
 
    virtual bool Process(Long64_t entry);

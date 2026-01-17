@@ -5,30 +5,30 @@
 /// analyze the LCIO file without writing out the MiniDST root file. To do so, your Start() function would need
 /// to disable the md_output_tree by setting it to nullptr, so it does not write out...
 ///
+#include <string>
+#include <filesystem>
+#include "TSystem.h"
+#include "TObjString.h"
 #include "LcioReader.h"
 #include "TLorentzVector.h"
 #include "TMath.h"
+#include "nlohmann/json.hpp"
+
+using json = nlohmann::json;
 
 LcioReader::LcioReader(const string &input_file, const int debug_level) {
    md_Debug = debug_level;
-   if(md_Debug > 0) cout << "LcioReader Debug level is " << md_Debug << std::endl;
+   if(md_Debug > 3) cout << "LcioReader Debug level is " << md_Debug << std::endl;
    if(!input_file.empty()) input_files.push_back(input_file);
 };
 
 LcioReader::LcioReader(const vector<string> &infile_list, const int debug_level){
    md_Debug = debug_level;
-   if(md_Debug > 0) cout << "LcioReader Debug level is " << md_Debug << std::endl;
+   if(md_Debug > 3) cout << "LcioReader Debug level is " << md_Debug << std::endl;
    for(auto f : infile_list){
       input_files.push_back(f);
    }
 
-#ifdef DEBUG
-   {
-        for(auto file: input_files){
-            std::cout << "File: " << file << std::endl;
-        }
-    }
-#endif
 };
 
 void LcioReader::Start(){
@@ -42,32 +42,6 @@ void LcioReader::Start(){
       // TODO: We should throw an error here, or something.
       return;
    }
-
-//   if(kf_has_no_postscript){
-//      for(int i=0; i<Type_to_Collection.size(); ++i){
-//         if(Type_to_Collection[i].find("_KF") != string::npos){
-//            Type_to_Collection[i] = Type_to_Collection[i].substr(0, Type_to_Collection[i].size()-3);
-//         }
-//      }
-//      for(int i=0; i<Type_to_VertexCollection.size(); ++i){
-//         if(Type_to_VertexCollection[i].find("_KF") != string::npos){
-//            Type_to_VertexCollection[i] = Type_to_VertexCollection[i].substr(0, Type_to_VertexCollection[i].size()-3);
-//         }
-//      }
-//   }
-//
-//   if(gbl_has_no_postscript){
-//      for(auto &name: Type_to_Collection){
-//         if(name.find("_GBL") != string::npos){
-//            name = name.substr(0, name.size()-4);
-//         }
-//      }
-//      for(auto &name: Type_to_VertexCollection){
-//         if(name.find("_GBL") != string::npos){
-//            name = name.substr(0, name.size()-4);
-//         }
-//      }
-//   }
 
    lcio_reader->open(input_files[0]);
    lcio_event =lcio_reader->readNextEvent();
@@ -95,6 +69,35 @@ void LcioReader::Clear(){
    matched_track_to_index_map.clear();
    any_track_to_index_map.clear();
    any_particle_to_index_map.clear();
+}
+
+void LcioReader::WriteStateToFile() {
+   /// Write the relevant state information into the ROOT file so you can later
+   /// know how the file was written.
+   /// Must be called *after* SetBranchMap so the output file is open.
+   if (!md_output_file) {
+      std::cout<< "WriteStateToFile() -- Error -- cannot write the system state if file not open.\n ";
+      return;
+   }
+
+   // Fully resolve all of the input file, so no symlinks and no funny stuff.
+   vector<string> infiles;
+   for(auto f :input_files){
+      auto expand_file = gSystem->ExpandPathName(f.c_str());
+      auto final_name =  std::filesystem::canonical(expand_file); // file must exist, else error.
+      infiles.push_back(final_name);
+   }
+   json meta;
+   meta["schema"] = "minidst-metadata-v1";
+   meta["minidst_version"] = __MiniDst_Version__;
+   meta["lcioreader_version"] = __LCIOReader__Version__;
+   meta["input_files"] = infiles;
+   meta["output_file"] = md_output_file_name;
+
+   std::string json_str = meta.dump(2);
+   TObjString metaobj(json_str.c_str());
+   metaobj.Write("metadata_json", TObject::kOverwrite);
+
 }
 
 void LcioReader::SetupLcioDataType() {

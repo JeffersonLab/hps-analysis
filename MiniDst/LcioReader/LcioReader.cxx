@@ -970,31 +970,32 @@ bool LcioReader::Process(Long64_t entry){
          double bTmp = lcio_track->getTrackState(1)->getBLocal();
          bool is_2025_processing = ( abs(bTmp)<10.);
 
-         const EVENT::TrackState *ts_target
-               = lcio_track->getTrackState(EVENT::TrackState::AtTarget);
-         double bfield = ts_target->getBLocal();
-#ifdef DEBUG
-         track_bfield_at_target.push_back(bfield);
-#endif
          if(is_2025_processing){
+            const EVENT::TrackState *ts_target
+                  = lcio_track->getTrackState(EVENT::TrackState::AtTarget);
+            double bfield = ts_target->getBLocal();
+#ifdef DEBUG
+            track_bfield_at_target.push_back(bfield);
+#endif
+
             // In 2025 processing the B field is stored in the TrackState object.
+            double omega = ts_target->getOmega();
+            if( abs(omega) < 1E-7) omega = 1E-7;
 
             track_d0.push_back(ts_target->getD0());
             track_chi2.push_back(lcio_track->getChi2());
-            track_omega.push_back(ts_target->getOmega());
+            track_omega.push_back(omega);
             track_phi0.push_back(ts_target->getPhi());
             track_tan_lambda.push_back(ts_target->getTanLambda());
             track_z0.push_back(ts_target->getZ0());
             track_type.push_back(lcio_track->getType());
 
             // Now compute the momentum from helix parameters and B field.
-            double omega = ts_target->getOmega();
-            if( abs(omega) < 1E-7) omega = 1E-7;
             double pt = 2.99792458e-04 * bfield / fabs(omega); // GeV/c
-            double py = pt * lcio_track->getTanLambda();
-            double px = pt * sin(lcio_track->getPhi());
-            double pz = pt * cos(lcio_track->getPhi());
-            double p = sqrt(pt * pt + py * py);
+            double py = pt * ts_target->getTanLambda();
+            double px = pt * sin(ts_target->getPhi());
+            double pz = pt * cos(ts_target->getPhi());
+          //  double p = sqrt(pt * pt + py * py);
             track_px.push_back(px);
             track_py.push_back(py);
             track_pz.push_back(pz);
@@ -1021,7 +1022,7 @@ bool LcioReader::Process(Long64_t entry){
          vector<double> iso_values(14, -99.);
 
          if (track_data_list.size() == 1) {
-            // There should always be one and only one for GBL tracks, 0 for matched tracks.
+            // There should always be one and only one for GBL or KF tracks, 0 for matched tracks.
             IMPL::LCGenericObjectImpl *track_info =
                   static_cast<IMPL::LCGenericObjectImpl *>(track_data_list.at(0));
 
@@ -1047,8 +1048,8 @@ bool LcioReader::Process(Long64_t entry){
                }
                // Compute the px, py, pz component from the magnetic field and the tracking parameters. See hps-java TrackUtils.java
                double omega = lcio_track->getOmega();
-               if (abs(omega) < 0.0000001) {
-                  omega = 0.0000001;
+               if (abs(omega) < 1E-7) {
+                  omega = 1E-7;
                }
                double Pt = abs((1. / omega) * magnetic_field * 2.99792458E-4);
                // Get px, py, pz already taking into account the tracking coordinate to detector coordinate conversion.
@@ -1121,10 +1122,38 @@ bool LcioReader::Process(Long64_t entry){
             track_x_at_ecal.push_back(ecal_pos[1]);  // Note: Un-rotate from tracking coordinate system.
             track_y_at_ecal.push_back(ecal_pos[2]);
             track_z_at_ecal.push_back(ecal_pos[0]);
+            if(use_extra_tracks){
+               float omega = track_state->getOmega();
+               float phi = track_state->getPhi();
+               float tanlambda = track_state->getTanLambda();
+               float z0 = track_state->getZ0();
+               float d0 = track_state->getD0();
+               double bfield = track_state->getBLocal();
+#ifdef DEBUG
+               track_bfield_at_ecal.push_back(bfield);
+#endif
+               double pt = 2.99792458e-04 * bfield / fabs(omega); // GeV/c
+               double py = pt * track_state->getTanLambda();
+               double px = pt * sin(track_state->getPhi());
+               double pz = pt * cos(track_state->getPhi());
+               track_px_at_ecal.push_back(px);
+               track_py_at_ecal.push_back(py);
+               track_pz_at_ecal.push_back(pz);
+            }
+
+
          } else {
             track_x_at_ecal.push_back(-9999.);
             track_y_at_ecal.push_back(-9999.);
             track_z_at_ecal.push_back(-9999.);
+            if(use_extra_tracks){
+               track_px_at_ecal.push_back(-9999.);
+               track_py_at_ecal.push_back(-9999.);
+               track_pz_at_ecal.push_back(-9999.);
+#ifdef DEBUG
+               track_bfield_at_ecal.push_back(-9.);
+#endif
+            }
          }
 
          if(use_extra_tracks) {
@@ -1142,9 +1171,20 @@ bool LcioReader::Process(Long64_t entry){
                track_x_at_lasthit.push_back(hit_pos[0]);  // Note: these are not rotated, they were put in detector
                track_y_at_lasthit.push_back(hit_pos[1]);  //       coordinates before being written to file.
                track_z_at_lasthit.push_back(hit_pos[2]);
-               //track_px_at_lasthit.push_back(mom_at_lasthit[0]);
-               //track_py_at_lasthit.push_back(mom_at_lasthit[1]);
-               //track_pz_at_lasthit.push_back(mom_at_lasthit[2]);
+
+               double bfield = track_state->getBLocal();
+#ifdef DEBUG
+               track_bfield_at_lasthit.push_back(bfield);
+#endif
+               double pt = 2.99792458e-04 * bfield / fabs(omega); // GeV/c
+               double py = pt * track_state->getTanLambda();
+               double px = pt * sin(track_state->getPhi());
+               double pz = pt * cos(track_state->getPhi());
+               // double p = sqrt(pt * pt + py * py);
+
+               track_px_at_lasthit.push_back(px);
+               track_py_at_lasthit.push_back(py);
+               track_pz_at_lasthit.push_back(pz);
                track_omega_at_lasthit.push_back(omega);
                track_phi0_at_lasthit.push_back(phi);
                track_tan_lambda_at_lasthit.push_back(tanlambda);
@@ -1154,9 +1194,9 @@ bool LcioReader::Process(Long64_t entry){
                track_x_at_lasthit.push_back(-9999.);
                track_y_at_lasthit.push_back(-9999.);
                track_z_at_lasthit.push_back(-9999.);
-               //track_px_at_lasthit.push_back(-9999.);
-               //track_py_at_lasthit.push_back(-9999.);
-               //track_pz_at_lasthit.push_back(-9999.);
+               track_px_at_lasthit.push_back(-9999.);
+               track_py_at_lasthit.push_back(-9999.);
+               track_pz_at_lasthit.push_back(-9999.);
                track_omega_at_lasthit.push_back(-9999.);
                track_phi0_at_lasthit.push_back(-9999.);
                track_tan_lambda_at_lasthit.push_back(-9999.);

@@ -399,12 +399,16 @@ public:
    vector<double> track_px_at_lasthit; /** 3 momentum at last hit obtained from the reference point. **/
    vector<double> track_py_at_lasthit;
    vector<double> track_pz_at_lasthit;
-
+#ifdef DEBUG
+   vector<double> track_bfield_at_lasthit;
+   vector<double> track_bfield_at_ecal;
+#endif
    vector<double> track_omega_at_lasthit;
    vector<double> track_tan_lambda_at_lasthit;
    vector<double> track_phi0_at_lasthit;
    vector<double> track_d0_at_lasthit;
    vector<double> track_z0_at_lasthit;
+
    vector<double> track_x_at_ecal; /** The x position of the extrapolated track at the Ecal face. */
    vector<double> track_y_at_ecal; /** The y position of the extrapolated track at the Ecal face. */
    vector<double> track_z_at_ecal; /** The z position of the extrapolated track at the Ecal face. */

@@ -18,13 +18,13 @@ using json = nlohmann::json;
 
 LcioReader::LcioReader(const string &input_file, const int debug_level) {
    md_Debug = debug_level;
-   if(md_Debug > 3) cout << "LcioReader Debug level is " << md_Debug << std::endl;
+   if(md_Debug > 7) cout << "LcioReader Debug level is " << md_Debug << std::endl;
    if(!input_file.empty()) input_files.push_back(input_file);
 };
 
 LcioReader::LcioReader(const vector<string> &infile_list, const int debug_level){
    md_Debug = debug_level;
-   if(md_Debug > 3) cout << "LcioReader Debug level is " << md_Debug << std::endl;
+   if(md_Debug > 7) cout << "LcioReader Debug level is " << md_Debug << std::endl;
    for(auto f : infile_list){
       input_files.push_back(f);
    }
@@ -32,7 +32,7 @@ LcioReader::LcioReader(const vector<string> &infile_list, const int debug_level)
 };
 
 void LcioReader::Start(){
-   if( md_Debug & kDebug_Info ) {
+   if( md_Debug & kDebug_L1 ) {
       printf("LCIO READER version " __LCIOReader__Version__ " with debug = %02X \n", md_Debug);
    }
    // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
@@ -147,10 +147,10 @@ void LcioReader::SetupLcioDataType() {
          cout << "LCIO -> This is 2015/2016 data. Field set to " << magnetic_field << "T.\n";
    } else if (run_number <= 10750) { // 2019 physics run
       is_2019_data = true;
-      if (md_Debug & kDebug_Info) cout << "LCIO -> This is 2019 data. \n";
+      if (md_Debug & kDebug_L1) cout << "LCIO -> This is 2019 data. \n";
    } else if (run_number > 10750) { // 2019 physics run
       is_2019_data = true;             // 2021 data behaves the same as 2019 data. (?)
-      if (md_Debug & kDebug_Info) cout << "LCIO -> This is 2021 data. \n";
+      if (md_Debug & kDebug_L1) cout << "LCIO -> This is 2021 data. \n";
    }
 
    col_names = lcio_event->getCollectionNames();
@@ -300,7 +300,7 @@ void LcioReader::SetupLcioDataType() {
    //
    for (auto type = particle_types_single.begin(); type < particle_types_single.end(); ++type) {
       string collection_name = Type_to_Collection[*type];
-      if (md_Debug & kDebug_L1) {
+      if (md_Debug & kDebug_L2) {
          cout << "Checking for " << collection_name << " in lcio file.\n";
       }
       if (!has_collection(collection_name.c_str())) {
@@ -313,7 +313,7 @@ void LcioReader::SetupLcioDataType() {
             if (has_collection(no_postfix.c_str()) &&
                   ((kf_has_no_postscript && postfix == "_KF") || (gbl_has_no_postscript && postfix == "_GBL"))) {
                // The no_postfix version exists, and is the one to be used
-               if (md_Debug & kDebug_L1)
+               if (md_Debug & kDebug_L2)
                   cout << "WARNING: The LCIO file does not have " << collection_name << ". Using " << no_postfix
                        << " instead.\n";
                Type_to_Collection[*type] = no_postfix;
@@ -336,7 +336,7 @@ void LcioReader::SetupLcioDataType() {
 
    for (auto type = particle_types_double.begin(); type < particle_types_double.end(); ++type) {
       string collection_name = Type_to_Collection[*type];
-      if (md_Debug & kDebug_L1) {
+      if (md_Debug & kDebug_L2) {
          cout << "Checking for " << collection_name << " in lcio file.\n";
       }
       if (!has_collection(collection_name.c_str())) {
@@ -348,7 +348,7 @@ void LcioReader::SetupLcioDataType() {
             if (has_collection(no_postfix.c_str()) &&
                   ((kf_has_no_postscript && postfix == "_KF") || (gbl_has_no_postscript && postfix == "_GBL")) ) {
                // The no_postfix version exists.
-               if (md_Debug & kDebug_L1)
+               if (md_Debug & kDebug_L2)
                   cout << "WARNING: The LCIO file does not have " << collection_name << ". Using " << no_postfix
                        << " instead.\n";
                Type_to_Collection[*type] = no_postfix;
@@ -372,7 +372,7 @@ void LcioReader::SetupLcioDataType() {
 
    for (auto type = particle_types_double.begin(); type < particle_types_double.end(); ++type) {
       string collection_name = Type_to_VertexCollection[*type];
-      if (md_Debug & kDebug_L1) {
+      if (md_Debug & kDebug_L2) {
          cout << "Checking for " << collection_name << " in lcio file.\n";
       }
       if (!has_collection(collection_name.c_str())) {
@@ -384,7 +384,7 @@ void LcioReader::SetupLcioDataType() {
             if (has_collection(no_postfix.c_str()) &&
                   ((kf_has_no_postscript && postfix == "_KF") || (gbl_has_no_postscript && postfix == "_GBL"))) {
                // The no_postfix version exists.
-               if (md_Debug & kDebug_L1)
+               if (md_Debug & kDebug_L2)
                   cout << "WARNING: The LCIO file does not have " << collection_name << ". Using " << no_postfix
                        << " instead.\n";
                Type_to_VertexCollection[*type] = no_postfix;
@@ -1619,7 +1619,7 @@ long LcioReader::Run(int max_event) {
 
    for (const string &file: input_files) {
 
-      if (md_Debug & kDebug_L1) cout << "Opening file : " << file << endl;
+      if (md_Debug & kDebug_Info) cout << "Opening file : " << file << endl;
 
       is_2016_data = false;
       is_2019_data = false;
@@ -1853,7 +1853,7 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
    auto i_daughter_ptr = any_particle_to_index_map.find(daughter);
    int i_part = -99;
    if(i_daughter_ptr == any_particle_to_index_map.end()) { // We did not find the daughter particle.
-      if( md_Debug & kDebug_Info ) {
+      if( md_Debug & kDebug_Warning ) {
          cout << "We did not find the daughter particle of type " << type << " for a vertex in Run " <<
               run_number << "::" << event_number << ". Adding it.\n";
       }

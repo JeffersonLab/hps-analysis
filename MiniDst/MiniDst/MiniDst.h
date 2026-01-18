@@ -206,7 +206,7 @@ public:
    bool use_ecal_hits_truth{true};
    bool use_svt_raw_hits{false};
 
-   bool use_svt_hits{false};
+   bool use_svt_hits{true};
    bool use_kf_tracks{true};
    bool use_gbl_tracks{false};
    bool use_matched_tracks{false};

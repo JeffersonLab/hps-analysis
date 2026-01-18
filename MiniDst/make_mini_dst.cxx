@@ -19,10 +19,17 @@ int main(int argc, char **argv){
    gROOT->SetBatch(true);
 
    // This is a nicer way to do options in C++. See cxxopts.hpp file.
-   string help_string = string("Write a ROOT MiniDst for HPS data.\n") +
-                        "Version: 1.1, using MiniDst.h version " + MiniDst::_version_() +
-                        ", LcioReader version " + LcioReader::_version_() +
-                        "\nCompiled with "+__VERSION__+"\n";
+   string help_string = string("Write a ROOT MiniDst for HPS data.") +
+                        " MiniDst.h version " + MiniDst::_version_() +
+                        " LcioReader version " + LcioReader::_version_() +
+                        "\nCompiled with "+__VERSION__+"\n" +
+#ifdef DEBUG
+                        "====================== DEBUG VERSION ===========================================\n"+
+                        "=> Recompile with -DCMAKE_BUILD_TYPE=Release to get faster code and less output \n"+
+                        "================================================================================\n"+
+#endif
+                        "Default behavior is to store KF tracks and SVT, Ecal and Hodo hits and clusters\n"+
+                        "Additional control can be done with switches.";
    cxxopts::Options options(argv[0], help_string);
    options
          .positional_help(" infile1 infile2 ...")
@@ -31,8 +38,10 @@ int main(int argc, char **argv){
    options.add_options()
          ("d,debug", "Increase debug level")
          ("q,quiet", "Run quiet.")
-         ("a,all", "Store all known values in file, except the raw stuff or uncorrected. Equivalent to -c -e -s -h",
+         ("a,all", "Store ALL known values in file, except the raw stuff or uncorrected hits. (default, so not needed)",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+         ("sparse","Opposite of ALL. Do NOT store anything default. The switches below determine what is stored.",
+               cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("c,all_clusters", "Store Ecal and Hodo Clusters",
           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
          ("E,ecal_clusters", "Store Ecal Clusters",
@@ -95,10 +104,7 @@ int main(int argc, char **argv){
       }
       auto& infiles = args["inputfiles"].as<std::vector<std::string>>();
       auto& outfile = args["output"].as<std::string>();
-      auto& store_all = args["all"].as<bool>();
-      auto& all_tracks = args["all_tracks"].as<bool>();
-      auto& kf_tracks = args["kf_tracks"].as<bool>();
-      auto& matched_tracks = args["matched_tracks"].as<bool>();
+
       auto& num_evt = args["num_evt"].as<long>();
       int debug = 0;
       if(args.count("quiet") == 0 ){
@@ -106,7 +112,7 @@ int main(int argc, char **argv){
       }else {
          debug = 0;
       }
-      if(debug > 1) {
+      if(debug > 2) {
          cout << "Debug was set to: " << debug << endl;
       }
 
@@ -122,7 +128,7 @@ int main(int argc, char **argv){
       int debug_code = 0;
       if( debug <= 0) debug_code = 0;
       if (debug == 1) debug_code = MiniDst::kDebug_Error + MiniDst::kDebug_Warning;
-      if (debug >= 2) debug_code += MiniDst::kDebug_Error + MiniDst::kDebug_Warning + MiniDst::kDebug_Info;
+      if (debug >= 2) debug_code = MiniDst::kDebug_Error + MiniDst::kDebug_Warning + MiniDst::kDebug_Info;
       if (debug >= 3) debug_code += MiniDst::kDebug_L1;
       if (debug >= 4) debug_code += MiniDst::kDebug_L2;
       if (debug >= 5) debug_code += MiniDst::kDebug_L3;
@@ -166,16 +172,28 @@ int main(int argc, char **argv){
       }
 
       dst->SetDebugLevel(debug_code);
-      dst->use_ecal_cluster = store_all || args["ecal_clusters"].as<bool>() || args["all_clusters"].as<bool>();
+
+      auto& store_all = args["all"].as<bool>();
+      auto& store_none = args["sparse"].as<bool>();
+      auto& all_tracks = args["all_tracks"].as<bool>();
+      auto& kf_tracks = args["kf_tracks"].as<bool>();
+      auto& gbl_tracks = args["gbl_tracks"].as<bool>();
+      auto& matched_tracks = args["matched_tracks"].as<bool>();
+
+      bool default_setting = true;
+      if(store_none) default_setting = false;
+      if(store_all) default_setting = true;
+
+      dst->use_ecal_cluster = default_setting || args["ecal_clusters"].as<bool>() || args["all_clusters"].as<bool>();
       dst->use_ecal_cluster_uncor = args["ecal_clusters_uncor"].as<bool>();
-      dst->use_hodo_clusters = store_all || args["hodo_clusters"].as<bool>() || args["all_clusters"].as<bool>();
-      dst->use_ecal_hits = store_all || args["ecal_hits"].as<bool>();
-      dst->use_hodo_hits = store_all || args["hodo_hits"].as<bool>();
-      dst->use_svt_hits =  store_all || args["svt_hits"].as<bool>();
+      dst->use_hodo_clusters = default_setting || args["hodo_clusters"].as<bool>() || args["all_clusters"].as<bool>();
+      dst->use_ecal_hits = default_setting || args["ecal_hits"].as<bool>();
+      dst->use_hodo_hits = default_setting || args["hodo_hits"].as<bool>();
+      dst->use_svt_hits =  default_setting || args["svt_hits"].as<bool>();
       dst->use_svt_raw_hits = args["raw_hits"].as<bool>();
       dst->use_ecal_raw_hits = args["raw_hits"].as<bool>();
       dst->use_hodo_raw_hits = args["raw_hits"].as<bool>();
-      dst->use_kf_tracks = kf_tracks || all_tracks || store_all;
+      dst->use_kf_tracks = default_setting || kf_tracks || all_tracks;
       dst->use_gbl_tracks = all_tracks || args["gbl_tracks"].as<bool>();
       dst->use_gbl_kink_data = args["gbl_kinks"].as<bool>();
       dst->use_matched_tracks = matched_tracks || all_tracks;

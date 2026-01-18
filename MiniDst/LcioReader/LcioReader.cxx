@@ -5,34 +5,34 @@
 /// analyze the LCIO file without writing out the MiniDST root file. To do so, your Start() function would need
 /// to disable the md_output_tree by setting it to nullptr, so it does not write out...
 ///
+#include <string>
+#include <filesystem>
+#include "TSystem.h"
+#include "TObjString.h"
 #include "LcioReader.h"
 #include "TLorentzVector.h"
 #include "TMath.h"
+#include "nlohmann/json.hpp"
+
+using json = nlohmann::json;
 
 LcioReader::LcioReader(const string &input_file, const int debug_level) {
    md_Debug = debug_level;
-   if(md_Debug > 0) cout << "LcioReader Debug level is " << md_Debug << std::endl;
+   if(md_Debug > 7) cout << "LcioReader Debug level is " << md_Debug << std::endl;
    if(!input_file.empty()) input_files.push_back(input_file);
 };
 
 LcioReader::LcioReader(const vector<string> &infile_list, const int debug_level){
    md_Debug = debug_level;
-   if(md_Debug > 0) cout << "LcioReader Debug level is " << md_Debug << std::endl;
+   if(md_Debug > 7) cout << "LcioReader Debug level is " << md_Debug << std::endl;
    for(auto f : infile_list){
       input_files.push_back(f);
    }
 
-#ifdef DEBUG
-   {
-        for(auto file: input_files){
-            std::cout << "File: " << file << std::endl;
-        }
-    }
-#endif
 };
 
 void LcioReader::Start(){
-   if( md_Debug & kDebug_Info ) {
+   if( md_Debug & kDebug_L1 ) {
       printf("LCIO READER version " __LCIOReader__Version__ " with debug = %02X \n", md_Debug);
    }
    // Slightly "expensive", but it is really nice to know ahead of time if we need MCParticle in the DST.
@@ -42,32 +42,6 @@ void LcioReader::Start(){
       // TODO: We should throw an error here, or something.
       return;
    }
-
-//   if(kf_has_no_postscript){
-//      for(int i=0; i<Type_to_Collection.size(); ++i){
-//         if(Type_to_Collection[i].find("_KF") != string::npos){
-//            Type_to_Collection[i] = Type_to_Collection[i].substr(0, Type_to_Collection[i].size()-3);
-//         }
-//      }
-//      for(int i=0; i<Type_to_VertexCollection.size(); ++i){
-//         if(Type_to_VertexCollection[i].find("_KF") != string::npos){
-//            Type_to_VertexCollection[i] = Type_to_VertexCollection[i].substr(0, Type_to_VertexCollection[i].size()-3);
-//         }
-//      }
-//   }
-//
-//   if(gbl_has_no_postscript){
-//      for(auto &name: Type_to_Collection){
-//         if(name.find("_GBL") != string::npos){
-//            name = name.substr(0, name.size()-4);
-//         }
-//      }
-//      for(auto &name: Type_to_VertexCollection){
-//         if(name.find("_GBL") != string::npos){
-//            name = name.substr(0, name.size()-4);
-//         }
-//      }
-//   }
 
    lcio_reader->open(input_files[0]);
    lcio_event =lcio_reader->readNextEvent();
@@ -97,6 +71,62 @@ void LcioReader::Clear(){
    any_particle_to_index_map.clear();
 }
 
+void LcioReader::WriteStateToFile() {
+   /// Write the relevant state information into the ROOT file so you can later
+   /// know how the file was written.
+   /// Must be called *after* SetBranchMap so the output file is open.
+   /// Uses JSON C++ header: https://github.com/nlohmann/json
+
+   if (!md_output_file) {
+      std::cout<< "WriteStateToFile() -- Error -- cannot write the system state if file not open.\n ";
+      return;
+   }
+
+   // Fully resolve all of the input file, so no symlinks and no funny stuff.
+   vector<string> infiles;
+   for(auto f :input_files){
+      auto expand_file = gSystem->ExpandPathName(f.c_str());
+      auto final_name =  std::filesystem::canonical(expand_file); // file must exist, else error.
+      infiles.push_back(final_name);
+   }
+   json meta;
+   meta["schema"] = "minidst-metadata-v1";
+   meta["minidst_version"] = __MiniDst_Version__;
+   meta["lcioreader_version"] = __LCIOReader__Version__;
+   meta["input_files"] = infiles;
+   string outfile = std::filesystem::canonical(gSystem->ExpandPathName(md_output_file_name.c_str()));
+   meta["output_file"] = outfile;
+
+   std::map<std::string, bool> store_switch;
+   store_switch["use_hodo_raw_hits"]        = use_hodo_raw_hits;
+   store_switch["use_hodo_hits"]            = use_hodo_hits;
+   store_switch["use_hodo_clusters"]        = use_hodo_clusters;
+   store_switch["use_ecal_raw_hits"]        = use_ecal_raw_hits;
+   store_switch["use_ecal_cluster"]         = use_ecal_cluster;
+   store_switch["use_ecal_cluster_uncor"]   = use_ecal_cluster_uncor;
+   store_switch["use_ecal_hits"]            = use_ecal_hits;
+   store_switch["use_ecal_hits_truth"]      = use_ecal_hits_truth;
+   store_switch["use_svt_raw_hits"]         = use_svt_raw_hits;
+
+   store_switch["use_svt_hits"]             = use_svt_hits;
+   store_switch["use_kf_tracks"]            = use_kf_tracks;
+   store_switch["use_gbl_tracks"]           = use_gbl_tracks;
+   store_switch["use_matched_tracks"]       = use_matched_tracks;
+   store_switch["use_extra_tracks"]         = use_extra_tracks;
+   store_switch["use_gbl_kink_data"]        = use_gbl_kink_data;
+   store_switch["use_mc_particles"]         = use_mc_particles;
+   store_switch["use_mc_scoring"]           = use_mc_scoring;
+   store_switch["use_kf_particles"]         = use_kf_particles;
+   store_switch["use_gbl_particles"]        = use_gbl_particles;
+
+   meta["switches"] = store_switch;
+
+   std::string json_str = meta.dump(2);
+   TObjString metaobj(json_str.c_str());
+   metaobj.Write("metadata_json", TObject::kOverwrite);
+
+}
+
 void LcioReader::SetupLcioDataType() {
    // Read the LCIO file and determine what capabilities it has.
    // Set appropriate flags accordingly.
@@ -117,10 +147,10 @@ void LcioReader::SetupLcioDataType() {
          cout << "LCIO -> This is 2015/2016 data. Field set to " << magnetic_field << "T.\n";
    } else if (run_number <= 10750) { // 2019 physics run
       is_2019_data = true;
-      if (md_Debug & kDebug_Info) cout << "LCIO -> This is 2019 data. \n";
+      if (md_Debug & kDebug_L1) cout << "LCIO -> This is 2019 data. \n";
    } else if (run_number > 10750) { // 2019 physics run
       is_2019_data = true;             // 2021 data behaves the same as 2019 data. (?)
-      if (md_Debug & kDebug_Info) cout << "LCIO -> This is 2021 data. \n";
+      if (md_Debug & kDebug_L1) cout << "LCIO -> This is 2021 data. \n";
    }
 
    col_names = lcio_event->getCollectionNames();
@@ -270,7 +300,7 @@ void LcioReader::SetupLcioDataType() {
    //
    for (auto type = particle_types_single.begin(); type < particle_types_single.end(); ++type) {
       string collection_name = Type_to_Collection[*type];
-      if (md_Debug & kDebug_L1) {
+      if (md_Debug & kDebug_L2) {
          cout << "Checking for " << collection_name << " in lcio file.\n";
       }
       if (!has_collection(collection_name.c_str())) {
@@ -283,7 +313,7 @@ void LcioReader::SetupLcioDataType() {
             if (has_collection(no_postfix.c_str()) &&
                   ((kf_has_no_postscript && postfix == "_KF") || (gbl_has_no_postscript && postfix == "_GBL"))) {
                // The no_postfix version exists, and is the one to be used
-               if (md_Debug & kDebug_L1)
+               if (md_Debug & kDebug_L2)
                   cout << "WARNING: The LCIO file does not have " << collection_name << ". Using " << no_postfix
                        << " instead.\n";
                Type_to_Collection[*type] = no_postfix;
@@ -306,7 +336,7 @@ void LcioReader::SetupLcioDataType() {
 
    for (auto type = particle_types_double.begin(); type < particle_types_double.end(); ++type) {
       string collection_name = Type_to_Collection[*type];
-      if (md_Debug & kDebug_L1) {
+      if (md_Debug & kDebug_L2) {
          cout << "Checking for " << collection_name << " in lcio file.\n";
       }
       if (!has_collection(collection_name.c_str())) {
@@ -318,7 +348,7 @@ void LcioReader::SetupLcioDataType() {
             if (has_collection(no_postfix.c_str()) &&
                   ((kf_has_no_postscript && postfix == "_KF") || (gbl_has_no_postscript && postfix == "_GBL")) ) {
                // The no_postfix version exists.
-               if (md_Debug & kDebug_L1)
+               if (md_Debug & kDebug_L2)
                   cout << "WARNING: The LCIO file does not have " << collection_name << ". Using " << no_postfix
                        << " instead.\n";
                Type_to_Collection[*type] = no_postfix;
@@ -342,7 +372,7 @@ void LcioReader::SetupLcioDataType() {
 
    for (auto type = particle_types_double.begin(); type < particle_types_double.end(); ++type) {
       string collection_name = Type_to_VertexCollection[*type];
-      if (md_Debug & kDebug_L1) {
+      if (md_Debug & kDebug_L2) {
          cout << "Checking for " << collection_name << " in lcio file.\n";
       }
       if (!has_collection(collection_name.c_str())) {
@@ -354,7 +384,7 @@ void LcioReader::SetupLcioDataType() {
             if (has_collection(no_postfix.c_str()) &&
                   ((kf_has_no_postscript && postfix == "_KF") || (gbl_has_no_postscript && postfix == "_GBL"))) {
                // The no_postfix version exists.
-               if (md_Debug & kDebug_L1)
+               if (md_Debug & kDebug_L2)
                   cout << "WARNING: The LCIO file does not have " << collection_name << ". Using " << no_postfix
                        << " instead.\n";
                Type_to_VertexCollection[*type] = no_postfix;
@@ -1589,7 +1619,7 @@ long LcioReader::Run(int max_event) {
 
    for (const string &file: input_files) {
 
-      if (md_Debug & kDebug_L1) cout << "Opening file : " << file << endl;
+      if (md_Debug & kDebug_Info) cout << "Opening file : " << file << endl;
 
       is_2016_data = false;
       is_2019_data = false;
@@ -1823,7 +1853,7 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
    auto i_daughter_ptr = any_particle_to_index_map.find(daughter);
    int i_part = -99;
    if(i_daughter_ptr == any_particle_to_index_map.end()) { // We did not find the daughter particle.
-      if( md_Debug & kDebug_Info ) {
+      if( md_Debug & kDebug_Warning ) {
          cout << "We did not find the daughter particle of type " << type << " for a vertex in Run " <<
               run_number << "::" << event_number << ". Adding it.\n";
       }

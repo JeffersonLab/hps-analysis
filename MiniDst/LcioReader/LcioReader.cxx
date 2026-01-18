@@ -75,6 +75,8 @@ void LcioReader::WriteStateToFile() {
    /// Write the relevant state information into the ROOT file so you can later
    /// know how the file was written.
    /// Must be called *after* SetBranchMap so the output file is open.
+   /// Uses JSON C++ header: https://github.com/nlohmann/json
+
    if (!md_output_file) {
       std::cout<< "WriteStateToFile() -- Error -- cannot write the system state if file not open.\n ";
       return;
@@ -92,7 +94,32 @@ void LcioReader::WriteStateToFile() {
    meta["minidst_version"] = __MiniDst_Version__;
    meta["lcioreader_version"] = __LCIOReader__Version__;
    meta["input_files"] = infiles;
-   meta["output_file"] = md_output_file_name;
+   string outfile = std::filesystem::canonical(gSystem->ExpandPathName(md_output_file_name.c_str()));
+   meta["output_file"] = outfile;
+
+   std::map<std::string, bool> store_switch;
+   store_switch["use_hodo_raw_hits"]        = use_hodo_raw_hits;
+   store_switch["use_hodo_hits"]            = use_hodo_hits;
+   store_switch["use_hodo_clusters"]        = use_hodo_clusters;
+   store_switch["use_ecal_raw_hits"]        = use_ecal_raw_hits;
+   store_switch["use_ecal_cluster"]         = use_ecal_cluster;
+   store_switch["use_ecal_cluster_uncor"]   = use_ecal_cluster_uncor;
+   store_switch["use_ecal_hits"]            = use_ecal_hits;
+   store_switch["use_ecal_hits_truth"]      = use_ecal_hits_truth;
+   store_switch["use_svt_raw_hits"]         = use_svt_raw_hits;
+
+   store_switch["use_svt_hits"]             = use_svt_hits;
+   store_switch["use_kf_tracks"]            = use_kf_tracks;
+   store_switch["use_gbl_tracks"]           = use_gbl_tracks;
+   store_switch["use_matched_tracks"]       = use_matched_tracks;
+   store_switch["use_extra_tracks"]         = use_extra_tracks;
+   store_switch["use_gbl_kink_data"]        = use_gbl_kink_data;
+   store_switch["use_mc_particles"]         = use_mc_particles;
+   store_switch["use_mc_scoring"]           = use_mc_scoring;
+   store_switch["use_kf_particles"]         = use_kf_particles;
+   store_switch["use_gbl_particles"]        = use_gbl_particles;
+
+   meta["switches"] = store_switch;
 
    std::string json_str = meta.dump(2);
    TObjString metaobj(json_str.c_str());

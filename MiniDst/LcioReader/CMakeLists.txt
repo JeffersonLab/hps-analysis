@@ -13,5 +13,14 @@ ROOT_GENERATE_DICTIONARY(LcioReaderDict LcioReader.h MODULE ${PROJECT_NAME} LINK
 
 add_library(${PROJECT_NAME} SHARED LcioReader.cxx LcioReaderDict.cxx)
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC MiniDst ${LCIO_LIBRARIES} ${ROOT_LIBRARIES})
+#
+# Handle SLAC old gcc version 3.8 issues.
+#
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+    CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
+    target_link_libraries(${PROJECT_NAME} PUBLIC MiniDst ${LCIO_LIBRARIES} ${ROOT_LIBRARIES} PRIVATE stdc++fs)
+else()
+    target_link_libraries(${PROJECT_NAME} PUBLIC MiniDst ${LCIO_LIBRARIES} ${ROOT_LIBRARIES})
+endif()
+
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR} )

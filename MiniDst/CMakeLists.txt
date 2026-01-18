@@ -1,7 +1,7 @@
 #
 # Specify the minimum CMake version required.  If the cmake version 
 # minimum is not met, cmake will fail.
-cmake_minimum_required(VERSION 3.10.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20.0 FATAL_ERROR)
 cmake_policy(SET CMP0005 NEW)
 cmake_policy(SET CMP0042 NEW)
 
@@ -80,10 +80,17 @@ endif(CERNLIB_FOUND)
 
 include(FetchContent)
 
-FetchContent_Declare(json
-        URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
-        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+    FetchContent_Declare(json
+            URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+else()
+    FetchContent_Declare(json
+            URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
+    )
+endif()
+
 FetchContent_MakeAvailable(json)
 
 

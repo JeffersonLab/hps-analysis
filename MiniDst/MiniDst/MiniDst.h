@@ -22,7 +22,7 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"
 
-#define __MiniDst_Version__ "1.5.0"
+#define __MiniDst_Version__ "1.5.1"
 //
 // The following construction defines a "Variant", a type in C++17 and later that can contain different kinds of object.
 // In our case the variant contains each of the possible types that we have in the output tree.

@@ -424,6 +424,7 @@ public:
    vector<int>  track_gbl_ref;
    vector<int>  track_ref;
    vector<vector<int> > track_svt_hits;/** Reference to the 3D hits associated with this track. */
+   vector<vector<int> > track_hit_pattern; /** Array of 14 -1,0,1 values. -1 is "hole" i.e. expected hit but did not get one. 1 is hit, 0 no hit. See hps-java KallmanInterface.java:651 */
 
    struct Basic_Particle_t {
       vector<int>    type;

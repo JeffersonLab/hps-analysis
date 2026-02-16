@@ -1143,6 +1143,8 @@ bool LcioReader::Process(Long64_t entry){
          EVENT::TrackerHitVec tracker_hits = lcio_track->getTrackerHits();
          track_n_hits.push_back(tracker_hits.size());
 
+         auto hit_pattern = lcio_track->getSubdetectorHitNumbers();
+         track_hit_pattern.push_back(hit_pattern);
 
          const EVENT::TrackState *track_state
                // = lcio_track->getTrackState(EVENT::TrackState::LastLocation);

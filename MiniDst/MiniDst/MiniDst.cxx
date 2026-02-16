@@ -220,6 +220,7 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("track_gbl_ref", &track_gbl_ref, write_any_tracks);
    branch_map_try_emplace("track_ref", &track_ref, write_any_tracks);
    branch_map_try_emplace("track_svt_hits",&track_svt_hits, write_any_tracks);
+   branch_map_try_emplace("track_hit_pattern",&track_hit_pattern, write_any_tracks);
 
    bool write_particles = use_kf_particles || use_gbl_particles;
    branch_map_try_emplace("part_type", &part.type, write_particles);
@@ -581,6 +582,7 @@ int MiniDst::Add_Track(MiniDst &event_in, int i_track, bool also_copy_svt_hits) 
    track_gbl_ref.push_back(-1);
    track_ref.push_back(-1);
    track_svt_hits.push_back({-1});
+   track_hit_pattern.push_back({-2});
 
    return track_type.size()-1;
 }

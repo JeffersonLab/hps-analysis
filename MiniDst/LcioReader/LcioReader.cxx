@@ -1029,6 +1029,12 @@ bool LcioReader::Process(Long64_t entry){
             track_px.push_back(px);
             track_py.push_back(py);
             track_pz.push_back(pz);
+
+            const float *ref_point = ts_target->getReferencePoint();
+            track_x_at_target.push_back(ref_point[1]);  // Get the ref point, i.e. point at the target.
+            track_y_at_target.push_back(ref_point[2]);  // Note that we need to rotate the coordinate frame to detector.
+            track_z_at_target.push_back(ref_point[0]);
+
             //track_p.push_back(p);
          }else {
             // This is the old way, which works okay and is best for the pre-2025 data.

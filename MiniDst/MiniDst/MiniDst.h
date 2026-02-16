@@ -385,6 +385,10 @@ public:
    vector<double> track_px;
    vector<double> track_py;
    vector<double> track_pz;
+   vector<double> track_x_at_target;
+   vector<double> track_y_at_target;
+   vector<double> track_z_at_target;
+
 #ifdef DEBUG
    vector<double> track_px_old;
    vector<double> track_py_old;

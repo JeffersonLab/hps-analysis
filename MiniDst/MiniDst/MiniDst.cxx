@@ -183,6 +183,10 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("track_px",&track_px, write_any_tracks);
    branch_map_try_emplace("track_py",&track_py, write_any_tracks);
    branch_map_try_emplace("track_pz",&track_pz, write_any_tracks);
+   branch_map_try_emplace("track_x_at_target",&track_x_at_target, write_any_tracks);
+   branch_map_try_emplace("track_y_at_target",&track_y_at_target, write_any_tracks);
+   branch_map_try_emplace("track_z_at_target",&track_z_at_target, write_any_tracks);
+#
 #ifdef DEBUG
    branch_map_try_emplace("track_px_old",&track_px_old, write_any_tracks);
    branch_map_try_emplace("track_py_old",&track_py_old, write_any_tracks);

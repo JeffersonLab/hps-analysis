@@ -119,9 +119,7 @@ if(APPLE)
   ENDIF("${isSystemDir}" STREQUAL "-1")
 endif(APPLE)
 
-add_subdirectory(BaseAna)
 add_subdirectory(MiniDst)
-add_subdirectory(Dst2016)
 
 if(LCIO_FOUND)
     add_subdirectory(LcioReader)
@@ -131,7 +129,7 @@ if(LCIO_FOUND)
     # HPSTR reading requires both the LCIO and HPSTR Libraries, because the HPSTR event definition is not clean
     # i.e. unnecessarily depends on the LCIO objects.
 
-    target_link_libraries(make_mini_dst MiniDst Dst2016 ${EXTRA_LIBRARIES} ${ROOT_LIBRARIES})
+    target_link_libraries(make_mini_dst MiniDst ${EXTRA_LIBRARIES} ${ROOT_LIBRARIES})
     install(TARGETS make_mini_dst)
     add_executable(lcio_test_reader lcio_test_reader.cpp)
     target_link_libraries(lcio_test_reader ${LCIO_LIBRARIES})

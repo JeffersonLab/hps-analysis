@@ -5,10 +5,6 @@ cmake_policy(SET CMP0042 NEW)
 project(hps-analysis)
 
 add_subdirectory(MiniDst)
-add_subdirectory(BumpHunt2016)
-add_subdirectory(Moller)
-add_subdirectory(EventMixer)
-add_subdirectory(Utilities)
 
 # Add the uninstall target
 if(NOT TARGET uninstall)

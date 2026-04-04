@@ -5,10 +5,8 @@
 #include "cxxopts.hpp"
 #include "TChain.h"
 #include "MiniDst.h"
-#include "Dst2016.h"
-
 #include "LcioReader.h"
-#include <locale.h>
+#include <clocale>
 
 using namespace std;
 
@@ -138,19 +136,8 @@ int main(int argc, char **argv){
       bool is_dst_type = false;
       if( !infiles.empty() && infiles[0].find(".root") != string::npos ) {
          // The first file in the list has .root extension.
-         is_dst_type = true;
-
-         auto chain = new TChain("HPS_Event");
-         for (auto &v : infiles) {
-            chain->Add(v.c_str());
-         }
-         auto dst2016 = new Dst2016(chain);
-         dst = static_cast<MiniDst *>(dst2016);
-         if (dst2016->event->getNumberOfMCParticles() > 0 && !dst->use_mc_particles &&
-             !args["no_mc_particles"].as<bool>()) {
-            cout << "Warning: Input is MC Data, but write_mc_particles is not set. Turning on write_mc_particles!\n";
-            dst->use_mc_particles = true;
-         }
+         cout << "WARNING: .root files are no longer supported. ";
+         exit(1);
       }else if( infiles.size()>0 && infiles[0].find(".slcio") != string::npos ) {
          auto dstlcio = new LcioReader(infiles, debug_code);
          if(args["magfield"].as<double>() > 0.) dstlcio->magnetic_field = args["magfield"].as<double>();

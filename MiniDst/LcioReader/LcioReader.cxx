@@ -184,6 +184,9 @@ void LcioReader::SetupLcioDataType() {
             scoring_planes_active[i] = false;
             if (md_Debug & kDebug_Warning)
                cout << "Scoring plane " << scoring_planes[i] << " not found. Turned off.\n";
+         }else {
+            if (md_Debug & kDebug_L1)
+               cout << "Scoring plane " << scoring_planes[i] << " found. Turned on.\n";
          }
       }
    } else {
@@ -212,7 +215,7 @@ void LcioReader::SetupLcioDataType() {
    ///  Safety switches. We check the collections names to make sure the needed data is in the file.
    ///
    /////////////////////////////////////////////////////////////////////////////////////////////////
-
+   if (md_Debug & kDebug_L1)    cout << "Checking the LCIO file for the collections needed for the requested output. \n";
    if (use_ecal_hits && !has_collection("EcalCalHits")) {
       if (md_Debug & kDebug_Warning)
          cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit reading. \n";
@@ -404,6 +407,7 @@ void LcioReader::SetupLcioDataType() {
          }
       }
    }
+   if (md_Debug & kDebug_L1)    cout << "Done checking the LCIO file for the collections.\n";
    data_type_is_known = true;
 }
 

@@ -239,6 +239,12 @@ void LcioReader::SetupLcioDataType() {
       use_ecal_cluster_uncor = false;
    }
 
+   if (use_ecal_raw_hits && !has_collection("EcalReadoutHits")) {
+      if (md_Debug & kDebug_Warning)
+         cout << "WARNING: The LCIO file does not have EcalReadoutHits. Turning of ECal raw hit reading. \n";
+      use_ecal_raw_hits = false;
+   }
+
    if (use_hodo_hits && !has_collection("HodoCalHits")) {
       if (md_Debug & kDebug_Warning)
          cout << "WARNING: The LCIO file does not have HodoCalHits. Turning of Hodoscope hit reading. \n";
@@ -250,6 +256,12 @@ void LcioReader::SetupLcioDataType() {
          cout
                << "WARNING: The LCIO file does not have HodoGenericClusters. Turning of Hodoscope cluster reading. \n";
       use_hodo_clusters = false;
+   }
+
+   if(use_hodo_raw_hits && !has_collection("HodoscopeReadoutHits")){
+      if (md_Debug & kDebug_Warning)
+         cout << "WARNING: The LCIO file does not have HodoscopeReadoutHits. Turning of Hodoscope raw hit reading. \n";
+      use_hodo_raw_hits = false;
    }
 
    if (use_svt_raw_hits && (!has_collection("SVTRawTrackerHits") ||
@@ -593,10 +605,10 @@ bool LcioReader::Process(Long64_t entry){
    /// In each case, a corresponding hit will have an identical cellid0 and cellid1.
    /// The "EcalTruthRelations" connects the EcalReadoutHits to the EcalHits.
    ///
-   /// EcalReadoutHits contain the raw ADC information from data, for MC this is derived from the EcalHits
-   /// EcalHits        contain the MC true energy and position, with a list of PDG particle ids and energies.
-   /// EcalUncalHits   contain the calculated uncalibrated hits from EcalReadoutHits.
-   /// EcalCalHits     conatian the calculated calibrated hits from EcalUncalHits.
+   /// EcalReadoutHits contains the raw ADC information from data, for MC this is derived from the EcalHits
+   /// EcalHits        contains the MC true energy and position, with a list of PDG particle ids and energies.
+   /// EcalUncalHits   contains the calculated uncalibrated hits from EcalReadoutHits.
+   /// EcalCalHits     contains the calculated calibrated hits from EcalUncalHits.
    ///
    /// The order of the hits appears is not consisted throughout but the cellids track, so truth relations seem
    /// to be not needed and instead a lookup can be used.

@@ -298,6 +298,18 @@ public:
    vector<double> ecal_hit_x;
    vector<double> ecal_hit_y;
    vector<double> ecal_hit_z;
+
+   // Ecal Uncalibrated Hits:
+   // Ecal Hits
+   vector<double> ecal_uncal_hit_energy;
+   vector<double> ecal_uncal_hit_time;
+   vector<int>    ecal_uncal_hit_index_x;
+   vector<int>    ecal_uncal_hit_index_y;
+   // It *should* be possible to derive these from ix and iy, but that would be detector dependent.
+   vector<double> ecal_uncal_hit_x;
+   vector<double> ecal_uncal_hit_y;
+   vector<double> ecal_uncal_hit_z;
+
    // For MC events, we want to store the truth with the hits.
    vector<vector<int>> ecal_hit_mc_contrib_id;   // For each hit contributor, the MCParticle indexes.
    vector<vector<int>> ecal_hit_mc_contrib_pdg;  // For each hit contributor, the MCParticle pdg nums.

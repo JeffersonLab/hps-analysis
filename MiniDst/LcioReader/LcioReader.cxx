@@ -202,7 +202,7 @@ void LcioReader::SetupLcioDataType() {
       has_rf_hits = false;
       if (!is_MC_data) {
          if (md_Debug & kDebug_Warning)
-            cout << "WARNING: The LCIO file does not have RF Hits. Turning of RFHit reading.\n";
+            cout << "WARNING: The LCIO file does not have RF Hits. Turning off RFHit reading.\n";
       }
    }
 
@@ -218,7 +218,7 @@ void LcioReader::SetupLcioDataType() {
    if (md_Debug & kDebug_L1)    cout << "Checking the LCIO file for the collections needed for the requested output. \n";
    if (use_ecal_hits && !has_collection("EcalCalHits")) {
       if (md_Debug & kDebug_Warning)
-         cout << "WARNING: The LCIO file does not have EcalCalHits. Turning of ECal hit reading. \n";
+         cout << "WARNING: The LCIO file does not have EcalCalHits. Turning off ECal hit reading. \n";
       use_ecal_hits = false;
    }
 
@@ -232,38 +232,38 @@ void LcioReader::SetupLcioDataType() {
    if (use_ecal_cluster && !has_collection("EcalClustersCorr")) {
       if (md_Debug & kDebug_Warning)
          cout
-               << "WARNING: The LCIO file does not have EcalClustersCorr. Turning of ECal corrected cluster reading. \n";
+               << "WARNING: The LCIO file does not have EcalClustersCorr. Turning off ECal corrected cluster reading. \n";
       use_ecal_cluster = false;
    }
 
    if (use_ecal_cluster_uncor && !has_collection("EcalClusters")) {
       if (md_Debug & kDebug_Warning)
-         cout << "WARNING: The LCIO file does not have EcalClusters. Turning of ECal cluster reading. \n";
+         cout << "WARNING: The LCIO file does not have EcalClusters. Turning off ECal cluster reading. \n";
       use_ecal_cluster_uncor = false;
    }
 
-   if (use_ecal_raw_hits && !has_collection("EcalReadoutHits")) {
+   if (use_ecal_raw_hits && (!has_collection("EcalReadoutHits") or !has_collection("EcalUncalHits"))) {
       if (md_Debug & kDebug_Warning)
-         cout << "WARNING: The LCIO file does not have EcalReadoutHits. Turning of ECal raw hit reading. \n";
+         cout << "WARNING: The LCIO file does not have EcalReadoutHits or EcalUncalHits. Turning off ECal raw hit reading. \n";
       use_ecal_raw_hits = false;
    }
 
    if (use_hodo_hits && !has_collection("HodoCalHits")) {
       if (md_Debug & kDebug_Warning)
-         cout << "WARNING: The LCIO file does not have HodoCalHits. Turning of Hodoscope hit reading. \n";
+         cout << "WARNING: The LCIO file does not have HodoCalHits. Turning off Hodoscope hit reading. \n";
       use_hodo_hits = false;
    }
 
    if (use_hodo_clusters && !has_collection("HodoGenericClusters")) {
       if (md_Debug & kDebug_Warning)
          cout
-               << "WARNING: The LCIO file does not have HodoGenericClusters. Turning of Hodoscope cluster reading. \n";
+               << "WARNING: The LCIO file does not have HodoGenericClusters. Turning off Hodoscope cluster reading. \n";
       use_hodo_clusters = false;
    }
 
    if(use_hodo_raw_hits && !has_collection("HodoscopeReadoutHits")){
       if (md_Debug & kDebug_Warning)
-         cout << "WARNING: The LCIO file does not have HodoscopeReadoutHits. Turning of Hodoscope raw hit reading. \n";
+         cout << "WARNING: The LCIO file does not have HodoscopeReadoutHits. Turning off Hodoscope raw hit reading. \n";
       use_hodo_raw_hits = false;
    }
 
@@ -273,7 +273,7 @@ void LcioReader::SetupLcioDataType() {
       if (md_Debug & kDebug_Warning) {
          cout << "WARNING: The LCIO file does not have SVTRawTrackerHits or " <<
               "SVTShapeFitParameters or SVTFittedRawTrackerHits.\n";
-         cout << "         Turning of SVT raw hit writing. \n";
+         cout << "         Turning off SVT raw hit writing. \n";
       }
       use_svt_raw_hits = false;
    }
@@ -281,7 +281,7 @@ void LcioReader::SetupLcioDataType() {
    if (use_svt_hits && !(has_collection("RotatedHelicalTrackHits") ||
                          has_collection("StripClusterer_SiTrackerHitStrip1D"))) {
       if (md_Debug & kDebug_Warning)
-         cout << "WARNING: The LCIO file does not have RotatedHelicalTrackHits. Turning of svt 3D hit writing. \n";
+         cout << "WARNING: The LCIO file does not have RotatedHelicalTrackHits. Turning off svt 3D hit writing. \n";
       use_svt_hits = false;
    } else {
       if (has_collection("StripClusterer_SiTrackerHitStrip1D"))
@@ -291,19 +291,19 @@ void LcioReader::SetupLcioDataType() {
    }
    if ((use_kf_tracks || use_kf_particles) && !has_collection("KalmanFullTracks")) {
       if (md_Debug & kDebug_Warning)
-         cout << "WARNING: The LCIO file does not have KalmanFullTracks. Turning of KF track writing. \n";
+         cout << "WARNING: The LCIO file does not have KalmanFullTracks. Turning off KF track writing. \n";
       use_kf_tracks = false;
       use_kf_particles = false;
    }
    if ((use_gbl_tracks || use_gbl_particles) && !has_collection("GBLTracks")) {
       if (md_Debug & kDebug_Warning)
-         cout << "WARNING: The LCIO file does not have GBLTracks. Turning of GBL track writing. \n";
+         cout << "WARNING: The LCIO file does not have GBLTracks. Turning off GBL track writing. \n";
       use_gbl_tracks = false;
       use_gbl_particles = false;
    }
    if (use_matched_tracks && !has_collection("MatchedTracks")) {
       if (md_Debug & kDebug_Warning)
-         cout << "WARNING: The LCIO file does not have MatchedTracks. Turning of matched track writing. \n";
+         cout << "WARNING: The LCIO file does not have MatchedTracks. Turning off matched track writing. \n";
       use_matched_tracks = false;
    }
 
@@ -620,6 +620,29 @@ bool LcioReader::Process(Long64_t entry){
    ////////////////////////////////////////////////////////////////////////////////////////////////
 
    if (use_ecal_raw_hits){
+      auto ecal_uncal_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalUncalHits"));
+
+      for (int ihit = 0; ihit < ecal_uncal_hits->getNumberOfElements(); ++ihit) {
+         IMPL::CalorimeterHitImpl *lcio_hit
+               = static_cast<IMPL::CalorimeterHitImpl *>(ecal_uncal_hits->getElementAt(ihit));
+
+         ecal_uncal_hit_energy.push_back(lcio_hit->getEnergy());
+         ecal_uncal_hit_time.push_back(lcio_hit->getTime());
+
+            Long64_t value = Long64_t(lcio_hit->getCellID0() & 0xffffffff) |
+                             (Long64_t(lcio_hit->getCellID1()) << 32);
+            ecal_hit_field_decoder.setValue(value);
+
+            ecal_uncal_hit_index_x.push_back(ecal_hit_field_decoder["ix"]);
+            ecal_uncal_hit_index_y.push_back(ecal_hit_field_decoder["iy"]);
+            const float *pos = lcio_hit->getPosition();
+            if( pos != nullptr) {
+               ecal_uncal_hit_x.push_back(pos[0]);
+               ecal_uncal_hit_y.push_back(pos[1]);
+               ecal_uncal_hit_z.push_back(pos[2]);
+            }
+         }
+
       auto ecal_raw_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalReadoutHits"));
 
       for(int ihit = 0; ihit < ecal_raw_hits->getNumberOfElements(); ++ihit){

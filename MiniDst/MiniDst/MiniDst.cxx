@@ -94,13 +94,13 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("ecal_raw_iy", &ecal_raw_iy, use_ecal_raw_hits | use_all );
    branch_map_try_emplace("ecal_raw_adc", &ecal_raw_adc, use_ecal_raw_hits | use_all );
 
-   branch_map_try_emplace("ecal_uncal_hit_energy", &ecal_uncal_hit_energy, use_ecal_raw_hits | use_all );
-   branch_map_try_emplace("ecal_uncal_hit_time", &ecal_uncal_hit_time, use_ecal_raw_hits | use_all );
-   branch_map_try_emplace("ecal_uncal_hit_index_x", &ecal_uncal_hit_index_x, use_ecal_raw_hits | use_all );
-   branch_map_try_emplace("ecal_uncal_hit_index_y", &ecal_uncal_hit_index_y, use_ecal_raw_hits | use_all );
-   branch_map_try_emplace("ecal_uncal_hit_x", &ecal_uncal_hit_x, use_ecal_raw_hits | use_all );
-   branch_map_try_emplace("ecal_uncal_hit_y", &ecal_uncal_hit_y, use_ecal_raw_hits | use_all );
-   branch_map_try_emplace("ecal_uncal_hit_z", &ecal_uncal_hit_z, use_ecal_raw_hits| use_all );
+   branch_map_try_emplace("ecal_uncal_hit_energy", &ecal_uncal_hit_energy, use_ecal_raw_hits | use_ecal_cluster_uncor | use_all );
+   branch_map_try_emplace("ecal_uncal_hit_time", &ecal_uncal_hit_time,use_ecal_raw_hits | use_ecal_cluster_uncor | use_all  );
+   branch_map_try_emplace("ecal_uncal_hit_index_x", &ecal_uncal_hit_index_x, use_ecal_raw_hits | use_ecal_cluster_uncor | use_all  );
+   branch_map_try_emplace("ecal_uncal_hit_index_y", &ecal_uncal_hit_index_y, use_ecal_raw_hits | use_ecal_cluster_uncor | use_all  );
+   branch_map_try_emplace("ecal_uncal_hit_x", &ecal_uncal_hit_x, use_ecal_raw_hits | use_ecal_cluster_uncor | use_all );
+   branch_map_try_emplace("ecal_uncal_hit_y", &ecal_uncal_hit_y, use_ecal_raw_hits | use_ecal_cluster_uncor | use_all );
+   branch_map_try_emplace("ecal_uncal_hit_z", &ecal_uncal_hit_z, use_ecal_raw_hits| use_ecal_cluster_uncor | use_all );
 
    branch_map_try_emplace("ecal_hit_energy", &ecal_hit_energy, use_ecal_hits | use_all );
    branch_map_try_emplace("ecal_hit_time", &ecal_hit_time, use_ecal_hits | use_all );

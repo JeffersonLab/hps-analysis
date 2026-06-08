@@ -77,6 +77,7 @@ class MiniDst : public TObject {
 
 public:
    static string _version_(){return(__MiniDst_Version__);};
+   static string GetVersion(){return(__MiniDst_Version__);};
    MiniDst(): md_output_file_name("minidst.root"){};
    explicit MiniDst(string output_file_name): md_output_file_name(output_file_name){};
    ~MiniDst() override = default;

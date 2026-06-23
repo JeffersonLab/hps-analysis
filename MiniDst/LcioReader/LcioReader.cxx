@@ -1051,12 +1051,22 @@ bool LcioReader::Process(Long64_t entry){
             double omega = ts_target->getOmega();
             if( abs(omega) < 1E-7) omega = 1E-7;
 
-            track_d0.push_back(ts_target->getD0());
+            // It is very amazing and surprising how complicated the LCIO information is structured, and how little
+            // sense it makes. There is no documentation.
+            // In hpstr, which is the only "documention" that exists, the trackstate used is "AtTarget", BUT
+            // the z0 and d0 parameters are not obtained from getZ0 or getD0, instead the getReferencePoint[2] ans [1]
+            // are used. Go figure.
+
+            // track_d0.push_back(ts_target->getD0());
+            track_d0.push_back(ts_target->getReferencePoint()[1]);
             track_chi2.push_back(lcio_track->getChi2());
             track_omega.push_back(omega);
             track_phi0.push_back(ts_target->getPhi());
             track_tan_lambda.push_back(ts_target->getTanLambda());
-            track_z0.push_back(ts_target->getZ0());
+            // double this_track_z0 = ts_target->getZ0();
+            // double that_track_z0 = ts_target->getReferencePoint()[2];
+            // track_z0.push_back(ts_target->getZ0());
+            track_z0.push_back(ts_target->getReferencePoint()[2]);
             track_type.push_back(lcio_track->getType());
 
             // Now compute the momentum from helix parameters and B field.

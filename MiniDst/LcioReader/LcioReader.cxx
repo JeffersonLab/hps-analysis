@@ -1068,6 +1068,7 @@ bool LcioReader::Process(Long64_t entry){
             // track_z0.push_back(ts_target->getZ0());
             track_z0.push_back(ts_target->getReferencePoint()[2]);
             track_type.push_back(lcio_track->getType());
+            track_ndf.push_back(lcio_track->getNdf());
 
             // Now compute the momentum from helix parameters and B field.
             double pt = 2.99792458e-04 * bfield / fabs(omega); // GeV/c

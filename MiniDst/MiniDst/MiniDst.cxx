@@ -181,6 +181,7 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("track_n_hits", &track_n_hits, write_any_tracks);
    branch_map_try_emplace("track_volume", &track_volume, write_any_tracks);
    branch_map_try_emplace("track_type", &track_type, write_any_tracks);
+   branch_map_try_emplace("track_ndf", &track_ndf, write_any_tracks);
    branch_map_try_emplace("track_d0", &track_d0, write_any_tracks);
    branch_map_try_emplace("track_phi0",&track_phi0, write_any_tracks);
    branch_map_try_emplace("track_omega",&track_omega, write_any_tracks);
@@ -558,6 +559,7 @@ int MiniDst::Add_Track(MiniDst &event_in, int i_track, bool also_copy_svt_hits) 
       track_n_gbl++;
    }
    track_type.push_back(event_in.track_type[i_track]);
+   track_ndf.push_back(event_in.track_ndf[i_track]);
    track_n_hits.push_back(event_in.track_n_hits[i_track]);
    track_volume.push_back(event_in.track_volume[i_track]);
    track_d0.push_back(event_in.track_d0[i_track]);
@@ -634,6 +636,7 @@ void MiniDst::Print(Option_t *option) const {
       if(part.track[i] >= 0) {
          cout << "    |- Track: type: " << track_type[part.track[i]]
               << " n_hits: " << track_n_hits[part.track[i]]
+              << " ndf: " << track_ndf[part.track[i]]
               << " d0: " << track_d0[part.track[i]]
               << " phi0: " << track_phi0[part.track[i]]
               << " omega: " << track_omega[part.track[i]]

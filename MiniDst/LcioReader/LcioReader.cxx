@@ -1197,7 +1197,8 @@ bool LcioReader::Process(Long64_t entry){
          track_isolation.push_back(iso_values);
 
          EVENT::TrackerHitVec tracker_hits = lcio_track->getTrackerHits();
-         track_n_hits.push_back(tracker_hits.size());
+         int nhits = tracker_hits.size();
+         track_n_hits.push_back(nhits);
 
          auto hit_pattern = lcio_track->getSubdetectorHitNumbers();
          track_hit_pattern.push_back(hit_pattern);
@@ -1310,9 +1311,10 @@ bool LcioReader::Process(Long64_t entry){
                }
             }
             track_svt_hits.push_back(svt_hits);
-         }else{
-            track_n_hits.push_back(-1);
          }
+//         else{
+//            track_n_hits.push_back(-1);
+//         }
 
          // TODO: It would be better to permit vector<vector<float>> and store that
          //  instead of converting to double.

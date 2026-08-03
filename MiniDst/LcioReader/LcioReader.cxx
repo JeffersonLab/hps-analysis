@@ -1857,6 +1857,22 @@ void LcioReader::Fill_Vertex_From_LCIO(Vertex_Particle_t *vp, EVENT::Vertex *lci
    auto v4 = pe4 + pp4;
    vp->energy.back() = v4.E();  // Set the energy of the vertex particle to the sum of the daughters.
 
+   vp->em.p.back() = pe4.P();
+   vp->ep.p.back() = pp4.P();
+
+   // Compare vertex momentum em px py pz with the refit values. They should be close.
+//   auto em_track = vp->em.track.back();
+//   auto ep_track = vp->ep.track.back();
+
+//   if( (track_py[em_track] > 0 && vp->em_py_refit.back() < 0) || (track_py[em_track] < 0 && vp->em_py_refit.back() > 0) ) {
+//
+//      cout << "Vertex momentum: " << track_px[em_track] << " " << track_py[em_track] << " " << track_pz[em_track]
+//           << "\n";
+//      cout << "Refit momentum:  " << vp->em_px_refit.back() << " " << vp->em_py_refit.back() << " "
+//           << vp->em_pz_refit.back() << " " << vp->ep_px_refit.back() << " " << vp->ep_py_refit.back() << " "
+//           << vp->ep_pz_refit.back() << "\n";
+//   }
+
 #ifdef DEBUG
    if(vp->energy.size() != vp->type.size()){
       cout << "ERROR === Miss filling of the vertex energy.\n";

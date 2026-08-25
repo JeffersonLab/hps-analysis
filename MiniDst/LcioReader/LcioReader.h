@@ -32,7 +32,7 @@
 
 #include "MiniDst.h"
 
-#define __LCIOReader__Version__ "1.5.4"
+#define __LCIOReader__Version__ "1.5.5"
 using namespace std;
 
 // Collection in May 2021 versions of the 2019 data with both KF and GBL tracking.
@@ -120,7 +120,7 @@ public:
     void Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::ReconstructedParticle *daughter, int type);
 
     bool has_collection(const char *name) const{
-        return(std::find(col_names->begin(), col_names->end(), name) != col_names->end());}
+        return(std::find(col_names.begin(), col_names.end(), name) != col_names.end());}
 
 public:
     IO::LCReader* lcio_reader{IOIMPL::LCFactory::getInstance()->createLCReader()};
@@ -128,7 +128,7 @@ public:
     vector<string> input_files{};
 
     unsigned long evt_count{0}; // Event sequence number.
-    const vector<string> *col_names{nullptr}; // Store the LCIO collection names from the first event.
+    vector<string> col_names; // Store the LCIO collection names from the first event.
     vector<string> svt_hit_collections;
     bool data_type_is_known{false};  // The LCIO data is different between 2015/2016 and 2019. This is true when that is known.
     bool is_2016_data{false};  // True for 2015 and 2016 data: i.e. there is Trigger info in the TriggerBank

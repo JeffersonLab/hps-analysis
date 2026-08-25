@@ -110,6 +110,7 @@ void LcioReader::WriteStateToFile() {
    store_switch["use_svt_raw_hits"]         = use_svt_raw_hits;
 
    store_switch["use_svt_hits"]             = use_svt_hits;
+   store_switch["use_svt_hits_truth"]       = use_svt_hits_truth;
    store_switch["use_kf_tracks"]            = use_kf_tracks;
    store_switch["use_gbl_tracks"]           = use_gbl_tracks;
    store_switch["use_matched_tracks"]       = use_matched_tracks;
@@ -154,10 +155,10 @@ void LcioReader::SetupLcioDataType() {
       if (md_Debug & kDebug_L1) cout << "LCIO -> This is 2021 data. \n";
    }
 
-   col_names = lcio_event->getCollectionNames();
+   col_names = *lcio_event->getCollectionNames();   //
    if (md_Debug & kDebug_L1) {
       cout << "LCIO Collections found:\n";
-      for (string s: *col_names) {
+      for (const string &s: col_names) {
          cout << s << endl;
       }
    }
@@ -174,8 +175,16 @@ void LcioReader::SetupLcioDataType() {
 //                    }
    if (has_collection("MCParticle")) {
       if (md_Debug & kDebug_Info) cout << "LCIO -> This is Monte Carlo data. \n";
-      if (use_mc_particles) is_MC_data = true;
-      else {
+      if (use_mc_particles) {
+         is_MC_data = true;
+         if (use_svt_hits && has_collection("SVTTrueHitRelations")) {
+            use_svt_hits_truth = true;
+         }else {
+            use_svt_hits_truth = false;
+            if (md_Debug & kDebug_Warning)
+               cout << "WARNING: The LCIO file does not have SVTTrueHitRelations. Turning off SVT truth hit reading. \n";
+         }
+      }else {
          cout << "LCIO -> Monte Carle data, but no_mc_particle flag. MCParticles not written. \n";
       }
 
@@ -190,6 +199,8 @@ void LcioReader::SetupLcioDataType() {
                cout << "Scoring plane " << scoring_planes[i] << " found. Turned on.\n";
          }
       }
+
+
    } else {
       is_MC_data = false;
       use_mc_particles = false;
@@ -543,9 +554,108 @@ bool LcioReader::Process(Long64_t entry){
    /////////////////////////////////////////////////////////////////////////////////////////////////
 
    if (use_mc_particles) {
-      auto mc_part_col = lcio_event->getCollection("MCParticle");
-      for (int i = 0; i < mc_part_col->getNumberOfElements(); ++i)
-         mc_part_id_to_index[mc_part_col->getElementAt(i)->id()] = i;
+      EVENT::LCCollection *mc_part_col = lcio_event->getCollection("MCParticle");
+
+      for (int i_part = 0; i_part < mc_part_col->getNumberOfElements(); ++i_part) {
+
+         auto mc_part = dynamic_cast<EVENT::MCParticle *>(mc_part_col->getElementAt(i_part));
+         int this_id = mc_part->id();
+
+         mc_part_id_to_index[this_id] = i_part;
+         mc_part_id.push_back(this_id);
+
+         mc_part_pdg.push_back(mc_part->getPDG());
+         mc_part_energy.push_back(mc_part->getEnergy());
+         mc_part_mass.push_back(mc_part->getMass());
+         int simulation_status = mc_part->getGeneratorStatus() | mc_part->getSimulatorStatus();
+         mc_part_sim_status.push_back(simulation_status);
+         mc_part_time.push_back(mc_part->getTime());
+         mc_part_charge.push_back(mc_part->getCharge());
+         const double *part_vertex = mc_part->getVertex();
+         mc_part_x.push_back(part_vertex[0]);
+         mc_part_y.push_back(part_vertex[1]);
+         mc_part_z.push_back(part_vertex[2]);
+         const double *part_mom = mc_part->getMomentum();
+         mc_part_px.push_back(part_mom[0]);
+         mc_part_py.push_back(part_mom[1]);
+         mc_part_pz.push_back(part_mom[2]);
+         const double *part_end = mc_part->getEndpoint();
+         mc_part_end_x.push_back(part_end[0]);
+         mc_part_end_y.push_back(part_end[1]);
+         mc_part_end_z.push_back(part_end[2]);
+//               const double *part_end_mom = mc_part->getMomentumAtEndpoint();
+//               mc_part_end_px.push_back(part_end_mom[0]);
+//               mc_part_end_py.push_back(part_end_mom[1]);
+//               mc_part_end_pz.push_back(part_end_mom[2]);
+      }
+
+      // Now we loop again to resolve the parent and daughter ids correctly.
+      for (int i_part = 0; i_part < mc_part_col->getNumberOfElements(); ++i_part) {
+         auto mc_part = dynamic_cast<EVENT::MCParticle *>(mc_part_col->getElementAt(i_part));
+         EVENT::MCParticleVec parent_particles = mc_part->getParents();
+         vector<int> parents;
+         for (auto parent: parent_particles) {
+            int parent_id = parent->id();
+            auto idid = mc_part_id_to_index.find(parent_id);
+            if (idid != mc_part_id_to_index.end()) {
+               int parent_id_id = idid->second;
+               parents.push_back(parent_id_id);
+            } else {
+               cout << "MCParticle: unidentified parent.\n";
+               parents.push_back(-1);
+            }
+         }
+         mc_part_parents.push_back(parents);
+         EVENT::MCParticleVec daughter_particles = mc_part->getDaughters();
+         vector<int> daughters;
+         for (auto daughter: daughter_particles) {
+            int daughter_id = daughter->id();
+            auto idid = mc_part_id_to_index.find(daughter_id);
+            if (idid != mc_part_id_to_index.end()) {
+               int daughter_id_id = idid->second;
+               daughters.push_back(daughter_id_id);
+            } else {
+               cout << "MCParticle: unidentified daughter.\n";
+               daughters.push_back(-1);
+            }
+         }
+         mc_part_daughters.push_back(daughters);
+      }
+
+      ////////////////////////////////////////////////////////////////////////////////////////////////
+      /// MC Scoring planes.
+      ////////////////////////////////////////////////////////////////////////////////////////////////
+      if (use_mc_scoring) {
+         for (int type = 0; type < scoring_planes.size(); ++type) {
+            if(scoring_planes_active[type]) {
+               EVENT::LCCollection *mc_simtrackerhit_col = lcio_event->getCollection(
+                     scoring_planes[type].c_str());
+               for (int i = 0; i < mc_simtrackerhit_col->getNumberOfElements(); ++i) {
+                  auto mc_score = dynamic_cast<EVENT::SimTrackerHit *>(mc_simtrackerhit_col->getElementAt(
+                        i));
+                  mc_score_type.push_back(type);
+                  auto mc_particle = mc_score->getMCParticle();
+                  int mc_part_id = mc_particle->id();
+                  auto idid = mc_part_id_to_index.find(mc_part_id);
+                  if (idid != mc_part_id_to_index.end()) {
+                     mc_score_part_idx.push_back(idid->second);
+                  } else {
+                     mc_score_part_idx.push_back(-1);
+                  }
+                  const float *score_part_mom = mc_score->getMomentum();
+                  mc_score_px.push_back(score_part_mom[0]);
+                  mc_score_py.push_back(score_part_mom[1]);
+                  mc_score_pz.push_back(score_part_mom[2]);
+                  const double *score_hit_pos = mc_score->getPosition();
+                  mc_score_x.push_back(score_hit_pos[0]);
+                  mc_score_y.push_back(score_hit_pos[1]);
+                  mc_score_z.push_back(score_hit_pos[2]);
+                  mc_score_time.push_back(mc_score->getTime());
+                  mc_score_pdg.push_back(mc_score->getMCParticle()->getPDG());
+               }
+            }
+         }
+      }
    }
 
    ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -876,7 +986,7 @@ bool LcioReader::Process(Long64_t entry){
 
       // For MC Truth matching of the SVT hits.
       std::unique_ptr<UTIL::LCRelationNavigator> svt_truth_nav;
-      if (has_collection("SVTTrueHitRelations"))
+      if (use_svt_hits_truth)
          svt_truth_nav = std::make_unique<UTIL::LCRelationNavigator>(
                              lcio_event->getCollection("SVTTrueHitRelations"));
       int i_svt_hit_type = -1;
@@ -912,8 +1022,8 @@ bool LcioReader::Process(Long64_t entry){
             vector<int> raw_other;
             vector<int> mc_idx;
             vector<double> mc_edep;
-            int layer;
-            int module;
+            int layer{-1};
+            int module{-1};
             vector<int> strip;
             for (int i_hit = 0; i_hit < raw_hits.size(); ++i_hit) {
                auto lcio_raw_hit = static_cast<EVENT::TrackerRawData *>(raw_hits.at(i_hit));
@@ -962,7 +1072,7 @@ bool LcioReader::Process(Long64_t entry){
             svt_hit_layer.push_back(layer);
             svt_hit_module.push_back(module);
             svt_hit_strip.push_back(strip);
-            svt_hit_mc_part_id.push_back(mc_idx);
+            svt_hit_mc_part_idx.push_back(mc_idx);
             svt_hit_mc_part_edep.push_back(mc_edep);
          }
       }
@@ -1451,109 +1561,12 @@ bool LcioReader::Process(Long64_t entry){
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
    ///
-   /// MCParticles - Monte Carlo specific information.
+   /// MCParticles part 2 - Monte Carlo specific information.
    ///
    ///////////////////////////////////////////////////////////////////////////////////////////////
 
    if(use_mc_particles) {
-      EVENT::LCCollection *mc_part_col = lcio_event->getCollection("MCParticle");
 
-      for (int i_part = 0; i_part < mc_part_col->getNumberOfElements(); ++i_part) {
-         auto mc_part = dynamic_cast<EVENT::MCParticle *>(mc_part_col->getElementAt(i_part));
-         int this_id = mc_part->id();
-         mc_part_id.push_back(this_id);
-         mc_part_pdg.push_back(mc_part->getPDG());
-         mc_part_energy.push_back(mc_part->getEnergy());
-         mc_part_mass.push_back(mc_part->getMass());
-         int simulation_status = mc_part->getGeneratorStatus() | mc_part->getSimulatorStatus();
-         mc_part_sim_status.push_back(simulation_status);
-         mc_part_time.push_back(mc_part->getTime());
-         mc_part_charge.push_back(mc_part->getCharge());
-         const double *part_vertex = mc_part->getVertex();
-         mc_part_x.push_back(part_vertex[0]);
-         mc_part_y.push_back(part_vertex[1]);
-         mc_part_z.push_back(part_vertex[2]);
-         const double *part_mom = mc_part->getMomentum();
-         mc_part_px.push_back(part_mom[0]);
-         mc_part_py.push_back(part_mom[1]);
-         mc_part_pz.push_back(part_mom[2]);
-         const double *part_end = mc_part->getEndpoint();
-         mc_part_end_x.push_back(part_end[0]);
-         mc_part_end_y.push_back(part_end[1]);
-         mc_part_end_z.push_back(part_end[2]);
-//               const double *part_end_mom = mc_part->getMomentumAtEndpoint();
-//               mc_part_end_px.push_back(part_end_mom[0]);
-//               mc_part_end_py.push_back(part_end_mom[1]);
-//               mc_part_end_pz.push_back(part_end_mom[2]);
-      }
-
-      // Now we loop again to resolve the parent and daughter ids correctly.
-      for (int i_part = 0; i_part < mc_part_col->getNumberOfElements(); ++i_part) {
-         auto mc_part = dynamic_cast<EVENT::MCParticle *>(mc_part_col->getElementAt(i_part));
-         EVENT::MCParticleVec parent_particles = mc_part->getParents();
-         vector<int> parents;
-         for (auto parent: parent_particles) {
-            int parent_id = parent->id();
-            auto idid = mc_part_id_to_index.find(parent_id);
-            if (idid != mc_part_id_to_index.end()) {
-               int parent_id_id = idid->second;
-               parents.push_back(parent_id_id);
-            } else {
-               cout << "MCParticle: unidentified parent.\n";
-               parents.push_back(-1);
-            }
-         }
-         mc_part_parents.push_back(parents);
-         EVENT::MCParticleVec daughter_particles = mc_part->getDaughters();
-         vector<int> daughters;
-         for (auto daughter: daughter_particles) {
-            int daughter_id = daughter->id();
-            auto idid = mc_part_id_to_index.find(daughter_id);
-            if (idid != mc_part_id_to_index.end()) {
-               int daughter_id_id = idid->second;
-               daughters.push_back(daughter_id_id);
-            } else {
-               cout << "MCParticle: unidentified daughter.\n";
-               daughters.push_back(-1);
-            }
-         }
-         mc_part_daughters.push_back(daughters);
-      }
-
-      ////////////////////////////////////////////////////////////////////////////////////////////////
-      /// MC Scoring planes.
-      ////////////////////////////////////////////////////////////////////////////////////////////////
-      if (use_mc_scoring) {
-         for (int type = 0; type < scoring_planes.size(); ++type) {
-            if(scoring_planes_active[type]) {
-               EVENT::LCCollection *mc_simtrackerhit_col = lcio_event->getCollection(
-                     scoring_planes[type].c_str());
-               for (int i = 0; i < mc_simtrackerhit_col->getNumberOfElements(); ++i) {
-                  auto mc_score = dynamic_cast<EVENT::SimTrackerHit *>(mc_simtrackerhit_col->getElementAt(
-                        i));
-                  mc_score_type.push_back(type);
-                  auto mc_particle = mc_score->getMCParticle();
-                  int mc_part_id = mc_particle->id();
-                  auto idid = mc_part_id_to_index.find(mc_part_id);
-                  if (idid != mc_part_id_to_index.end()) {
-                     mc_score_part_idx.push_back(idid->second);
-                  } else {
-                     mc_score_part_idx.push_back(-1);
-                  }
-                  const float *score_part_mom = mc_score->getMomentum();
-                  mc_score_px.push_back(score_part_mom[0]);
-                  mc_score_py.push_back(score_part_mom[1]);
-                  mc_score_pz.push_back(score_part_mom[2]);
-                  const double *score_hit_pos = mc_score->getPosition();
-                  mc_score_x.push_back(score_hit_pos[0]);
-                  mc_score_y.push_back(score_hit_pos[1]);
-                  mc_score_z.push_back(score_hit_pos[2]);
-                  mc_score_time.push_back(mc_score->getTime());
-                  mc_score_pdg.push_back(mc_score->getMCParticle()->getPDG());
-               }
-            }
-         }
-      }
       ///////////////////////////////////////////////////////////////////////////////////////////////
       ///
       /// ADD ECal Truth for MC data.

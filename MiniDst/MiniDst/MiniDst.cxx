@@ -173,7 +173,7 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("svt_hit_module", &svt_hit_module, use_svt_hits | use_all );
    branch_map_try_emplace("svt_hit_strip", &svt_hit_strip, use_svt_hits | use_all );
 
-   branch_map_try_emplace("svt_hit_mc_part_idx",  &svt_hit_mc_part_id,(use_svt_hits & use_mc_particles) | use_all);
+   branch_map_try_emplace("svt_hit_mc_part_idx",  &svt_hit_mc_part_idx,(use_svt_hits & use_mc_particles) | use_all);
    branch_map_try_emplace("svt_hit_mc_part_edep", &svt_hit_mc_part_edep,(use_svt_hits & use_mc_particles) | use_all);
 
    bool write_any_tracks = use_kf_tracks || use_gbl_tracks || use_matched_tracks || use_all;

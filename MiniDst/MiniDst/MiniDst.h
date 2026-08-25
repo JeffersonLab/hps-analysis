@@ -22,7 +22,7 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"
 
-#define __MiniDst_Version__ "1.5.4"
+#define __MiniDst_Version__ "1.5.5"
 //
 // The following construction defines a "Variant", a type in C++17 and later that can contain different kinds of object.
 // In our case the variant contains each of the possible types that we have in the output tree.
@@ -208,6 +208,7 @@ public:
    bool use_svt_raw_hits{false};
 
    bool use_svt_hits{true};
+   bool use_svt_hits_truth{false};
    bool use_kf_tracks{true};
    bool use_gbl_tracks{false};
    bool use_matched_tracks{false};
@@ -382,7 +383,7 @@ public:
    vector<vector<int>> svt_hit_strip;
 
    // For MC events, we want to store the truth with the hits.
-   vector<vector<int>> svt_hit_mc_part_id;   // For each hit contributor, the MCParticle indexes.
+   vector<vector<int>> svt_hit_mc_part_idx;   // For each hit contributor, the MCParticle indexes.
    vector<vector<double>> svt_hit_mc_part_edep; // dE/dx contributed to hit by this particle;
 
    // SVT Tracks

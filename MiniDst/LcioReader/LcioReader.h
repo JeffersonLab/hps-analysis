@@ -156,6 +156,7 @@ public:
     map<EVENT::Track*, int> matched_track_to_index_map;       // Map to link Matched only track to index.
     map<EVENT::Track*, int> any_track_to_index_map;           // Map to link any track to index.
     map<EVENT::ReconstructedParticle*, int> any_particle_to_index_map; // Map to link any particle to the particle index.
+    std::map<int, int> mc_part_id_to_index;                  // Map to link MCParticle id to the particle index.
 
 private:
    /// LCIO Decoders. We need these instantiated only once.

@@ -69,6 +69,7 @@ void LcioReader::Clear(){
    matched_track_to_index_map.clear();
    any_track_to_index_map.clear();
    any_particle_to_index_map.clear();
+   mc_part_id_to_index.clear();
 }
 
 void LcioReader::WriteStateToFile() {
@@ -533,6 +534,19 @@ bool LcioReader::Process(Long64_t entry){
 // Todo: Add the VTP Parsing when needed.
    } // End of 2019 specific header parsing.
 
+   ////////////////////////////////////////////////////////////////////////////////////////////////
+   ///
+   ///  MCParticle -- Pre scan so that the MCParicle index can be found from the MCParticle id which
+   ///                we need for truth matching (specifically for SVT hit truth matching).
+   ///                The ECAL truth matching is currently done in a re-loop at the bottom.
+   ///
+   /////////////////////////////////////////////////////////////////////////////////////////////////
+
+   if (use_mc_particles) {
+      auto mc_part_col = lcio_event->getCollection("MCParticle");
+      for (int i = 0; i < mc_part_col->getNumberOfElements(); ++i)
+         mc_part_id_to_index[mc_part_col->getElementAt(i)->id()] = i;
+   }
 
    ////////////////////////////////////////////////////////////////////////////////////////////////
    ///
@@ -859,6 +873,12 @@ bool LcioReader::Process(Long64_t entry){
    /// Parse the "RotatedHelicalTrackHits"       - These are the hits used by the GBL tracker.
    /// and "StripClusterer_SiTrackerHitStrip1D"  - These are the hits used by the KF tracker.
    if (use_svt_hits) {
+
+      // For MC Truth matching of the SVT hits.
+      std::unique_ptr<UTIL::LCRelationNavigator> svt_truth_nav;
+      if (has_collection("SVTTrueHitRelations"))
+         svt_truth_nav = std::make_unique<UTIL::LCRelationNavigator>(
+                             lcio_event->getCollection("SVTTrueHitRelations"));
       int i_svt_hit_type = -1;
       for( auto collection_name: svt_hit_collections) {
          i_svt_hit_type++;
@@ -866,7 +886,8 @@ bool LcioReader::Process(Long64_t entry){
          for (int i_svt_hit = 0; i_svt_hit < tracker_hits->getNumberOfElements(); ++i_svt_hit) {
             auto lcio_svt_hit =
                   dynamic_cast<IMPL::TrackerHitImpl *>(tracker_hits->getElementAt(i_svt_hit));
-            svt_hit_to_index_map[lcio_svt_hit] = i_svt_hit;
+            svt_hit_to_index_map[lcio_svt_hit] = static_cast<int>(svt_hit_type.size()); // Stores the index to the hit from the pointer.
+            // Note that i_svt_hit can potentially double if there are more than one svt_hit_collection entries.
 
             svt_hit_type.push_back(i_svt_hit_type);
             svt_hit_time.push_back(lcio_svt_hit->getTime());
@@ -889,6 +910,8 @@ bool LcioReader::Process(Long64_t entry){
             EVENT::LCObjectVec raw_hits = lcio_svt_hit->getRawHits();
             vector<int> raw_index;
             vector<int> raw_other;
+            vector<int> mc_idx;
+            vector<double> mc_edep;
             int layer;
             int module;
             vector<int> strip;
@@ -921,12 +944,26 @@ bool LcioReader::Process(Long64_t entry){
                layer = raw_svt_hit_decoder["layer"];
                module = raw_svt_hit_decoder["module"];
                strip.push_back(raw_svt_hit_decoder["strip"]);
+
+               if (svt_truth_nav) {
+                  for (auto simObj : svt_truth_nav->getRelatedToObjects(lcio_raw_hit)) {
+                     auto sim_hit = dynamic_cast<EVENT::SimTrackerHit *>(simObj);
+                     if (!sim_hit) continue;
+                     auto mcp = sim_hit->getMCParticle();
+                     if (!mcp) continue;
+                     auto it = mc_part_id_to_index.find(mcp->id());
+                     mc_idx.push_back(it != mc_part_id_to_index.end() ? it->second : -1);
+                     mc_edep.push_back(sim_hit->getEDep());
+                  }
+               }
             }
             svt_hit_raw_index.push_back(raw_index);
             svt_hit_raw_other.push_back(raw_other);
             svt_hit_layer.push_back(layer);
             svt_hit_module.push_back(module);
             svt_hit_strip.push_back(strip);
+            svt_hit_mc_part_id.push_back(mc_idx);
+            svt_hit_mc_part_edep.push_back(mc_edep);
          }
       }
    }
@@ -1420,11 +1457,10 @@ bool LcioReader::Process(Long64_t entry){
 
    if(use_mc_particles) {
       EVENT::LCCollection *mc_part_col = lcio_event->getCollection("MCParticle");
-      map<int, int> id_to_id;
+
       for (int i_part = 0; i_part < mc_part_col->getNumberOfElements(); ++i_part) {
          auto mc_part = dynamic_cast<EVENT::MCParticle *>(mc_part_col->getElementAt(i_part));
          int this_id = mc_part->id();
-         id_to_id[this_id] = i_part;
          mc_part_id.push_back(this_id);
          mc_part_pdg.push_back(mc_part->getPDG());
          mc_part_energy.push_back(mc_part->getEnergy());
@@ -1458,8 +1494,8 @@ bool LcioReader::Process(Long64_t entry){
          vector<int> parents;
          for (auto parent: parent_particles) {
             int parent_id = parent->id();
-            auto idid = id_to_id.find(parent_id);
-            if (idid != id_to_id.end()) {
+            auto idid = mc_part_id_to_index.find(parent_id);
+            if (idid != mc_part_id_to_index.end()) {
                int parent_id_id = idid->second;
                parents.push_back(parent_id_id);
             } else {
@@ -1472,8 +1508,8 @@ bool LcioReader::Process(Long64_t entry){
          vector<int> daughters;
          for (auto daughter: daughter_particles) {
             int daughter_id = daughter->id();
-            auto idid = id_to_id.find(daughter_id);
-            if (idid != id_to_id.end()) {
+            auto idid = mc_part_id_to_index.find(daughter_id);
+            if (idid != mc_part_id_to_index.end()) {
                int daughter_id_id = idid->second;
                daughters.push_back(daughter_id_id);
             } else {
@@ -1498,8 +1534,8 @@ bool LcioReader::Process(Long64_t entry){
                   mc_score_type.push_back(type);
                   auto mc_particle = mc_score->getMCParticle();
                   int mc_part_id = mc_particle->id();
-                  auto idid = id_to_id.find(mc_part_id);
-                  if (idid != id_to_id.end()) {
+                  auto idid = mc_part_id_to_index.find(mc_part_id);
+                  if (idid != mc_part_id_to_index.end()) {
                      mc_score_part_idx.push_back(idid->second);
                   } else {
                      mc_score_part_idx.push_back(-1);
@@ -1569,8 +1605,8 @@ bool LcioReader::Process(Long64_t entry){
                mc_part_ec_list.push_back(truth_e);
                auto mc_particle = lcio_ecal_truth->getParticleCont(i_mcp);
                int mc_part_id = mc_particle->id();
-               auto idid = id_to_id.find(mc_part_id);
-               if (idid != id_to_id.end()) {
+               auto idid = mc_part_id_to_index.find(mc_part_id);
+               if (idid != mc_part_id_to_index.end()) {
                   mc_part_index_list.push_back(idid->second);
                   mc_part_pdg_list.push_back(mc_part_pdg[idid->second]);
                } else {
@@ -1598,7 +1634,7 @@ bool LcioReader::Process(Long64_t entry){
                }
 
                // We add the contributions of each MC Particle to the energy of the parent in a map.
-               idid = id_to_id.find(parent_particle->id());
+               idid = mc_part_id_to_index.find(parent_particle->id());
                auto idec = map_id_to_ec_sum.find(idid->second);
                if (idec != map_id_to_ec_sum.end()){ // Already had one, so add it.
                   map_id_to_ec_sum[idid->second] += truth_e;

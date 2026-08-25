@@ -381,6 +381,10 @@ public:
    vector<int> svt_hit_module;
    vector<vector<int>> svt_hit_strip;
 
+   // For MC events, we want to store the truth with the hits.
+   vector<vector<int>> svt_hit_mc_part_id;   // For each hit contributor, the MCParticle indexes.
+   vector<vector<double>> svt_hit_mc_part_edep; // dE/dx contributed to hit by this particle;
+
    // SVT Tracks
    int track_n_gbl{0}; /// Number of GBL tracks. The rest will be matched tracks or Kalman tracks.
    int track_n_kf{0};  /// Number of Kalman tracks.

@@ -22,7 +22,7 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"
 
-#define __MiniDst_Version__ "1.5.5"
+#define __MiniDst_Version__ "1.6.0"
 //
 // The following construction defines a "Variant", a type in C++17 and later that can contain different kinds of object.
 // In our case the variant contains each of the possible types that we have in the output tree.
@@ -81,7 +81,7 @@ public:
    MiniDst(): md_output_file_name("minidst.root"){};
    explicit MiniDst(string output_file_name): md_output_file_name(output_file_name){};
    ~MiniDst() override = default;
-   virtual void Clear();  /// Clear all the vectors and event storage.
+   virtual void Clear(Option_t */*option*/ = "") override;  /// Clear all the vectors and event storage.
    virtual void Start();
    virtual void DefineBranchMap(bool use_all=false); /// Setup the branch_map and branch_map_active
    virtual void SetBranchMap();    /// Use the branch_map to set the branches in the TTree that are active.

@@ -53,7 +53,7 @@ void LcioReader::Start(){
    MiniDst::Start();
 }
 
-void LcioReader::Clear(){
+void LcioReader::Clear(Option_t */*option*/){
    /// Clear the event storage.
    // Make sure you also call the "super"
 
@@ -192,7 +192,7 @@ void LcioReader::SetupLcioDataType() {
       }
 
       // Check the scoring planes.
-      for (int i = 0; i < scoring_planes.size(); ++i) {
+      for (size_t i = 0; i < scoring_planes.size(); ++i) {
          if (!has_collection(scoring_planes[i].c_str())) {
             scoring_planes_active[i] = false;
             if (md_Debug & kDebug_Warning)
@@ -531,9 +531,9 @@ bool LcioReader::Process(Long64_t entry){
       time_stamp <<= 32;
       time_stamp += lcio_ts_bank->getIntVal(3); // Time stamp low word.
 
-      unsigned long trigger_number = lcio_ts_bank->getIntVal(4) & 0xFFFF0000;
-      trigger_number <<= 16;
-      trigger_number += lcio_ts_bank->getIntVal(2);
+      //unsigned long trigger_number = lcio_ts_bank->getIntVal(4) & 0xFFFF0000;
+      //trigger_number <<= 16;
+      //trigger_number += lcio_ts_bank->getIntVal(2);
 
       // Prescaled is in word 5, Ext is in word 6
       trigger = lcio_ts_bank->getIntVal(5);
@@ -629,14 +629,13 @@ bool LcioReader::Process(Long64_t entry){
       /// MC Scoring planes.
       ////////////////////////////////////////////////////////////////////////////////////////////////
       if (use_mc_scoring) {
-         for (int type = 0; type < scoring_planes.size(); ++type) {
+         for (size_t type = 0; type < scoring_planes.size(); ++type) {
             if(scoring_planes_active[type]) {
-               EVENT::LCCollection *mc_simtrackerhit_col = lcio_event->getCollection(
-                     scoring_planes[type].c_str());
+               EVENT::LCCollection *mc_simtrackerhit_col = lcio_event->getCollection(scoring_planes[type]);
                for (int i = 0; i < mc_simtrackerhit_col->getNumberOfElements(); ++i) {
                   auto mc_score = dynamic_cast<EVENT::SimTrackerHit *>(mc_simtrackerhit_col->getElementAt(
                         i));
-                  mc_score_type.push_back(type);
+                  mc_score_type.push_back(static_cast<int>(type));
                   auto mc_particle = mc_score->getMCParticle();
                   int mc_part_id = mc_particle->id();
                   auto idid = mc_part_id_to_index.find(mc_part_id);
@@ -861,11 +860,11 @@ bool LcioReader::Process(Long64_t entry){
          double seed_time{-99};
          int seed_index{-99};
          Long64_t seed_cellid0{-99};
-         int seed_ix{-99};
-         int seed_iy{-99};
+         //int seed_ix{-99};
+         //int seed_iy{-99};
          vector<int> clus_hit_indexes;
-         for (int j_hit = 0; j_hit < clus_hits.size(); ++j_hit) {
-            IMPL::CalorimeterHitImpl *hit = static_cast<IMPL::CalorimeterHitImpl *>(clus_hits[j_hit]);
+         for (size_t j_hit = 0; j_hit < clus_hits.size(); ++j_hit) {
+            auto *hit = dynamic_cast<IMPL::CalorimeterHitImpl *>(clus_hits[j_hit]);
             if (hit->getEnergy() > seed_energy) {
                seed_energy = hit->getEnergy();
                seed_time = hit->getTime();
@@ -913,19 +912,19 @@ bool LcioReader::Process(Long64_t entry){
          double seed_time{-99};
          int seed_index{-99};
          Long64_t seed_cellid0{-99};
-         int seed_ix{-99};
-         int seed_iy{-99};
+         //int seed_ix{-99};
+         //int seed_iy{-99};
          vector<int> clus_hit_indexes;
-         for (int j_hit = 0; j_hit < clus_hits.size(); ++j_hit) {
-            IMPL::CalorimeterHitImpl *hit = static_cast<IMPL::CalorimeterHitImpl *>(clus_hits[j_hit]);
+         for (size_t j_hit = 0; j_hit < clus_hits.size(); ++j_hit) {
+            auto *hit = dynamic_cast<IMPL::CalorimeterHitImpl *>(clus_hits[j_hit]);
             if (hit->getEnergy() > seed_energy) {
                seed_energy = hit->getEnergy();
                seed_time = hit->getTime();
                if (use_ecal_hits) {
                   seed_index = ecal_hit_to_index_map[hit];
                }
-               seed_cellid0 = Long64_t(hit->getCellID0() & 0xffffffff) |
-                              (Long64_t(hit->getCellID1()) << 32);
+               seed_cellid0 = static_cast<Long64_t>(hit->getCellID0() & 0xffffffff) |
+                              (static_cast<Long64_t>(hit->getCellID1()) << 32);
 
             }
             int hit_index = -99;
@@ -973,8 +972,8 @@ bool LcioReader::Process(Long64_t entry){
             cout << "Error retrieving the fits for a raw hit.\n";
          }else{
             pair<int, int> store_indexes{-1,-2};
-            for(int i_raw_fit=0; i_raw_fit < raw_hit_fit_result_list.size(); ++i_raw_fit) {
-               auto raw_hit_fit = static_cast<IMPL::LCGenericObjectImpl *>(raw_hit_fit_result_list.at(i_raw_fit));
+            for(int i_raw_fit=0; i_raw_fit < static_cast<int>(raw_hit_fit_result_list.size()); ++i_raw_fit) {
+               auto raw_hit_fit = dynamic_cast<IMPL::LCGenericObjectImpl *>(raw_hit_fit_result_list.at(i_raw_fit));
                svt_raw_hit_adc.push_back(raw_hit_adc);
                svt_raw_hit_fit_no.push_back(i_raw_fit);
                svt_raw_hit_layer.push_back(raw_svt_hit_decoder["layer"]);
@@ -985,8 +984,8 @@ bool LcioReader::Process(Long64_t entry){
                svt_raw_hit_amp.push_back(raw_hit_fit->getDoubleVal(2));
                svt_raw_hit_amp_err.push_back(raw_hit_fit->getDoubleVal(3));
                svt_raw_hit_chi2.push_back(raw_hit_fit->getDoubleVal(4));
-               if(i_raw_fit == 0) store_indexes.first = svt_raw_hit_fit_no.size()-1;
-               if(i_raw_fit == 1) store_indexes.second = svt_raw_hit_fit_no.size()-1;
+               if(i_raw_fit == 0) store_indexes.first = static_cast<int>(svt_raw_hit_fit_no.size())-1;
+               if(i_raw_fit == 1) store_indexes.second = static_cast<int>(svt_raw_hit_fit_no.size())-1;
             }
             svt_raw_hit_to_index_map[raw_hit] = store_indexes;
          }
@@ -1038,8 +1037,8 @@ bool LcioReader::Process(Long64_t entry){
             int layer{-1};
             int module{-1};
             vector<int> strip;
-            for (int i_hit = 0; i_hit < raw_hits.size(); ++i_hit) {
-               auto lcio_raw_hit = static_cast<EVENT::TrackerRawData *>(raw_hits.at(i_hit));
+            for (int i_hit = 0; i_hit < static_cast<int>(raw_hits.size()); ++i_hit) {
+               auto lcio_raw_hit = dynamic_cast<EVENT::TrackerRawData *>(raw_hits.at(i_hit));
                if(use_svt_raw_hits){
                   auto hit_index_ptr = svt_raw_hit_to_index_map.find(lcio_raw_hit);
                   if( hit_index_ptr != svt_raw_hit_to_index_map.end() ) {
@@ -1060,8 +1059,8 @@ bool LcioReader::Process(Long64_t entry){
                      raw_other.push_back(-1);
                   }
                }
-               ULong64_t value = (ULong64_t(lcio_raw_hit->getCellID0()) & 0xffffffff) |
-                                 (ULong64_t(lcio_raw_hit->getCellID1()) << 32);
+               lcio::long64 value = (static_cast<lcio::long64>(lcio_raw_hit->getCellID0()) & 0xffffffff) |
+                                 (static_cast<lcio::long64>(lcio_raw_hit->getCellID1()) << 32);
                raw_svt_hit_decoder.setValue(value);
 
                layer = raw_svt_hit_decoder["layer"];
@@ -1165,7 +1164,7 @@ bool LcioReader::Process(Long64_t entry){
       for (int track_number = 0; track_number < n_total_tracks; ++track_number) {
          bool track_is_kf = false;
          bool track_is_gbl = false;
-         bool track_is_matched = false;
+         //bool track_is_matched = false;
          if (track_number < track_n_kf) {
             track_is_kf = true;
             lcio_track = static_cast<EVENT::Track *>(kf_tracks->getElementAt(track_number));
@@ -1180,7 +1179,7 @@ bool LcioReader::Process(Long64_t entry){
             track_gbl_ref.push_back(track_number); // GBL Track points to itself.
             track_ref.push_back(-99); // Pointer to seed track is resolved later.
          } else {
-            track_is_matched = true;
+            //track_is_matched = true;
             int matched_track_number = track_number - track_n_kf - track_n_gbl;
             lcio_track = static_cast<EVENT::Track *>(matched_tracks->getElementAt(matched_track_number));
             matched_track_to_index_map[lcio_track] = track_number;
@@ -1285,9 +1284,12 @@ bool LcioReader::Process(Long64_t entry){
             double px{-999.}, py{-999.}, pz{-999.};
 
             // Sanity check... If this is really old data.
-            if (!is_2025_processing && (track_is_gbl && (track_info->getNDouble() < 12 || track_info->getNDouble() > 14 ||  /* 2016 or 2019 */
-                                 track_info->getNFloat() < 4   || track_info->getNInt() < 1) ||
-                track_is_kf &&  (track_info->getNFloat() < 4 || track_info->getNInt() < 1) )){
+            if (!is_2025_processing &&
+               (
+                (track_is_gbl && (track_info->getNDouble() < 12 || track_info->getNDouble() > 14 ||  /* 2016 or 2019 */
+                                 track_info->getNFloat() < 4   || track_info->getNInt() < 1)) ||
+                (track_is_kf &&  (track_info->getNFloat() < 4 || track_info->getNInt() < 1) ))
+                ){
                static int n_warning{0};
 
                if(n_warning < 2) {  // Only show this warning twice.
@@ -1379,10 +1381,10 @@ bool LcioReader::Process(Long64_t entry){
             track_z_at_ecal.push_back(ecal_pos[0]);
             if(use_extra_tracks){
                float omega = track_state->getOmega();
-               float phi = track_state->getPhi();
-               float tanlambda = track_state->getTanLambda();
-               float z0 = track_state->getZ0();
-               float d0 = track_state->getD0();
+               //float phi = track_state->getPhi();
+               //float tanlambda = track_state->getTanLambda();
+               //float z0 = track_state->getZ0();
+               //float d0 = track_state->getD0();
                double bfield = track_state->getBLocal();
 #ifdef DEBUG
                track_bfield_at_ecal.push_back(bfield);
@@ -1465,7 +1467,7 @@ bool LcioReader::Process(Long64_t entry){
 
             vector<int> svt_hits;
             svt_hits.reserve(tracker_hits.size());
-            for (int i_trk = 0; i_trk < tracker_hits.size(); ++i_trk) {
+            for (int i_trk = 0; i_trk < static_cast<int>(tracker_hits.size()); ++i_trk) {
                auto trk_hit = dynamic_cast<IMPL::TrackerHitImpl *>(tracker_hits[i_trk]);
                auto svt_hit_ptr = svt_hit_to_index_map.find(trk_hit);
                if (svt_hit_ptr == svt_hit_to_index_map.end()) {
@@ -1538,7 +1540,7 @@ bool LcioReader::Process(Long64_t entry){
                if (matched_track_to_index_map.find(seed_track) != matched_track_to_index_map.end()) {
                   seed_index = matched_track_to_index_map[seed_track];
 
-                  if (seed_index < 0 || seed_index >= track_gbl_ref.size()) {
+                  if (seed_index < 0 || seed_index >= static_cast<int>(track_gbl_ref.size())) {
                      cout << "Seed index is out of bounds: " << seed_index << " for gbl_track_index: "
                           << gbl_track_index << "\n";
                      throw runtime_error("Seed index out of bounds");
@@ -1672,7 +1674,7 @@ bool LcioReader::Process(Long64_t entry){
             vector<double> mc_part_ec_list;  // Energy contribution
             int ultimate_parent_idx = -1;
             int ultimate_parent_pdg = -9999;
-            double ultimate_parent_energy_contribution = -1.;
+            //double ultimate_parent_energy_contribution = -1.;
             map<int, double> map_id_to_ec_sum;
 
             // For each of the contributing MC Particles, collect the energy contributed to the hit,
@@ -1742,7 +1744,7 @@ bool LcioReader::Process(Long64_t entry){
                if(max_energy < itt.second){
                   max_energy = itt.second;
                   ultimate_parent_idx = itt.first;
-                  if (ultimate_parent_idx < 0 || ultimate_parent_idx >= mc_part_pdg.size()){
+                  if (ultimate_parent_idx < 0 || ultimate_parent_idx >= static_cast<int>(mc_part_pdg.size())){
                      printf("Ultimate parent index is out of range: %d \n", ultimate_parent_idx);
                      throw std::runtime_error("Ultimate parent index is out of range");
                   }
@@ -1760,10 +1762,10 @@ bool LcioReader::Process(Long64_t entry){
 
       if(use_ecal_cluster){
          // Sort through the cluster hits to determine the best guess parentage of the cluster.
-         for(int ic=0; ic< ecal_cluster_hits.size(); ++ic){
+         for(int ic=0; ic< static_cast<int>(ecal_cluster_hits.size()); ++ic){
             double n_tot=0.;
             map<int,double> pdg_count;  // Assumes auto initialization to zero of new elements
-            for(int ih=0; ih< ecal_cluster_hits[ic].size(); ++ih){
+            for(int ih=0; ih< static_cast<int>(ecal_cluster_hits[ic].size()); ++ih){
                int hit_id = ecal_cluster_hits[ic][ih];
                      int p_id = ecal_hit_mc_parent_id[hit_id];
                      double weight = ecal_hit_energy[hit_id];
@@ -1775,7 +1777,7 @@ bool LcioReader::Process(Long64_t entry){
                //}
             }
             // Find the maximum item in the pdg_count map.
-            if(pdg_count.size()) {
+            if(!pdg_count.empty()) {
                auto mymax = std::max_element(pdg_count.begin(), pdg_count.end(),
                                              [](const std::pair<int, double> &a,
                                                 const std::pair<int, double> &b) -> bool {
@@ -1820,7 +1822,7 @@ long LcioReader::Run(int max_event) {
                printf("i: %'10lu   event: %'10d  run: %5d\n", evt_count, event_number, run_number);
             }
          }
-         if (max_event > 0 && evt_count > max_event) break;  // End the loop, we are done.
+         if (max_event > 0 && static_cast<int>(evt_count) > max_event) break;  // End the loop, we are done.
 
          Process(evt_count);
          if(md_output_tree){
@@ -1945,13 +1947,13 @@ void LcioReader::Fill_Vertex_From_LCIO(Vertex_Particle_t *vp, EVENT::Vertex *lci
 
    Fill_Basic_Particle_From_LCIO(vp, vertex_part, false); // We DO NOT use the momentum or mass!!!!!
 
-   EVENT::ParticleID *lcio_part_id = vertex_part->getParticleIDUsed();
-   if(lcio_part_id){
-      int pdg = lcio_part_id->getPDG();
+   //EVENT::ParticleID *lcio_part_id = vertex_part->getParticleIDUsed();
+   //if(lcio_part_id){
+      //int pdg = lcio_part_id->getPDG();
       //       v0.pdg.push_back(pdg);
-   }else{
+   //}else{
       //     v0.pdg.push_back(0);
-   }
+   //}
    // v0.charge.push_back(vertex_part->getCharge());
    // v0.goodness_of_pid.push_back(vertex_part->getGoodnessOfPID());
 
@@ -2176,8 +2178,8 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
       double seed_time{-99};
 
       EVENT::CalorimeterHitVec clus_hits = clus->getCalorimeterHits();
-      for (int j_hit = 0; j_hit < clus_hits.size(); ++j_hit) {
-         IMPL::CalorimeterHitImpl *hit = static_cast<IMPL::CalorimeterHitImpl *>(clus_hits[j_hit]);
+      for (int j_hit = 0; j_hit < static_cast<int>(clus_hits.size()); ++j_hit) {
+         auto *hit = dynamic_cast<IMPL::CalorimeterHitImpl *>(clus_hits[j_hit]);
          if (hit->getEnergy() > seed_energy) {
             seed_energy = hit->getEnergy();
             seed_time = hit->getTime();

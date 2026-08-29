@@ -196,7 +196,7 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("track_x_at_target",&track_x_at_target, write_any_tracks);
    branch_map_try_emplace("track_y_at_target",&track_y_at_target, write_any_tracks);
    branch_map_try_emplace("track_z_at_target",&track_z_at_target, write_any_tracks);
-   
+
 #ifdef DEBUG
    branch_map_try_emplace("track_px_old",&track_px_old, write_any_tracks);
    branch_map_try_emplace("track_py_old",&track_py_old, write_any_tracks);
@@ -443,7 +443,7 @@ void MiniDst::SetBranchAddressesOnTree(TTree *read_tree) {
    }
 }
 
-void MiniDst::Clear(){
+void MiniDst::Clear(Option_t */*option*/){
    // Clear the event storage vectors.
    // We use the map to Clear all the vectors. Note that this means you *must* have each vector in the branch_map,
    // otherwise you will create an ever growing vector.
@@ -529,7 +529,7 @@ int MiniDst::Add_Ecal_Cluster(MiniDst &event_in, int i_cluster, bool also_copy_e
    if(also_copy_ecal_hits) {
       vector<int> copied_cluster_hits;
       bool seed_hit_copied = false;
-      for (int i_hit = 0; i_hit < event_in.ecal_cluster_hits[i_cluster].size(); ++i_hit) {
+      for (size_t i_hit = 0; i_hit < event_in.ecal_cluster_hits[i_cluster].size(); ++i_hit) {
          int new_hit = Add_Ecal_Hit(event_in, event_in.ecal_cluster_hits[i_cluster][i_hit]);
          if (event_in.ecal_cluster_hits[i_cluster][i_hit] == event_in.ecal_cluster_seed_index[i_cluster]) {
             ecal_cluster_seed_index.push_back(new_hit);
@@ -590,7 +590,7 @@ int MiniDst::Add_Track(MiniDst &event_in, int i_track, bool also_copy_svt_hits) 
    track_y_at_target.push_back(event_in.track_y_at_target[i_track]);
    track_z_at_target.push_back(event_in.track_z_at_target[i_track]);
 
-   if(event_in.track_x_at_lasthit.size() > i_track) { // The lasthit information is available
+   if( static_cast<int>(event_in.track_x_at_lasthit.size()) > i_track) { // The lasthit information is available
       track_x_at_lasthit.push_back(event_in.track_x_at_lasthit[i_track]);
       track_y_at_lasthit.push_back(event_in.track_y_at_lasthit[i_track]);
       track_z_at_lasthit.push_back(event_in.track_z_at_lasthit[i_track]);
@@ -614,7 +614,7 @@ int MiniDst::Add_Track(MiniDst &event_in, int i_track, bool also_copy_svt_hits) 
    track_isolation.push_back(event_in.track_isolation[i_track]);  // Places pointer to existing vector.
    track_covmatrix.push_back(event_in.track_covmatrix[i_track]);
 
-   if(event_in.track_lambda_kinks.size() > i_track) {   // KF tracks don't have kinks.
+   if( static_cast<int>(event_in.track_lambda_kinks.size()) > i_track) {   // KF tracks don't have kinks.
       track_lambda_kinks.push_back(event_in.track_lambda_kinks[i_track]);
       track_phi_kinks.push_back(event_in.track_phi_kinks[i_track]);
    }
@@ -624,7 +624,7 @@ int MiniDst::Add_Track(MiniDst &event_in, int i_track, bool also_copy_svt_hits) 
    track_svt_hits.push_back({-1});
    track_hit_pattern.push_back({-2});
 
-   return track_type.size()-1;
+   return static_cast<int>(track_type.size())-1;
 }
 
 int MiniDst::Add_Particle(MiniDst &event_in, int i_particle) {
@@ -645,7 +645,7 @@ void MiniDst::Print(Option_t *option) const {
    // Pretty print the contents of the current event in the MiniDst class.
    cout << "======== Event: " << event_number << " Run: " << run_number << "  ========\n";
    cout << " Particles: \n";
-   for(int i=0; i< part.pdg.size(); ++i){
+   for(size_t i=0; i < part.pdg.size(); ++i){
       cout << "   Particle " << i << ": type: " << part.type[i] << " pdg: " << part.pdg[i] << " energy: " << part.energy[i]
            << " px: " << part.px[i] << " py: " << part.py[i] << " pz: " << part.pz[i]
            << " track: " << part.track[i] << " ecal_cluster: " << part.ecal_cluster[i] << endl;

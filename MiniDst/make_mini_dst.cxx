@@ -133,7 +133,7 @@ int main(int argc, char **argv){
       if (debug >= 6) debug_code += MiniDst::kDebug_L4;
 
       MiniDst *dst{nullptr};
-      bool is_dst_type = false;
+
       if( !infiles.empty() && infiles[0].find(".root") != string::npos ) {
          // The first file in the list has .root extension.
          cout << "WARNING: .root files are no longer supported. ";
@@ -181,7 +181,7 @@ int main(int argc, char **argv){
       dst->use_ecal_raw_hits = args["raw_hits"].as<bool>();
       dst->use_hodo_raw_hits = args["raw_hits"].as<bool>();
       dst->use_kf_tracks = default_setting || kf_tracks || all_tracks;
-      dst->use_gbl_tracks = all_tracks || args["gbl_tracks"].as<bool>();
+      dst->use_gbl_tracks = all_tracks || gbl_tracks;
       dst->use_gbl_kink_data = args["gbl_kinks"].as<bool>();
       dst->use_matched_tracks = matched_tracks || all_tracks;
       dst->use_extra_tracks = args["extra_track"].as<bool>();

@@ -7,6 +7,7 @@
 ///
 #include <string>
 #include <filesystem>
+#include <stdexcept>
 #include "TSystem.h"
 #include "TObjString.h"
 #include "LcioReader.h"
@@ -61,6 +62,7 @@ void LcioReader::Clear(){
    // Clear all the maps
    ecal_hit_to_index_map.clear();
    ecal_id0_to_hit_index.clear();
+   ecal_hit_id0.clear();
    ecal_cluster_to_index_map.clear();
    svt_hit_to_index_map.clear();
    svt_raw_hit_to_index_map.clear();
@@ -800,6 +802,7 @@ bool LcioReader::Process(Long64_t entry){
          ecal_hit_to_index_map[lcio_hit] = ihit;
          int id0 = lcio_hit->getCellID0();
          ecal_id0_to_hit_index[id0] = ihit;
+         ecal_hit_id0.push_back(id0);             // Also store a forward map;
          // Gets the CellID which identifies the crystal.
          // int id0 = lcio_hit->getCellID0();
          // 0.1 ns resolution is sufficient to distinguish any 2 hits on the same crystal.
@@ -1183,17 +1186,23 @@ bool LcioReader::Process(Long64_t entry){
          // See the changes in hpstr by Matt Graham. This determines the version of the LCIO file by checking
          // the value of the bfield.
          // https://github.com/JeffersonLab/hpstr/blame/b4a52385db254d623bcbbe5b8879241c242346c8/processors/src/utilities.cxx#L217
-         double bTmp = lcio_track->getTrackState(1)->getBLocal();
+         auto tr_state = lcio_track->getTrackState(1);
+         double bTmp{0};
+         if (tr_state) {
+            bTmp = tr_state->getBLocal();
+         }
          bool is_2025_processing = ( abs(bTmp)<10.);
 
          if(is_2025_processing){
             const EVENT::TrackState *ts_target
                   = lcio_track->getTrackState(EVENT::TrackState::AtTarget);
-            double bfield = ts_target->getBLocal();
+            double bfield{0};
+            if (ts_target) {
+               bfield = ts_target->getBLocal();
 #ifdef DEBUG
-            track_bfield_at_target.push_back(bfield);
+               track_bfield_at_target.push_back(bfield);
 #endif
-
+            }
             // In 2025 processing the B field is stored in the TrackState object.
             double omega = ts_target->getOmega();
             if( abs(omega) < 1E-7) omega = 1E-7;
@@ -1242,6 +1251,7 @@ bool LcioReader::Process(Long64_t entry){
             track_tan_lambda.push_back(lcio_track->getTanLambda());
             track_z0.push_back(lcio_track->getZ0());
             track_type.push_back(lcio_track->getType());
+            track_ndf.push_back(lcio_track->getNdf());
          }
 
 
@@ -1291,7 +1301,7 @@ bool LcioReader::Process(Long64_t entry){
                py = Pt * lcio_track->getTanLambda();
             }
 
-            for (int i_iso = 0; i_iso < track_info->getNDouble(); ++i_iso) {
+            for (int i_iso = 0; i_iso < std::min<int>(14, track_info->getNDouble()); ++i_iso) {
                iso_values[i_iso] = track_info->getDoubleVal(i_iso);
             }
 
@@ -1333,7 +1343,6 @@ bool LcioReader::Process(Long64_t entry){
             if(track_is_gbl) cout << "Track without TrackData for type GBL\n";
             if(track_is_kf) cout << "Track without KFTrackData for type KF\n";
             track_time.push_back(-999.);
-            track_volume.push_back(-1);
             if(!is_2025_processing) {
                track_px.push_back(-999.);
                track_py.push_back(-999.);
@@ -1470,23 +1479,28 @@ bool LcioReader::Process(Long64_t entry){
          track_covmatrix.push_back(cov_matrix_d);
 
          /// Store the GBL Kink information, if you care to.
-         if (use_gbl_kink_data && track_is_gbl) {     // This is GBL track.
-            // Get the list of GBLKinkData associated with the LCIO Track
+         if (use_gbl_kink_data) {
+            if (track_is_gbl) {     // This is GBL track.
+               // Get the list of GBLKinkData associated with the LCIO Track
 
-            EVENT::LCObjectVec gbl_kink_data_list = gbl_kink_data_nav->getRelatedFromObjects(lcio_track);
-            IMPL::LCGenericObjectImpl *gbl_kink_datum{nullptr};
-            if (gbl_kink_data_list.size() == 1) {
-               vector<double> lambdas;
-               vector<double> kinks;
-               // Get the list GBLKinkData GenericObject associated with the LCIO Track
-               gbl_kink_datum = static_cast<IMPL::LCGenericObjectImpl *>(gbl_kink_data_list.at(0));
-               for (int ikink = 0; ikink < gbl_kink_datum->getNFloat(); ++ikink) {
-                  lambdas.push_back(gbl_kink_datum->getFloatVal(ikink));
-                  kinks.push_back(gbl_kink_datum->getDoubleVal(ikink));
+               EVENT::LCObjectVec gbl_kink_data_list = gbl_kink_data_nav->getRelatedFromObjects(lcio_track);
+               IMPL::LCGenericObjectImpl *gbl_kink_datum{nullptr};
+               if (gbl_kink_data_list.size() == 1) {
+                  vector<double> lambdas;
+                  vector<double> kinks;
+                  // Get the list GBLKinkData GenericObject associated with the LCIO Track
+                  gbl_kink_datum = static_cast<IMPL::LCGenericObjectImpl *>(gbl_kink_data_list.at(0));
+                  for (int ikink = 0; ikink < gbl_kink_datum->getNFloat(); ++ikink) {
+                     lambdas.push_back(gbl_kink_datum->getFloatVal(ikink));
+                     kinks.push_back(gbl_kink_datum->getDoubleVal(ikink));
+                  }
+                  track_lambda_kinks.push_back(lambdas);
+                  track_phi_kinks.push_back(kinks);
+               } else {
+                  track_lambda_kinks.push_back(vector<double>(0));
+                  track_phi_kinks.push_back(vector<double>(0));
                }
-               track_lambda_kinks.push_back(lambdas);
-               track_phi_kinks.push_back(kinks);
-            } else {
+            }else {
                track_lambda_kinks.push_back(vector<double>(0));
                track_phi_kinks.push_back(vector<double>(0));
             }
@@ -1510,13 +1524,20 @@ bool LcioReader::Process(Long64_t entry){
                cout << "Woops, I expected only one seed track for a gbl track.\n";
             } else {
                auto *seed_track = dynamic_cast<EVENT::Track *>(seed_to_gbl_list.at(0));
-               int seed_index = matched_track_to_index_map[seed_track];
-               track_ref[gbl_track_index] = seed_index;
-               if (track_gbl_ref.size() > seed_index) {
-                  int debug_copy_seed_index = seed_index;
-                  int debug_copy_gbl_track_index = gbl_track_index;
-                  track_gbl_ref[seed_index] = gbl_track_index;
+               int seed_index = -99;
+               if (matched_track_to_index_map.find(seed_track) != matched_track_to_index_map.end()) {
+                  seed_index = matched_track_to_index_map[seed_track];
+                  track_ref[gbl_track_index] = seed_index;
+                  if (track_gbl_ref.size() > seed_index) {
+                     //int debug_copy_seed_index = seed_index;
+                     //int debug_copy_gbl_track_index = gbl_track_index;
+                     track_gbl_ref[seed_index] = gbl_track_index;
+                  }
+
+               }else{
+                  cout << "This should not happeen, but the seed track was not found in the matched_track_to_index_map.\n";
                }
+               track_ref[gbl_track_index] = seed_index;
             }
          }
       }
@@ -1573,33 +1594,62 @@ bool LcioReader::Process(Long64_t entry){
       ///
       ///////////////////////////////////////////////////////////////////////////////////////////////
 
-      vector<int> ecal_truth_to_hit_index;  // A table for each truth hit pointing to the ecal hit.
+      //vector<int> ecal_truth_to_hit_index;  // A table for each truth hit pointing to the ecal hit.
+      vector<int> ecal_hit_to_truth_index;  // A table from each hit to the truth hit.
       if(use_ecal_hits && use_ecal_hits_truth) {
          // We want to add the "truth" information to hits. However, NOT EACH HIT HAS TRUTH.
          // No idea why, but just look in the LCIO file, EcalCalHits is often larger than EcalHits.
-         // A cursory check shows some low energy hits from EcalCalHits do not have a corresponding item in EcalHits.
+         // That is even more so true for data with Pulser added, the Pulser particles don't have "truth" associated.
+         // Also, a cursory check shows some low energy hits from EcalCalHits do not have a corresponding item in EcalHits.
 
          auto ecal_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalCalHits"));
          auto ecal_truth = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalHits"));
 
-         // Go through all the TRUTH hits from the EcalHits collection.
-         for(int i_truth = 0; i_truth < ecal_truth->getNumberOfElements(); ++i_truth){
-            IMPL::SimCalorimeterHitImpl *lcio_ecal_truth  =
-                  static_cast<IMPL::SimCalorimeterHitImpl *>(ecal_truth->getElementAt(i_truth));
+         // We need to go through all the hits and then find the associated truth hit. That will make sure
+         // the ecal_hit_mc_* has one entry for each ecal_hit_* entry and the two correspond to each other.
+         //IMPL::CalorimeterHitImpl *lcio_hit{nullptr};
+         IMPL::SimCalorimeterHitImpl *lcio_ecal_truth{nullptr};
 
-            // Find the corresponding hit in the EcalCalHits collection, and check is they are the same.
-            int hit_idx = ecal_id0_to_hit_index[lcio_ecal_truth->getCellID0()];
-            IMPL::CalorimeterHitImpl *lcio_hit
-                  = static_cast<IMPL::CalorimeterHitImpl *>(ecal_hits->getElementAt(hit_idx));
-            if( lcio_hit->getCellID0() != lcio_ecal_truth->getCellID0() ) {
+         for (int ihit = 0; ihit < ecal_hits->getNumberOfElements(); ++ihit) {
+            auto lcio_hit = static_cast<IMPL::CalorimeterHitImpl *>(ecal_hits->getElementAt(ihit));
+
+            int i_truth = 0;
+            for(i_truth = 0; i_truth < ecal_truth->getNumberOfElements(); ++i_truth) {
+               lcio_ecal_truth  = static_cast<IMPL::SimCalorimeterHitImpl *>(ecal_truth->getElementAt(i_truth));
+               // Find the corresponding hit in the EcalCalHits collection, and check if they are the same.
                int id_hit = lcio_hit->getCellID0();
                int id_truth = lcio_ecal_truth->getCellID0();
-               printf("======+++== The TRUTH did not match the ECAL HIT for idx = %2d,%2d %08d != %08d \n",
-                      i_truth, hit_idx, id_hit, id_truth);
-               ecal_truth_to_hit_index.push_back(-1);
-               continue;
+               // int hit_idx = ecal_id0_to_hit_index[lcio_ecal_truth->getCellID0()];
+               // int hit_idx = ecal_id0_to_hit_index[lcio_hit->getCellID0()];
+               if (id_hit == id_truth) {
+                  // if (hit_idx != ihit && hit_idx != ihit+1) { 
+                  //    printf("There can be more than one hit associated with a CellID here: %d != %d \n",hit_idx, ihit);
+                  // }
+                  break;
+               }
             }
-            ecal_truth_to_hit_index.push_back(hit_idx);  // Store the truth -> ecal hit id.
+            if (i_truth == ecal_truth->getNumberOfElements()) {
+               // We ran off the end, so the truth element was not found.
+               ecal_hit_mc_contrib_id.emplace_back(0);          // Store empty vector.
+               ecal_hit_mc_contrib_pdg.emplace_back(0);
+               ecal_hit_mc_contrib_ec.emplace_back(0);
+               ecal_hit_mc_parent_id.push_back(-1);
+               ecal_hit_mc_parent_pdg.push_back(-1);
+               ecal_hit_to_truth_index.push_back(-1);  // No index to the truth either.
+               continue;  // This hit does not have truth. Could be from Pulser. Continue with next ihit.
+            }
+            // Find the corresponding hit in the EcalCalHits collection, and check if they are the same.
+            // if( lcio_hit->getCellID0() != lcio_ecal_truth->getCellID0() ) {
+            //    int id_hit = lcio_hit->getCellID0();
+            //    int id_truth = lcio_ecal_truth->getCellID0();
+            //    printf("======+++== The TRUTH did not match the ECAL HIT for idx = %2d,%2d %08d != %08d \n",
+            //           i_truth, ihit, id_hit, id_truth);
+            //    printf("This should simply not happen. \n");
+            //    ecal_truth_to_hit_index.push_back(-1);
+            //    continue;
+            // }
+
+            ecal_hit_to_truth_index.push_back(i_truth);
             // We get the list of MC particles related to this hit. Can be more than one, can be quite a lot.
             int nmcc = lcio_ecal_truth->getNMCContributions();
             vector<int> mc_part_index_list;  // Index of the MC Particle
@@ -1648,11 +1698,16 @@ bool LcioReader::Process(Long64_t entry){
 
                // We add the contributions of each MC Particle to the energy of the parent in a map.
                idid = mc_part_id_to_index.find(parent_particle->id());
-               auto idec = map_id_to_ec_sum.find(idid->second);
-               if (idec != map_id_to_ec_sum.end()){ // Already had one, so add it.
-                  map_id_to_ec_sum[idid->second] += truth_e;
-               }else{ // Not found, add it.
-                  map_id_to_ec_sum[idid->second] = truth_e;
+               if (idid != mc_part_id_to_index.end()) {
+                  auto idec = map_id_to_ec_sum.find(idid->second);
+                  if (idec != map_id_to_ec_sum.end()){ // Already had one, so add it.
+                     map_id_to_ec_sum[idid->second] += truth_e;
+                  }else{ // Not found, add it.
+                     map_id_to_ec_sum[idid->second] = truth_e;
+                  }
+               }else {
+                  printf("Ultimate parent particle not found in map????? \n");
+                  throw std::runtime_error("Ultimate parent particle not found in map");
                }
             }
 
@@ -1664,6 +1719,10 @@ bool LcioReader::Process(Long64_t entry){
                if(max_energy < itt.second){
                   max_energy = itt.second;
                   ultimate_parent_idx = itt.first;
+                  if (ultimate_parent_idx < 0 || ultimate_parent_idx >= mc_part_pdg.size()){
+                     printf("Ultimate parent index is out of range: %d \n", ultimate_parent_idx);
+                     throw std::runtime_error("Ultimate parent index is out of range");
+                  }
                   ultimate_parent_pdg = mc_part_pdg[ultimate_parent_idx];
                }
             }
@@ -1683,15 +1742,16 @@ bool LcioReader::Process(Long64_t entry){
             map<int,double> pdg_count;  // Assumes auto initialization to zero of new elements
             for(int ih=0; ih< ecal_cluster_hits[ic].size(); ++ih){
                int hit_id = ecal_cluster_hits[ic][ih];
-               auto found = std::find(ecal_truth_to_hit_index.begin(),ecal_truth_to_hit_index.end(),hit_id);
-               if(found == ecal_truth_to_hit_index.end()){
-                  // This hit does not have any truth, so we just ignore it.
-               }else{
-                  int truth_id = std::distance(ecal_truth_to_hit_index.begin(),found);
-                  int p_id = ecal_hit_mc_parent_id[truth_id];
-                  double weight = ecal_hit_energy[truth_id];
-                  pdg_count[p_id] += weight;
-                  n_tot += weight;
+               int truth_id =ecal_hit_to_truth_index[hit_id];
+               if (truth_id>=0) {
+                  if (truth_id < ecal_hit_to_truth_index.size()) {
+                     int p_id = ecal_hit_mc_parent_id[truth_id];
+                     double weight = ecal_hit_energy[truth_id];
+                     pdg_count[p_id] += weight;
+                     n_tot += weight;
+                  }else {
+                     printf("No truth_id: %d for hit id: %d\n",truth_id, hit_id);
+                  }
                }
             }
             // Find the maximum item in the pdg_count map.
@@ -1883,55 +1943,56 @@ void LcioReader::Fill_Vertex_From_LCIO(Vertex_Particle_t *vp, EVENT::Vertex *lci
    //const vector<EVENT::Track *> &tracks = vertex_part->getTracks();
    //const EVENT::ClusterVec &cluster_vec = vertex_part->getClusters();
    const EVENT::ReconstructedParticleVec &daughters = vertex_part->getParticles();
-   if(daughters.size() != 2){
+   if(daughters.size() != 2){  // Sanity check. This was never seen so far, but it is worth a check.
       cout << "LcioReader:: Vertex should have 2 and only 2 daughters, but this one has:" <<
            daughters.size() << " !\n";
+      // Note that if this error does occur, the vp->ep and pm are out of sync with the vertex count, so there is a problem.
+      throw runtime_error("Vertex does not have 2 daughters.");
+   }else {
+      EVENT::ReconstructedParticle *electron;
+      EVENT::ReconstructedParticle *positron;
+      if( daughters[0]->getCharge() < 0 ){ // Daughter 0 is an electron.
+         electron = daughters[0];
+         positron = daughters[1];  // NOTE: for Mollers they are both electron. Whatever.
+      }else{
+         std::cout << "HMMM, weird, but daugther[0] seems to be a positron this time. \n";
+         electron = daughters[1];
+         positron = daughters[0];
+      }
+      Fill_SubPart_From_LCIO( &vp->em, electron, type);
+      Fill_SubPart_From_LCIO( &vp->ep, positron, type);
    }
-   EVENT::ReconstructedParticle *electron;
-   EVENT::ReconstructedParticle *positron;
-   if( daughters[0]->getCharge() < 0 ){ // Daughter 0 is an electron.
-      electron = daughters[0];
-      positron = daughters[1];  // NOTE: for Mollers they are both electron. Whatever.
-   }else{
-      electron = daughters[1];
-      positron = daughters[0];
-   }
-
-   Fill_SubPart_From_LCIO( &vp->em, electron, type);
-   Fill_SubPart_From_LCIO( &vp->ep, positron, type);
 
    // We need to fix up the Energy parameter, which at best is badly calculated and at worst is zero.
-   ROOT::Math::PxPyPzMVector pe4(vp->em_px_refit.back(), vp->em_py_refit.back(), vp->em_pz_refit.back(), 0.000511);
-   ROOT::Math::PxPyPzMVector pp4(vp->ep_px_refit.back(), vp->ep_py_refit.back(), vp->ep_pz_refit.back(), 0.000511);
-   auto v4 = pe4 + pp4;
-   vp->energy.back() = v4.E();  // Set the energy of the vertex particle to the sum of the daughters.
+   // First, check that we indeed have an em_px_refix and ep_px_refit. Sanity check, since 2016 data may not have it.
+   if (vp->em_px_refit.empty() || vp->em_py_refit.empty() || vp->em_pz_refit.empty() ||
+      vp->ep_px_refit.empty() || vp->ep_py_refit.empty() || vp->ep_pz_refit.empty() ) {
+      cout << "ERROR === Vertex does not have refit momentum for daughters. Cannot calculate energy. \n";
+   }else {
+      ROOT::Math::PxPyPzMVector pe4(vp->em_px_refit.back(), vp->em_py_refit.back(), vp->em_pz_refit.back(), 0.000511);
+      ROOT::Math::PxPyPzMVector pp4(vp->ep_px_refit.back(), vp->ep_py_refit.back(), vp->ep_pz_refit.back(), 0.000511);
+      auto v4 = pe4 + pp4;
 
-   vp->em.p.back() = pe4.P();
-   vp->ep.p.back() = pp4.P();
+      if (vp->energy.empty() || vp->em.p.empty() || vp->ep.p.empty()) {  // Sanity check. This should never happen.
+         cout << "ERROR === Vertex does not have energy. This is a very weird error! \n";
+      } else {
+         vp->energy.back() = v4.E();  // Set the energy of the vertex particle to the sum of the daughters.
 
-   // Compare vertex momentum em px py pz with the refit values. They should be close.
-//   auto em_track = vp->em.track.back();
-//   auto ep_track = vp->ep.track.back();
-
-//   if( (track_py[em_track] > 0 && vp->em_py_refit.back() < 0) || (track_py[em_track] < 0 && vp->em_py_refit.back() > 0) ) {
-//
-//      cout << "Vertex momentum: " << track_px[em_track] << " " << track_py[em_track] << " " << track_pz[em_track]
-//           << "\n";
-//      cout << "Refit momentum:  " << vp->em_px_refit.back() << " " << vp->em_py_refit.back() << " "
-//           << vp->em_pz_refit.back() << " " << vp->ep_px_refit.back() << " " << vp->ep_py_refit.back() << " "
-//           << vp->ep_pz_refit.back() << "\n";
-//   }
-
+         vp->em.p.back() = pe4.P();
+         vp->ep.p.back() = pp4.P();
+      }
 #ifdef DEBUG
-   if(vp->energy.size() != vp->type.size()){
-      cout << "ERROR === Miss filling of the vertex energy.\n";
-   }
-   if( abs(v4.M() - vp->mass.back()) > 0.0001 ){
-      cout << "ERROR === Vertex mass does not match the sum of daughters. \n";
-      cout << "Vertex mass:   " << vp->mass.back() << "\n";
-      cout << "Daughter mass: " << v4.M() << "\n";
-   }
+      if(vp->energy.size() != vp->type.size()){
+         cout << "ERROR === Miss filling of the vertex energy.\n";
+      }
+      if( abs(v4.M() - vp->mass.back()) > 0.0001 ){
+         cout << "ERROR === Vertex mass does not match the sum of daughters. \n";
+         cout << "Vertex mass:   " << vp->mass.back() << "\n";
+         cout << "Daughter mass: " << v4.M() << "\n";
+      }
 #endif
+   }
+
 
 #ifdef DEBUG_VERIFY_CODE
    if(params.size()>21) {
@@ -1984,7 +2045,7 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
       }
       // Add the particle to the particles list. We mark it by giving it the type of the vertex collection.
       Fill_Single_Particle_From_LCIO(&part, daughter, type);
-      i_part = part.type.size();
+      i_part = static_cast<int>(part.type.size())-1;  // The index of the newly added particle.
       any_particle_to_index_map[daughter] = i_part;
 
    }else{
@@ -2162,12 +2223,14 @@ void LcioReader::Fill_Single_Particle_From_LCIO(Single_Particle_t *bp, EVENT::Re
 #endif
    if( clusters.size() == 1){
       auto cluster = dynamic_cast<IMPL::ClusterImpl*>(clusters[0]);
-      if(use_ecal_cluster && ecal_cluster_to_index_map.find(cluster) == ecal_cluster_to_index_map.end() ){
-         cout << "Um, sorry, but I could not find the cluster associated with the particle, though I expected one. \n";
-         bp->ecal_cluster.push_back(-101);
-      }else {
-         int cluster_index = ecal_cluster_to_index_map[cluster];
-         bp->ecal_cluster.push_back(cluster_index);
+      if(use_ecal_cluster) {
+         if (ecal_cluster_to_index_map.find(cluster) == ecal_cluster_to_index_map.end() ){
+            cout << "Um, sorry, but I could not find the cluster associated with the particle, though I expected one. \n";
+            bp->ecal_cluster.push_back(-101);
+         }else {
+            int cluster_index = ecal_cluster_to_index_map[cluster];
+            bp->ecal_cluster.push_back(cluster_index);
+         }
       }
    }else{  // Ecal hole track.
       bp->ecal_cluster.push_back(-1);

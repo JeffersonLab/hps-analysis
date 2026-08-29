@@ -181,7 +181,7 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("track_n_gbl", &track_n_gbl, write_any_tracks);
    branch_map_try_emplace("track_n_matched", &track_n_matched, write_any_tracks);
    branch_map_try_emplace("track_n_hits", &track_n_hits, write_any_tracks);
-   branch_map_try_emplace("track_volume", &track_volume, write_any_tracks);
+   // branch_map_try_emplace("track_volume", &track_volume, write_any_tracks);
    branch_map_try_emplace("track_type", &track_type, write_any_tracks);
    branch_map_try_emplace("track_ndf", &track_ndf, write_any_tracks);
    branch_map_try_emplace("track_d0", &track_d0, write_any_tracks);
@@ -275,9 +275,9 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("v0_vertex_x", &v0.vertex_x, write_particles);
    branch_map_try_emplace("v0_vertex_y", &v0.vertex_y, write_particles);
    branch_map_try_emplace("v0_vertex_z", &v0.vertex_z, write_particles);
-   branch_map_try_emplace("v0_vertex_x_err", &v0.vertex_x, write_particles);
-   branch_map_try_emplace("v0_vertex_y_err", &v0.vertex_y, write_particles);
-   branch_map_try_emplace("v0_vertex_z_err", &v0.vertex_z, write_particles);
+   branch_map_try_emplace("v0_vertex_x_err", &v0.vertex_x_err, write_particles);
+   branch_map_try_emplace("v0_vertex_y_err", &v0.vertex_y_err, write_particles);
+   branch_map_try_emplace("v0_vertex_z_err", &v0.vertex_z_err, write_particles);
 
    branch_map_try_emplace("v0_vertex_chi2", &v0.vertex_chi2, write_particles);
    branch_map_try_emplace("v0_vertex_prob", &v0.vertex_prob, write_particles);
@@ -323,6 +323,11 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("v0_ep_py", &v0.ep_py_refit, write_particles);
    branch_map_try_emplace("v0_ep_pz", &v0.ep_pz_refit, write_particles);
 
+   branch_map_try_emplace("v0_target_proj_x", &v0.target_proj_x, write_particles);
+   branch_map_try_emplace("v0_target_proj_y", &v0.target_proj_y, write_particles);
+   branch_map_try_emplace("v0_target_proj_x_err", &v0.target_proj_x_err, write_particles);
+   branch_map_try_emplace("v0_target_proj_y_err", &v0.target_proj_y_err, write_particles);
+
 
    // MCParticles
    branch_map_try_emplace("mc_part_energy", &mc_part_energy, use_mc_particles | use_all );
@@ -367,6 +372,11 @@ void MiniDst::SetBranchMap() {
    if (!md_output_file) {
       if (md_Debug & kDebug_Info) std::cout << "Opening output file: " << md_output_file_name << std::endl;
       md_output_file = new TFile(md_output_file_name.data(), "RECREATE","MiniDST");
+      if (!md_output_file || md_output_file->IsZombie()) {
+         std::cout << "Error opening output file: " << md_output_file_name << std::endl;
+         std::cout << "Cowardly not continuing.\n";
+         exit(1);
+      }
    } else std::cout << "The output file should not be open already!\n\n\n\n";
 
    md_output_tree = new TTree("MiniDST", "HPS mini-DST");
@@ -446,6 +456,7 @@ void MiniDst::Clear(){
       // Also: https://arne-mertz.de/2018/05/overload-build-a-variant-visitor-on-the-fly/
       // We need one line for each type that is contained in our variant.
       //
+      // cout << "Clearing branch " << nam << endl;
       std::visit(overloaded{
             [](int *arg)    { (*arg) = 0; },
             [](unsigned int *arg)    { (*arg) = 0; },
@@ -476,13 +487,15 @@ bool MiniDst::Process(Long64_t entry){
 }
 
 void MiniDst::End() {
-   if (md_output_file->IsOpen()) {
+   if (md_output_file && md_output_file->IsOpen()) {
       if (!md_output_file->IsWritable()) {
-         cout << "End -- file is open but not writable!!??\n";
+         cout << "End -- file is open but not writable!!?? Sorry, no output!\n";
       } else {
          md_output_file->Write();
          md_output_file->Close();
       }
+   }else {
+      cout << "End -- No output file!!! Sorry, no output!\n";
    }
 }
 
@@ -563,7 +576,7 @@ int MiniDst::Add_Track(MiniDst &event_in, int i_track, bool also_copy_svt_hits) 
    track_type.push_back(event_in.track_type[i_track]);
    track_ndf.push_back(event_in.track_ndf[i_track]);
    track_n_hits.push_back(event_in.track_n_hits[i_track]);
-   track_volume.push_back(event_in.track_volume[i_track]);
+   // track_volume.push_back(event_in.track_volume[i_track]);
    track_d0.push_back(event_in.track_d0[i_track]);
    track_phi0.push_back(event_in.track_phi0[i_track]);
    track_omega.push_back(event_in.track_omega[i_track]);

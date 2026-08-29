@@ -1622,7 +1622,7 @@ bool LcioReader::Process(Long64_t entry){
                // int hit_idx = ecal_id0_to_hit_index[lcio_ecal_truth->getCellID0()];
                // int hit_idx = ecal_id0_to_hit_index[lcio_hit->getCellID0()];
                if (id_hit == id_truth) {
-                  // if (hit_idx != ihit && hit_idx != ihit+1) { 
+                  // if (hit_idx != ihit && hit_idx != ihit+1) {
                   //    printf("There can be more than one hit associated with a CellID here: %d != %d \n",hit_idx, ihit);
                   // }
                   break;
@@ -1685,14 +1685,22 @@ bool LcioReader::Process(Long64_t entry){
                auto parent_particle = mc_particle;
                int n_parents = parent_particle->getParents().size();
 
-               // We walk up the parent tree until there is no more parent. This is the ultimate parent.
+               // We walk up the parent tree until there is no more parent. OR
+               // if the parent has PDG=622 or 623. This is the ultimate parent, the one that came from the generator
+               // OR was the decay product of an A'.
                while( n_parents > 0){
                   //parent_particle = mc_particle->getParents()[0];  // In our case, only one parent per MCParticle.
                   auto parents = parent_particle->getParents();
-                  parent_particle = parents[0];
-                  n_parents = parent_particle->getParents().size();
+                  auto next_parent_particle = parents[0];
+                  n_parents = next_parent_particle->getParents().size();
                   if(n_parents > 1){
                      printf("More than one parent particle????? \n");
+                  }
+                  if (next_parent_particle->getPDG() == 622 || next_parent_particle->getPDG() == 623){
+                     // This is the ultimate parent, so stop here.
+                     break;
+                  }else {
+                     parent_particle = next_parent_particle;
                   }
                }
 
@@ -1743,10 +1751,11 @@ bool LcioReader::Process(Long64_t entry){
             for(int ih=0; ih< ecal_cluster_hits[ic].size(); ++ih){
                int hit_id = ecal_cluster_hits[ic][ih];
                int truth_id =ecal_hit_to_truth_index[hit_id];
+               int test_parent = ecal_hit_mc_parent_id[hit_id];
                if (truth_id>=0) {
                   if (truth_id < ecal_hit_to_truth_index.size()) {
-                     int p_id = ecal_hit_mc_parent_id[truth_id];
-                     double weight = ecal_hit_energy[truth_id];
+                     int p_id = ecal_hit_mc_parent_id[hit_id];
+                     double weight = ecal_hit_energy[hit_id];
                      pdg_count[p_id] += weight;
                      n_tot += weight;
                   }else {
@@ -1774,12 +1783,6 @@ bool LcioReader::Process(Long64_t entry){
          }
       }
    }
-
-   ///////////////////////////////////////////////////////////////////////////////////////////////
-   ///
-   /// TODO: ADD SVT Truth relation for MC data.
-   ///
-   ///////////////////////////////////////////////////////////////////////////////////////////////
 
    return true;
 }

@@ -18,9 +18,11 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR})
 #
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
     CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
-    target_link_libraries(${PROJECT_NAME} PUBLIC MiniDst ${LCIO_LIBRARIES} ${ROOT_LIBRARIES} PRIVATE stdc++fs)
+    target_link_libraries(${PROJECT_NAME} PUBLIC MiniDst ${LCIO_LIBRARIES} ${ROOT_LIBRARIES} PRIVATE stdc++fs PRIVATE project_warnings)
 else()
-    target_link_libraries(${PROJECT_NAME} PUBLIC MiniDst ${LCIO_LIBRARIES} ${ROOT_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC MiniDst ${LCIO_LIBRARIES} ${ROOT_LIBRARIES} PRIVATE project_warnings)
 endif()
+set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/LcioReaderDict.cxx
+        PROPERTIES COMPILE_OPTIONS "-w")
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR} )

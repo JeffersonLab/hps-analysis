@@ -64,6 +64,7 @@ void LcioReader::Clear(){
    ecal_id0_to_hit_index.clear();
    ecal_hit_id0.clear();
    ecal_cluster_to_index_map.clear();
+   // ecal_cluster_uncor_to_index_map.clear();
    svt_hit_to_index_map.clear();
    svt_raw_hit_to_index_map.clear();
    kf_track_to_index_map.clear();
@@ -766,7 +767,12 @@ bool LcioReader::Process(Long64_t entry){
                ecal_uncal_hit_x.push_back(pos[0]);
                ecal_uncal_hit_y.push_back(pos[1]);
                ecal_uncal_hit_z.push_back(pos[2]);
+            }else {
+               ecal_uncal_hit_x.push_back(-999.);
+               ecal_uncal_hit_y.push_back(-999.);
+               ecal_uncal_hit_z.push_back(-999.);
             }
+
          }
 
       auto ecal_raw_hits = static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalReadoutHits"));
@@ -823,6 +829,10 @@ bool LcioReader::Process(Long64_t entry){
                ecal_hit_x.push_back(pos[0]);
                ecal_hit_y.push_back(pos[1]);
                ecal_hit_z.push_back(pos[2]);
+            }else {
+               ecal_hit_x.push_back(-999.);
+               ecal_hit_y.push_back(-999.);
+               ecal_hit_z.push_back(-999.);
             }
          }
       }
@@ -887,7 +897,7 @@ bool LcioReader::Process(Long64_t entry){
             static_cast<EVENT::LCCollection *>(lcio_event->getCollection("EcalClusters"));
       for (int i_clus = 0; i_clus < clusters->getNumberOfElements(); ++i_clus) {
          auto lcio_clus = dynamic_cast<IMPL::ClusterImpl *>(clusters->getElementAt(i_clus));
-         ecal_cluster_uncor_to_index_map[lcio_clus] = i_clus;
+         // ecal_cluster_uncor_to_index_map[lcio_clus] = i_clus;
          ecal_cluster_uncor_energy.push_back(lcio_clus->getEnergy());
          const float *position = lcio_clus->getPosition();
          ecal_cluster_uncor_x.push_back(position[0]);
@@ -1527,17 +1537,22 @@ bool LcioReader::Process(Long64_t entry){
                int seed_index = -99;
                if (matched_track_to_index_map.find(seed_track) != matched_track_to_index_map.end()) {
                   seed_index = matched_track_to_index_map[seed_track];
-                  track_ref[gbl_track_index] = seed_index;
-                  if (track_gbl_ref.size() > seed_index) {
-                     //int debug_copy_seed_index = seed_index;
-                     //int debug_copy_gbl_track_index = gbl_track_index;
-                     track_gbl_ref[seed_index] = gbl_track_index;
+
+                  if (seed_index < 0 || seed_index >= track_gbl_ref.size()) {
+                     cout << "Seed index is out of bounds: " << seed_index << " for gbl_track_index: "
+                          << gbl_track_index << "\n";
+                     throw runtime_error("Seed index out of bounds");
                   }
+
+                  track_ref[gbl_track_index] = seed_index;
+                  track_gbl_ref[seed_index] = gbl_track_index;
+
 
                }else{
                   cout << "This should not happeen, but the seed track was not found in the matched_track_to_index_map.\n";
+                  track_ref[gbl_track_index] = seed_index;
                }
-               track_ref[gbl_track_index] = seed_index;
+
             }
          }
       }
@@ -1750,18 +1765,14 @@ bool LcioReader::Process(Long64_t entry){
             map<int,double> pdg_count;  // Assumes auto initialization to zero of new elements
             for(int ih=0; ih< ecal_cluster_hits[ic].size(); ++ih){
                int hit_id = ecal_cluster_hits[ic][ih];
-               int truth_id =ecal_hit_to_truth_index[hit_id];
-               int test_parent = ecal_hit_mc_parent_id[hit_id];
-               if (truth_id>=0) {
-                  if (truth_id < ecal_hit_to_truth_index.size()) {
                      int p_id = ecal_hit_mc_parent_id[hit_id];
                      double weight = ecal_hit_energy[hit_id];
                      pdg_count[p_id] += weight;
                      n_tot += weight;
-                  }else {
-                     printf("No truth_id: %d for hit id: %d\n",truth_id, hit_id);
-                  }
-               }
+               //   }else {
+               //      printf("No truth_id: %d for hit id: %d\n",truth_id, hit_id);
+               //   }
+               //}
             }
             // Find the maximum item in the pdg_count map.
             if(pdg_count.size()) {
@@ -1803,8 +1814,9 @@ long LcioReader::Run(int max_event) {
 
          if(!data_type_is_known) SetupLcioDataType();
 
+         evt_count++;
          if (md_Debug & kDebug_Info) {
-            if ((++evt_count) % Counter_Freq == 0) {
+            if (evt_count % Counter_Freq == 0) {
                printf("i: %'10lu   event: %'10d  run: %5d\n", evt_count, event_number, run_number);
             }
          }
@@ -1878,9 +1890,9 @@ void LcioReader::Fill_Vertex_From_LCIO(Vertex_Particle_t *vp, EVENT::Vertex *lci
       if (params.size() == 24){
          vp->px_err.push_back(params[22]); // V0PxErr
          vp->py_err.push_back(params[23]); // V0PyErr
-      } else if (params.size() == 23) {
+      } else if (params.size() == 23){    // layerCode is missing so the last two move one up.
          vp->px_err.push_back(params[21]); // V0PxErr
-         vp->py_err.push_back(params[20]); // V0PyErr
+         vp->py_err.push_back(params[22]); // V0PyErr
       }
       vp->pz_err.push_back(params[0]); // V0PzErr
 
@@ -2139,7 +2151,7 @@ void LcioReader::Fill_SubPart_From_LCIO(Sub_Particle_t *sub,EVENT::Reconstructed
    }
 
    if(clusters.size() == 1) {
-      UTIL::BitField64 ecal_hit_field_decoder("system:6,layer:2,ix:-8,iy:-6");
+      // UTIL::BitField64 ecal_hit_field_decoder("system:6,layer:2,ix:-8,iy:-6");
 
       IMPL::ClusterImpl *clus = static_cast<IMPL::ClusterImpl *>(clusters[0]);
       auto i_clus_ptr = ecal_cluster_to_index_map.find(clus);

@@ -15,13 +15,23 @@ set(HPS_ANALYSIS_VERSION_MINOR 3)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(ENABLE_WARNINGS "Compile with -Wall -Wextra" ON)
+
+add_library(project_warnings INTERFACE)
+if(ENABLE_WARNINGS AND NOT MSVC)
+    target_compile_options(project_warnings INTERFACE
+            -Wall
+            -Wextra
+            -Wno-unused-parameter)
+endif()
+
 # Offer the user the choice of overriding the installation directories
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
-    add_compile_options(-DDEBUG=1)
+    add_compile_definitions(-DDEBUG=1)
 endif()
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT) 
@@ -54,7 +64,7 @@ include(${ROOT_USE_FILE})
 
 find_package(LCIO)
 if(LCIO_FOUND)
-    include_directories( AFTER "${LCIO_INCLUDE_DIR}")
+    include_directories(SYSTEM AFTER "${LCIO_INCLUDE_DIR}")
     message(STATUS "LCIO includes: ${LCIO_INCLUDE_DIR}")
 else()
     message(STATUS "=================================================================")
@@ -129,7 +139,7 @@ if(LCIO_FOUND)
     # HPSTR reading requires both the LCIO and HPSTR Libraries, because the HPSTR event definition is not clean
     # i.e. unnecessarily depends on the LCIO objects.
 
-    target_link_libraries(make_mini_dst MiniDst ${EXTRA_LIBRARIES} ${ROOT_LIBRARIES})
+    target_link_libraries(make_mini_dst PUBLIC MiniDst ${EXTRA_LIBRARIES} ${ROOT_LIBRARIES} PRIVATE project_warnings)
     install(TARGETS make_mini_dst)
     add_executable(lcio_test_reader lcio_test_reader.cpp)
     target_link_libraries(lcio_test_reader ${LCIO_LIBRARIES})

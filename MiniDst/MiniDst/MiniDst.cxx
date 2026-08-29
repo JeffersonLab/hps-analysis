@@ -69,7 +69,6 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("ext_trigger", &ext_trigger);
    branch_map_try_emplace("rf_time1", &rf_time1);
    branch_map_try_emplace("rf_time2", &rf_time2);
-   branch_map_try_emplace("track_n_gbl", &track_n_gbl);
 
    branch_map_try_emplace("hodo_raw_ix", &hodo_raw_ix, use_hodo_raw_hits | use_all );
    branch_map_try_emplace("hodo_raw_iy", &hodo_raw_iy, use_hodo_raw_hits | use_all );
@@ -197,7 +196,7 @@ void MiniDst::DefineBranchMap(bool use_all) {
    branch_map_try_emplace("track_x_at_target",&track_x_at_target, write_any_tracks);
    branch_map_try_emplace("track_y_at_target",&track_y_at_target, write_any_tracks);
    branch_map_try_emplace("track_z_at_target",&track_z_at_target, write_any_tracks);
-#
+   
 #ifdef DEBUG
    branch_map_try_emplace("track_px_old",&track_px_old, write_any_tracks);
    branch_map_try_emplace("track_py_old",&track_py_old, write_any_tracks);
@@ -587,10 +586,18 @@ int MiniDst::Add_Track(MiniDst &event_in, int i_track, bool also_copy_svt_hits) 
    track_px.push_back(event_in.track_px[i_track]);
    track_py.push_back(event_in.track_py[i_track]);
    track_pz.push_back(event_in.track_pz[i_track]);
+   track_x_at_target.push_back(event_in.track_x_at_target[i_track]);
+   track_y_at_target.push_back(event_in.track_y_at_target[i_track]);
+   track_z_at_target.push_back(event_in.track_z_at_target[i_track]);
+
    if(event_in.track_x_at_lasthit.size() > i_track) { // The lasthit information is available
       track_x_at_lasthit.push_back(event_in.track_x_at_lasthit[i_track]);
       track_y_at_lasthit.push_back(event_in.track_y_at_lasthit[i_track]);
       track_z_at_lasthit.push_back(event_in.track_z_at_lasthit[i_track]);
+      track_px_at_lasthit.push_back(event_in.track_px_at_lasthit[i_track]);
+      track_py_at_lasthit.push_back(event_in.track_py_at_lasthit[i_track]);
+      track_pz_at_lasthit.push_back(event_in.track_pz_at_lasthit[i_track]);
+
       track_omega_at_lasthit.push_back(event_in.track_omega_at_lasthit[i_track]);
       track_tan_lambda_at_lasthit.push_back(event_in.track_tan_lambda_at_lasthit[i_track]);
       track_phi0_at_lasthit.push_back(event_in.track_phi0_at_lasthit[i_track]);
@@ -600,6 +607,10 @@ int MiniDst::Add_Track(MiniDst &event_in, int i_track, bool also_copy_svt_hits) 
    track_x_at_ecal.push_back(event_in.track_x_at_ecal[i_track]);
    track_y_at_ecal.push_back(event_in.track_y_at_ecal[i_track]);
    track_z_at_ecal.push_back(event_in.track_z_at_ecal[i_track]);
+   track_px_at_ecal.push_back(event_in.track_px_at_ecal[i_track]);
+   track_py_at_ecal.push_back(event_in.track_py_at_ecal[i_track]);
+   track_pz_at_ecal.push_back(event_in.track_pz_at_ecal[i_track]);
+
    track_isolation.push_back(event_in.track_isolation[i_track]);  // Places pointer to existing vector.
    track_covmatrix.push_back(event_in.track_covmatrix[i_track]);
 

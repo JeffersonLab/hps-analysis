@@ -1783,10 +1783,17 @@ bool LcioReader::Process(Long64_t entry){
                                                 const std::pair<int, double> &b) -> bool {
                                                 return a.second < b.second;
                                              });
-               int parent_id = mymax->first;
-               ecal_cluster_mc_id.push_back(parent_id);
-               ecal_cluster_mc_pdg.push_back(mc_part_pdg[parent_id]);
-               ecal_cluster_mc_pdg_purity.push_back(mymax->second / n_tot);
+               if (mymax == pdg_count.end()) {
+                  printf("No maximum found in pdg_count map for cluster %d\n", ic);
+                  ecal_cluster_mc_id.push_back(-1);
+                  ecal_cluster_mc_pdg.push_back(-999);
+                  ecal_cluster_mc_pdg_purity.push_back(0);
+               }else{
+                  int parent_id = mymax->first;
+                  ecal_cluster_mc_id.push_back(parent_id);
+                  ecal_cluster_mc_pdg.push_back(mc_part_pdg[parent_id]);
+                  ecal_cluster_mc_pdg_purity.push_back(mymax->second / n_tot);
+               }
             }else{
                // There was NO truth hit for this cluster. So fill out invalids.
                ecal_cluster_mc_id.push_back(-1);

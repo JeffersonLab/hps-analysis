@@ -25,6 +25,12 @@ if(ENABLE_WARNINGS AND NOT MSVC)
             -Wno-unused-parameter)
 endif()
 
+# Fix issues with very new cmake > 4 and ROOT needing CMAKE_OSX_SYSROOT set to work.
+if(APPLE AND NOT CMAKE_OSX_SYSROOT)
+    execute_process(COMMAND xcrun --show-sdk-path OUTPUT_VARIABLE CMAKE_OSX_SYSROOT OUTPUT_STRIP_TRAILING_WHITESPACE)
+#    set(CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk)
+endif()
+
 # Offer the user the choice of overriding the installation directories
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)

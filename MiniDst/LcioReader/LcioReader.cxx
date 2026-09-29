@@ -1790,6 +1790,11 @@ bool LcioReader::Process(Long64_t entry){
                   ecal_cluster_mc_pdg_purity.push_back(0);
                }else{
                   int parent_id = mymax->first;
+                  if (parent_id < 0 || parent_id >= static_cast<int>(mc_part_pdg.size())) {
+                     printf("Parent id %d is out of range for cluster %d\n", parent_id, ic);
+                     ecal_cluster_mc_id.push_back(-1);
+                     ecal_cluster_mc_pdg.push_back(-999);
+                     ecal_cluster_mc_pdg_purity.push_back(0);
                   ecal_cluster_mc_id.push_back(parent_id);
                   ecal_cluster_mc_pdg.push_back(mc_part_pdg[parent_id]);
                   ecal_cluster_mc_pdg_purity.push_back(mymax->second / n_tot);

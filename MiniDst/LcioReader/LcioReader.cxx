@@ -1785,7 +1785,9 @@ bool LcioReader::Process(Long64_t entry){
                                              });
                if (mymax == pdg_count.end() || mymax->first < 0 || mymax->first >= static_cast<int>(mc_part_pdg.size())) {
                   if (mymax == pdg_count.end()) printf("No maximum found in pdg_count map for cluster %d\n",ic);
+#ifdef DEBUG
                   if (mymax->first < 0 || mymax->first >= static_cast<int>(mc_part_pdg.size())) printf("bad parent id: %d \n", mymax->first);
+#endif
                   ecal_cluster_mc_id.push_back(-1);
                   ecal_cluster_mc_pdg.push_back(-999);
                   ecal_cluster_mc_pdg_purity.push_back(0);

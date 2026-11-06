@@ -20,7 +20,6 @@
 
 using json = nlohmann::json;
 
-namespace {
    /// Convert a unix time to an ISO 8601 string with the local timezone offset, e.g. 2026-10-01T12:18:28-0400
    string time_to_iso8601(time_t t){
       struct tm tm_local{};
@@ -70,7 +69,6 @@ namespace {
       delete reader;
       return info;
    }
-}
 
 LcioReader::LcioReader(const string &input_file, const int debug_level) {
    md_Debug = debug_level;
@@ -1409,9 +1407,9 @@ bool LcioReader::Process(Long64_t entry){
                track_pz_old.push_back(pz);
                track_bfield_alt.push_back(track_info->getFloatVal(5)); // This is the B field stored in TrackData.
                track_omega_old.push_back(lcio_track->getOmega());
-               double px_stored = track_px.back();
-               double py_stored = track_py.back();
-               double pz_stored = track_pz.back();
+//               double px_stored = track_px.back();
+//               double py_stored = track_py.back();
+//               double pz_stored = track_pz.back();
 //               if( abs(px - px_stored) > 0.001 ||
 //                   abs(py - py_stored) > 0.001 ||
 //                   abs(pz - pz_stored) > 0.001 ) {

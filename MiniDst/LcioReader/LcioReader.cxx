@@ -8,14 +8,69 @@
 #include <string>
 #include <filesystem>
 #include <stdexcept>
+#include <ctime>
+#include <sys/stat.h>
 #include "TSystem.h"
 #include "TObjString.h"
 #include "LcioReader.h"
+#include <EVENT/LCRunHeader.h>
 #include "TLorentzVector.h"
 #include "TMath.h"
 #include "nlohmann/json.hpp"
 
 using json = nlohmann::json;
+
+namespace {
+   /// Convert a unix time to an ISO 8601 string with the local timezone offset, e.g. 2026-10-01T12:18:28-0400
+   string time_to_iso8601(time_t t){
+      struct tm tm_local{};
+      localtime_r(&t, &tm_local);
+      char buf[64];
+      strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", &tm_local);
+      return {buf};
+   }
+
+   /// Collect information about a single LCIO file: detector name, run number and file date.
+   /// Note: LCIO files do not store a creation date internally (the event timestamp is the trigger clock),
+   /// so the file date is taken from the filesystem modification time.
+   json lcio_file_info(const string &file_name){
+      json info;
+      info["file"] = file_name;
+
+      struct stat st{};
+      if(stat(file_name.c_str(), &st) == 0){
+         info["file_modified_time"] = time_to_iso8601(st.st_mtime);
+         info["file_modified_epoch"] = static_cast<long long>(st.st_mtime);
+      }
+
+      IO::LCReader *reader = IOIMPL::LCFactory::getInstance()->createLCReader();
+      try {
+         reader->open(file_name);
+         string detector;
+         int run = -1;
+         if(auto *rh = reader->readNextRunHeader(); rh != nullptr){
+            detector = rh->getDetectorName();
+            run = rh->getRunNumber();
+         }
+         if(detector.empty()){  // No run header, or no detector in it, try the first event.
+            reader->close();
+            reader->open(file_name);
+            if(auto *evt = reader->readNextEvent(); evt != nullptr){
+               detector = evt->getDetectorName();
+               run = evt->getRunNumber();
+            }
+         }
+         reader->close();
+         info["detector"] = detector;
+         info["run_number"] = run;
+      } catch (std::exception &e) {
+         std::cout << "WriteStateToFile() -- Warning -- could not read LCIO header of " << file_name
+                   << " : " << e.what() << std::endl;
+      }
+      delete reader;
+      return info;
+   }
+}
 
 LcioReader::LcioReader(const string &input_file, const int debug_level) {
    md_Debug = debug_level;
@@ -47,6 +102,7 @@ void LcioReader::Start(){
    lcio_reader->open(input_files[0]);
    lcio_event =lcio_reader->readNextEvent();
    run_number = lcio_event->getRunNumber();
+   detector_name = lcio_event->getDetectorName();
    SetupLcioDataType();
    lcio_reader->close();
 
@@ -98,6 +154,23 @@ void LcioReader::WriteStateToFile() {
    meta["minidst_version"] = __MiniDst_Version__;
    meta["lcioreader_version"] = __LCIOReader__Version__;
    meta["input_files"] = infiles;
+
+   // Detector name and file date for each of the input files.
+   json file_info = json::array();
+   for(const auto &f: infiles){
+      auto info = lcio_file_info(f);
+      if(info.contains("detector") && info["detector"] != detector_name && !detector_name.empty()) {
+         std::cout << "WriteStateToFile() -- Warning -- input file " << f << " has detector "
+                   << info["detector"] << " which differs from " << detector_name << std::endl;
+      }
+      file_info.push_back(info);
+   }
+   if(detector_name.empty() && !file_info.empty() && file_info[0].contains("detector"))
+      detector_name = file_info[0]["detector"];
+   meta["detector"] = detector_name;
+   meta["run_number"] = run_number;
+   meta["input_file_info"] = file_info;
+   meta["creation_time"] = time_to_iso8601(time(nullptr));  // When this ROOT file was written.
    string outfile = std::filesystem::canonical(gSystem->ExpandPathName(md_output_file_name.c_str()));
    meta["output_file"] = outfile;
 

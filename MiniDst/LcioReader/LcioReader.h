@@ -126,6 +126,7 @@ public:
     IO::LCReader* lcio_reader{IOIMPL::LCFactory::getInstance()->createLCReader()};
     EVENT::LCEvent* lcio_event{nullptr};
     vector<string> input_files{};
+    string detector_name{};  // Detector name from the LCIO file (run header or first event).
 
     unsigned long evt_count{0}; // Event sequence number.
     vector<string> col_names; // Store the LCIO collection names from the first event.
